@@ -1,0 +1,33 @@
+# Documentazione e materiale di riferimento (tesi, paper, notebook, dataset)
+docs/
+
+# IDE — JetBrains
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Ambienti virtuali
+.venv/
+venv/
+env/
+
+# Segreti e configurazione locale
+.env
+.env.local
+
+# Test e cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Notebook
+.ipynb_checkpoints/
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
