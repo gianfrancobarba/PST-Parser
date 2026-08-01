@@ -1,0 +1,9 @@
+# Base model loaded in 4-bit precision with the Llama 3.1 conversation template.
+model:
+  backend: unsloth
+  name: unsloth/Meta-Llama-3.1-8B-Instruct
+  revision: null
+  max_seq_length: 4096
+  load_in_4bit: true
+  dtype: null
+  chat_template: llama-3.1

@@ -1,0 +1,20 @@
+data:
+  source_path: tests/assets/tiny_corpus.xlsx
+  sheet_name: corpus
+  prompt_column: PROMPT
+  column_mapping:
+    main_instruction: MAIN INSTRUCTION
+    context.format: FORMAT
+    context.constrains: CONSTRAINS
+    context.data: DATA
+    context.role: ROLE
+    examples: EXAMPLES
+    reasoning.influence: INFLUENCE
+    reasoning.reasoning_examples: REASONING EXAMPLES
+    reasoning.paths: PATHS
+  quality:
+    min_coverage_ratio: 0.90
+    fail_on_issues: false
+  split:
+    eval_fraction: 0.3
+    random_state: 42

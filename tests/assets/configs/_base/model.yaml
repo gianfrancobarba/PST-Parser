@@ -1,0 +1,15 @@
+model:
+  backend: hf
+  name: hf-internal-testing/tiny-random-LlamaForCausalLM
+  max_seq_length: 512
+  load_in_4bit: false
+  chat_template: llama-3.1
+
+training:
+  max_steps: 2
+  warmup_steps: 0
+  eval_steps: 1
+  logging_steps: 1
+
+inference:
+  max_new_tokens: 32

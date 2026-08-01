@@ -1,0 +1,4 @@
+extends:
+  - circular_b.yaml
+
+name: circular-a

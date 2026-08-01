@@ -1,0 +1,11 @@
+# The warmup schedule cannot be longer than the training run itself.
+extends:
+  - _base/data.yaml
+  - _base/model.yaml
+
+name: fixture-invalid
+system_prompt_path: tests/assets/system_prompt.md
+
+training:
+  max_steps: 10
+  warmup_steps: 50

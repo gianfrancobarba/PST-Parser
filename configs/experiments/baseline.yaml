@@ -1,0 +1,11 @@
+# Reference experiment. Every other configuration should be expressed as a
+# delta over this one so that comparisons remain meaningful.
+extends:
+  - _base/data/pst_v2.yaml
+  - _base/model/llama31_8b.yaml
+  - _base/train/sft_lora.yaml
+  - _base/eval/default.yaml
+
+name: baseline
+seed: 42
+system_prompt_path: prompts/system_pst.md

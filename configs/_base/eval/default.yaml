@@ -1,0 +1,13 @@
+# Deterministic decoding so that repeated evaluations of the same checkpoint
+# yield identical predictions.
+inference:
+  max_new_tokens: 4096
+  do_sample: false
+  temperature: 0.0
+  top_p: 1.0
+  structured_output: false
+  batch_size: 1
+
+evaluation:
+  ted_failure_penalty: 100.0
+  confusion_top_k: 5

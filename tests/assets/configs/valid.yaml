@@ -1,0 +1,11 @@
+extends:
+  - _base/data.yaml
+  - _base/model.yaml
+
+name: fixture
+seed: 7
+system_prompt_path: tests/assets/system_prompt.md
+
+lora:
+  r: 2
+  alpha: 4

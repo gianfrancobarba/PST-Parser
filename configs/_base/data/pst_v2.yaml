@@ -1,0 +1,29 @@
+# Annotated corpus: one row per prompt, one column per leaf of the target schema.
+# Paths are relative to the repository root.
+data:
+  source_path: data/raw/prompt_dataset_v2.xlsx
+  sheet_name: prompt_dataset_v2
+  prompt_column: PROMPT
+
+  # Dotted leaf path in the target schema -> spreadsheet column supplying it.
+  column_mapping:
+    main_instruction: MAIN INSTRUCTION
+    context.format: FORMAT
+    context.constrains: CONSTRAINS
+    context.data: DATA
+    context.role: ROLE
+    examples: EXAMPLES
+    reasoning.influence: INFLUENCE
+    reasoning.reasoning_examples: REASONING EXAMPLES
+    reasoning.paths: PATHS
+
+  processed_dir: data/processed
+
+  quality:
+    min_coverage_ratio: 0.90
+    fail_on_issues: false
+
+  split:
+    eval_fraction: 0.09
+    random_state: 42
+    output_dir: data/splits

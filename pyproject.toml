@@ -1,0 +1,158 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pstparser"
+version = "0.1.0"
+description = "Supervised fine-tuning and evaluation pipeline for Prompt Syntax Tree segmentation"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { file = "LICENSE" }
+authors = [{ name = "Gianfranco Barba" }]
+keywords = ["prompt-engineering", "llm", "fine-tuning", "structured-extraction"]
+
+dependencies = [
+    "pydantic>=2.9,<3",
+    "pyyaml>=6.0.2",
+    "typer>=0.15",
+    "rich>=13.9",
+    "pandas>=2.2",
+    "openpyxl>=3.1.5",
+    "numpy>=1.26,<3",
+    "scikit-learn>=1.5",
+    "apted>=1.0.3",
+    "datasets>=3.0",
+    # Upper bound imposed by the optimised training backend.
+    "transformers>=4.51.3,<4.58",
+]
+
+[project.optional-dependencies]
+# Torch build selection. These extras are mutually exclusive: pick exactly one.
+cpu = ["torch>=2.5"]
+cu128 = ["torch>=2.5"]
+
+# GPU training stack. Requires one of the torch extras above.
+train = [
+    "trl>=0.18.2,<=0.24.0",
+    "peft>=0.13",
+    "accelerate>=1.0",
+    "bitsandbytes>=0.45.5,!=0.46.0,!=0.48.0",
+]
+
+# The optimised backend patches transformers and TRL at import time, so its
+# version is pinned exactly. Its companion package is resolved transitively and
+# frozen by the lockfile.
+unsloth = ["unsloth==2025.12.9"]
+
+# Schema-constrained decoding. Optional because it is disabled by default.
+structured = ["outlines>=1.0"]
+
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "pytest-regressions>=2.5",
+    "hypothesis>=6.115",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pre-commit>=4.0",
+    "types-pyyaml>=6.0.12",
+    "pandas-stubs>=2.2",
+]
+
+[project.scripts]
+pstparser = "pstparser.cli.main:app"
+
+[project.urls]
+Repository = "https://github.com/gianfrancobarba/PST-Parser"
+
+# ---------------------------------------------------------------------------
+# uv
+# ---------------------------------------------------------------------------
+
+[tool.uv]
+# Only one torch build may be installed at a time.
+conflicts = [[{ extra = "cpu" }, { extra = "cu128" }]]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu128", extra = "cu128" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+# ---------------------------------------------------------------------------
+# Packaging
+# ---------------------------------------------------------------------------
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pstparser"]
+
+# ---------------------------------------------------------------------------
+# Tooling
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "PTH",  # flake8-use-pathlib
+    "RUF",  # ruff-specific
+    "D",    # pydocstyle
+]
+ignore = [
+    "D104",  # missing docstring in public package
+    "D203",  # conflicts with D211
+    "D213",  # conflicts with D212
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D100", "D101", "D102", "D103"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+files = ["src/pstparser"]
+
+[[tool.mypy.overrides]]
+module = [
+    "apted.*",
+    "datasets.*",
+    "peft.*",
+    "sklearn.*",
+    "transformers.*",
+    "trl.*",
+    "unsloth.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --showlocals"
+markers = [
+    "slow: end-to-end recipe tests; excluded from the default run",
+    "gpu: requires a CUDA device",
+]

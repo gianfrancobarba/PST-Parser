@@ -20,10 +20,18 @@ env/
 .env
 .env.local
 
+# Artefatti generati dalla pipeline
+# data/raw/, data/splits/ e results/ restano versionati: sono input immutabili
+# e output di riferimento del progetto.
+data/processed/
+outputs/
+
 # Test e cache
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 
 # Notebook
 .ipynb_checkpoints/
