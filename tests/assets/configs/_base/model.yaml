@@ -10,6 +10,10 @@ training:
   warmup_steps: 0
   eval_steps: 1
   logging_steps: 1
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 1
+  optim: adamw_torch
 
 inference:
   max_new_tokens: 32

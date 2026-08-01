@@ -36,7 +36,7 @@ def test_defaults_apply_to_unspecified_sections(config_dir: Path) -> None:
     config = load_experiment(config_dir / "valid.yaml", root=config_dir)
 
     assert config.training.learning_rate == pytest.approx(2e-4)
-    assert config.training.optim == "adamw_8bit"
+    assert config.training.eval_strategy == "steps"
     assert config.inference.do_sample is False
 
 

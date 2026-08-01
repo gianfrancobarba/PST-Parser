@@ -136,6 +136,9 @@ python_version = "3.11"
 strict = true
 warn_unreachable = true
 files = ["src/pstparser"]
+# The machine learning stack ships incomplete annotations, so requiring every
+# call to be typed would flag library entry points rather than our own code.
+disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
 module = [

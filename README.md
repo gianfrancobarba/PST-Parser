@@ -51,8 +51,38 @@ Copiare `.env.example` in `.env` e compilare i valori necessari.
 uv run pstparser validate-config --config configs/experiments/baseline.yaml
 ```
 
+```bash
+# Converte il corpus annotato in record e ne congela la partizione
+uv run pstparser prepare-data --config configs/experiments/baseline.yaml
+```
+
+```bash
+# Addestra gli adapter sul corpus preparato
+uv run pstparser train --config configs/experiments/baseline.yaml
+```
+
 Ogni comando accetta `--set chiave.annidata=valore` per sovrascrivere puntualmente la
-configurazione, ad esempio `--set training.max_steps=50`.
+configurazione, ad esempio `--set training.max_steps=50`. Le sovrascritture sono registrate nella
+configurazione risolta che accompagna ogni run.
+
+Per una prova rapida senza GPU, sostituendo il modello con uno giocattolo:
+
+```bash
+uv run pstparser train --config configs/experiments/baseline.yaml --set model.backend=hf --set model.name=hf-internal-testing/tiny-random-LlamaForCausalLM --set model.load_in_4bit=false --set model.max_seq_length=512 --set training.max_steps=2 --set training.warmup_steps=0 --set training.optim=adamw_torch --set inference.max_new_tokens=32
+```
+
+## Artefatti di una run
+
+Ogni esecuzione di `train` scrive una directory sotto `outputs/`:
+
+| File | Contenuto |
+|---|---|
+| `adapter/` | Pesi LoRA e tokenizer |
+| `run_manifest.json` | Commit git, configurazione risolta e suo digest, digest di corpus, record, system prompt, chat template e adapter, seed applicati, versioni delle librerie, descrizione dell'acceleratore |
+| `training_metrics.jsonl` | Metriche emesse dal trainer, una per riga |
+
+Il manifest è ciò che rende un risultato tracciabile: consente di risalire con esattezza a quale
+codice, quali dati e quale ambiente lo hanno prodotto.
 
 ## Configurazione
 

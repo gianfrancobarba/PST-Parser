@@ -140,5 +140,52 @@ def prepare_data(config: ConfigOption, set_: SetOption = None) -> None:
         console.print(f"  ... {len(result.quality.issues) - 10} more, see {result.report_path}")
 
 
+@app.command("train")
+def train(
+    config: ConfigOption,
+    set_: SetOption = None,
+    run_dir: Annotated[
+        Path | None,
+        typer.Option("--run-dir", help="Directory for the run artefacts.", dir_okay=True),
+    ] = None,
+) -> None:
+    """Fine-tune adapters on the prepared corpus."""
+    experiment = _load(config, set_)
+
+    from pstparser.models import BackendError
+    from pstparser.training import run_training
+
+    try:
+        outcome = run_training(experiment, run_dir=run_dir)
+    except BackendError as exc:
+        error_console.print(f"[bold red]Backend error:[/] {exc}")
+        raise typer.Exit(code=1) from exc
+    except FileNotFoundError as exc:
+        error_console.print(f"[bold red]Missing input:[/] {exc}\nRun 'prepare-data' first.")
+        raise typer.Exit(code=1) from exc
+
+    share = outcome.trainable / outcome.total if outcome.total else 0.0
+    table = Table(title="Training complete", show_header=False, box=None)
+    table.add_column(style="cyan")
+    table.add_column()
+    table.add_row("training examples", str(outcome.train_size))
+    table.add_row("evaluation examples", str(outcome.eval_size))
+    table.add_row(
+        "trainable parameters", f"{outcome.trainable:,} of {outcome.total:,} ({share:.2%})"
+    )
+    table.add_row("adapter", str(outcome.adapter_dir))
+    table.add_row("manifest", str(outcome.manifest_path))
+    table.add_row("metrics", str(outcome.metrics_path))
+    console.print(table)
+
+    losses = [entry for entry in outcome.log_history if "eval_loss" in entry]
+    if losses:
+        best = min(losses, key=lambda entry: float(entry["eval_loss"]))
+        console.print(
+            f"lowest evaluation loss [bold]{float(best['eval_loss']):.4f}[/] "
+            f"at step {int(best.get('step', 0))}"
+        )
+
+
 if __name__ == "__main__":
     app()
