@@ -39,10 +39,13 @@ uv sync --extra cu128 --extra train --extra unsloth
 Per una macchina senza GPU, sufficiente per preparare i dati e calcolare le metriche:
 
 ```bash
-uv sync --extra cpu --extra dev
+uv sync --extra cpu --extra train --extra dev
 ```
 
 Copiare `.env.example` in `.env` e compilare i valori necessari.
+
+Istruzioni complete, incluso il percorso containerizzato, in [INSTALL.md](INSTALL.md); requisiti
+di sistema in [REQUIREMENTS.md](REQUIREMENTS.md).
 
 ## Uso
 
@@ -80,6 +83,44 @@ Per una prova rapida senza GPU, sostituendo il modello con uno giocattolo:
 ```bash
 uv run pstparser train --config configs/experiments/baseline.yaml --set model.backend=hf --set model.name=hf-internal-testing/tiny-random-LlamaForCausalLM --set model.load_in_4bit=false --set model.max_seq_length=512 --set training.max_steps=2 --set training.warmup_steps=0 --set training.optim=adamw_torch --set inference.max_new_tokens=32
 ```
+
+## Esecuzione in container
+
+Due immagini, costruite dallo stesso `Dockerfile` con target diversi.
+
+| Target | Base | Contenuto | Dimensione |
+|---|---|---|---|
+| `train` | PyTorch con CUDA 12.8 | Stack completo di fine-tuning | grande, richiede GPU |
+| `eval` | Python 3.11 slim | Solo ciò che serve al calcolo delle metriche | circa 660 MB |
+
+```bash
+docker build -f docker/Dockerfile --target eval -t pstparser:eval .
+```
+
+```bash
+docker compose -f docker/compose.yaml --profile eval run --rm score score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
+```
+
+L'immagine di valutazione **non contiene PyTorch né alcuna libreria di modelli**. Non è una
+questione di dimensioni: è ciò che rende le metriche ricalcolabili anche quando l'ambiente di
+training non è riproducibile, e permette di verificare i risultati su una macchina qualsiasi.
+
+L'immagine è autosufficiente: configurazioni e system prompt sono al suo interno, e l'unica cosa
+da fornire è il file di predizioni.
+
+```bash
+docker run --rm -v "$PWD/results:/work" pstparser:eval score --config configs/experiments/baseline.yaml --predictions /work/predictions.jsonl
+```
+
+Il training richiede l'NVIDIA Container Toolkit:
+
+```bash
+docker compose -f docker/compose.yaml --profile train run --rm train train --config configs/experiments/baseline.yaml
+```
+
+I pesi del modello base risiedono in un volume nominato, quindi non entrano mai nell'immagine e
+sopravvivono alle ricostruzioni. `data/`, `outputs/` e `results/` sono montate dall'host.
+
 
 ## Artefatti di una run
 
@@ -148,14 +189,15 @@ possibile risalire ai parametri esatti con cui un risultato è stato prodotto.
 
 ```
 configs/      configurazioni degli esperimenti
+docker/       Dockerfile multi-target e compose
 data/raw/     corpus annotato, immutabile
 data/splits/  identificativi delle partizioni, congelati
 prompts/      system prompt versionato
 src/pstparser/
   config/     schema tipizzato e composizione YAML
-  pst/        tassonomia e costruzione dei target
-  data/       lettura, normalizzazione, controllo di integrità, partizionamento
-  models/     caricamento del modello base
+  pst/        tassonomia, serializzazione e schema derivato
+  data/       lettura, normalizzazione, integrità, partizioni, formati di scambio
+  models/     caricamento del modello base e degli adapter
   training/   ricetta di fine-tuning
   inference/  generazione delle predizioni
   evaluation/ metriche e report
@@ -163,6 +205,11 @@ src/pstparser/
 results/      predizioni e metriche di riferimento
 tests/        suite di test
 ```
+
+Le dipendenze fra i package sono aciclee e orientate verso il basso: `pst/` non dipende da nulla,
+`data/` dipende da `pst/`, `evaluation/` dipende da `data/`, e solo `models/`, `training/` e
+`inference/` toccano PyTorch. È questa direzione a rendere possibile un ambiente di valutazione
+privo dello stack di modelli.
 
 ## Limiti noti
 

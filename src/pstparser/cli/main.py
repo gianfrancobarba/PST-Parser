@@ -250,8 +250,8 @@ def score(
     """Score predictions against their references. Runs without an accelerator."""
     experiment = _load(config, set_)
 
+    from pstparser.data import load_predictions
     from pstparser.evaluation import evaluate, write_report
-    from pstparser.inference import load_predictions
 
     records = load_predictions(predictions)
     if not records:

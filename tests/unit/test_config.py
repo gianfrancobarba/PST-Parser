@@ -9,6 +9,7 @@ import pytest
 import yaml
 
 from pstparser.config import ConfigError, ExperimentConfig, dump_resolved, load_experiment
+from pstparser.data import CorpusError, prepare_corpus
 
 
 def test_composition_merges_every_base(config_dir: Path) -> None:
@@ -80,13 +81,19 @@ def test_missing_file_is_rejected(config_dir: Path) -> None:
         load_experiment(config_dir / "does_not_exist.yaml", root=config_dir)
 
 
-def test_missing_corpus_is_rejected(config_dir: Path) -> None:
-    with pytest.raises(ValueError, match="corpus not found"):
-        load_experiment(
-            config_dir / "valid.yaml",
-            overrides=["data.source_path=tests/assets/absent.xlsx"],
-            root=config_dir,
-        )
+def test_missing_corpus_is_accepted_until_it_is_read(config_dir: Path) -> None:
+    # Scoring never opens the corpus, so a configuration that names an absent
+    # one is still usable. The failure surfaces when preparation reads it.
+    config = load_experiment(
+        config_dir / "valid.yaml",
+        overrides=["data.source_path=tests/assets/absent.xlsx"],
+        root=config_dir,
+    )
+
+    assert config.data.source_path.name == "absent.xlsx"
+
+    with pytest.raises(CorpusError, match="corpus not found"):
+        prepare_corpus(config.data)
 
 
 def test_unknown_key_is_rejected(config_dir: Path) -> None:

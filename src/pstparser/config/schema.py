@@ -56,6 +56,10 @@ class SplitConfig(_Base):
 class DataConfig(_Base):
     """Location and layout of the annotated corpus.
 
+    The corpus is only read while preparing the data, so its presence is checked
+    at that point rather than here. Scoring a prediction file therefore needs no
+    access to the annotations.
+
     Attributes:
         source_path: Spreadsheet holding the manual annotations.
         sheet_name: Worksheet to read within the spreadsheet.
@@ -74,13 +78,6 @@ class DataConfig(_Base):
     processed_dir: Path = Path("data/processed")
     quality: QualityConfig = QualityConfig()
     split: SplitConfig = SplitConfig()
-
-    @field_validator("source_path")
-    @classmethod
-    def _source_must_exist(cls, value: Path) -> Path:
-        if not value.is_file():
-            raise ValueError(f"annotated corpus not found: {value}")
-        return value
 
     @field_validator("column_mapping")
     @classmethod

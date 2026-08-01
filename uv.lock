@@ -493,8 +493,8 @@ dependencies = [
     { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-pstparser-cpu') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
     { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128')" },
     { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-pstparser-cpu') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
-    { name = "triton", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'linux' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'linux' and extra == 'extra-9-pstparser-cu128') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
-    { name = "triton", version = "3.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'linux' and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
+    { name = "triton", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'linux' and extra == 'extra-9-pstparser-cu128') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
+    { name = "triton", version = "3.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'linux' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'linux' and extra != 'extra-9-pstparser-cu128') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7e/97/45ff09cfcda7b200389204daa0125168e6544fba257adbbcdf728501d4f9/cut_cross_entropy-25.1.1.tar.gz", hash = "sha256:5fe5924509248b1aea5c890f8887c6a7759f7c8b1ebc0490e42c247c4f7c1e34", size = 22972, upload-time = "2025-01-07T12:21:53.896Z" }
 wheels = [
@@ -1821,7 +1821,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "apted" },
-    { name = "datasets" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
     { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
     { name = "openpyxl" },
@@ -1830,7 +1829,6 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rich" },
     { name = "scikit-learn" },
-    { name = "transformers" },
     { name = "typer" },
 ]
 
@@ -1859,7 +1857,9 @@ structured = [
 train = [
     { name = "accelerate" },
     { name = "bitsandbytes" },
+    { name = "datasets" },
     { name = "peft" },
+    { name = "transformers" },
     { name = "trl" },
 ]
 unsloth = [
@@ -1871,7 +1871,7 @@ requires-dist = [
     { name = "accelerate", marker = "extra == 'train'", specifier = ">=1.0" },
     { name = "apted", specifier = ">=1.0.3" },
     { name = "bitsandbytes", marker = "extra == 'train'", specifier = ">=0.45.5,!=0.46.0,!=0.48.0" },
-    { name = "datasets", specifier = ">=3.0" },
+    { name = "datasets", marker = "extra == 'train'", specifier = ">=3.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.115" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13" },
     { name = "numpy", specifier = ">=1.26,<3" },
@@ -1891,7 +1891,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.5" },
     { name = "torch", marker = "extra == 'cpu'", specifier = ">=2.5", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "pstparser", extra = "cpu" } },
     { name = "torch", marker = "extra == 'cu128'", specifier = ">=2.5", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "pstparser", extra = "cu128" } },
-    { name = "transformers", specifier = ">=4.51.3,<4.58" },
+    { name = "transformers", marker = "extra == 'train'", specifier = ">=4.51.3,<4.58" },
     { name = "trl", marker = "extra == 'train'", specifier = ">=0.18.2,<=0.24.0" },
     { name = "typer", specifier = ">=0.15" },
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0.12" },
@@ -2791,12 +2791,8 @@ name = "triton"
 version = "3.6.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128'",
-    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128'",
-    "python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
-    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
-    "python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
-    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0f/2c/96f92f3c60387e14cc45aed49487f3486f89ea27106c1b1376913c62abe4/triton-3.6.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:49df5ef37379c0c2b5c0012286f80174fcf0e073e5ade1ca9a86c36814553651", size = 176081190, upload-time = "2026-01-20T16:16:00.523Z" },
@@ -2810,12 +2806,24 @@ name = "triton"
 version = "3.7.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version >= '3.12' and sys_platform == 'win32' and extra != 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra != 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform == 'darwin' and extra == 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform == 'win32' and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version >= '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform == 'win32' and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
+    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32' and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128'",
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7b/f9/19d842d06a08559534fa1eaab6ca551b1bcf40f06620bddec1babaa2772d/triton-3.7.1-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:d4a0e1cd4c4a76370ed74a8432a53cea28716827d19e40ffc732233e35ceb3f6", size = 184664887, upload-time = "2026-06-17T20:03:42.913Z" },
@@ -2953,8 +2961,8 @@ dependencies = [
     { name = "torchvision", version = "0.28.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-9-pstparser-cpu' or extra != 'extra-9-pstparser-cu128'" },
     { name = "tqdm" },
     { name = "transformers" },
-    { name = "triton", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'emscripten' and sys_platform != 'win32' and 'linux' in sys_platform and extra == 'extra-9-pstparser-cpu') or (sys_platform != 'emscripten' and sys_platform != 'win32' and 'linux' in sys_platform and extra == 'extra-9-pstparser-cu128') or ('linux' not in sys_platform and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
-    { name = "triton", version = "3.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'emscripten' and 'linux' in sys_platform) or (sys_platform == 'win32' and 'linux' in sys_platform) or ('linux' in sys_platform and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
+    { name = "triton", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'emscripten' and sys_platform != 'win32' and 'linux' in sys_platform and extra == 'extra-9-pstparser-cu128') or ('linux' not in sys_platform and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
+    { name = "triton", version = "3.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'emscripten' and 'linux' in sys_platform) or (sys_platform == 'win32' and 'linux' in sys_platform) or ('linux' in sys_platform and extra == 'extra-9-pstparser-cpu') or ('linux' in sys_platform and extra != 'extra-9-pstparser-cu128') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
     { name = "triton-windows", marker = "(platform_machine != 'AMD64' and platform_machine != 'x86_64' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'x86_64' and sys_platform == 'win32') or (sys_platform != 'win32' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
     { name = "trl" },
     { name = "tyro" },
@@ -3014,8 +3022,8 @@ dependencies = [
     { name = "torchao", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'win32' and extra != 'extra-9-pstparser-cu128')" },
     { name = "tqdm", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'win32' and extra != 'extra-9-pstparser-cu128')" },
     { name = "transformers", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'win32' and extra != 'extra-9-pstparser-cu128')" },
-    { name = "triton", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'emscripten' and sys_platform != 'win32' and 'linux' in sys_platform and extra == 'extra-9-pstparser-cpu') or (sys_platform != 'emscripten' and sys_platform != 'win32' and 'linux' in sys_platform and extra == 'extra-9-pstparser-cu128') or ('linux' not in sys_platform and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
-    { name = "triton", version = "3.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'emscripten' and 'linux' in sys_platform and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'win32' and 'linux' in sys_platform and extra == 'extra-9-pstparser-cpu') or ('linux' in sys_platform and extra != 'extra-9-pstparser-cpu' and extra != 'extra-9-pstparser-cu128') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
+    { name = "triton", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'emscripten' and sys_platform != 'win32' and 'linux' in sys_platform and extra == 'extra-9-pstparser-cu128') or ('linux' not in sys_platform and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
+    { name = "triton", version = "3.7.1", source = { registry = "https://pypi.org/simple" }, marker = "('linux' in sys_platform and extra == 'extra-9-pstparser-cpu') or ('linux' in sys_platform and extra != 'extra-9-pstparser-cu128') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
     { name = "trl", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'win32' and extra != 'extra-9-pstparser-cu128')" },
     { name = "typing-extensions", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'win32' and extra != 'extra-9-pstparser-cu128')" },
     { name = "tyro", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'emscripten' and extra != 'extra-9-pstparser-cu128') or (sys_platform == 'win32' and extra == 'extra-9-pstparser-cpu') or (sys_platform == 'win32' and extra != 'extra-9-pstparser-cu128')" },

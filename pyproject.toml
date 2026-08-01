@@ -22,9 +22,6 @@ dependencies = [
     "numpy>=1.26,<3",
     "scikit-learn>=1.5",
     "apted>=1.0.3",
-    "datasets>=3.0",
-    # Upper bound imposed by the optimised training backend.
-    "transformers>=4.51.3,<4.58",
 ]
 
 [project.optional-dependencies]
@@ -32,8 +29,12 @@ dependencies = [
 cpu = ["torch>=2.5"]
 cu128 = ["torch>=2.5"]
 
-# GPU training stack. Requires one of the torch extras above.
+# Model stack. Requires one of the torch extras above. Scoring does not need it,
+# which is what keeps the evaluation environment small and portable.
 train = [
+    # Upper bound imposed by the optimised training backend.
+    "transformers>=4.51.3,<4.58",
+    "datasets>=3.0",
     "trl>=0.18.2,<=0.24.0",
     "peft>=0.13",
     "accelerate>=1.0",

@@ -1,0 +1,38 @@
+# Only the project sources, the lockfile and the configurations belong in the
+# build context. Everything below is either regenerated, mounted at run time, or
+# irrelevant to the image.
+
+.git/
+.github/
+.idea/
+.venv/
+venv/
+env/
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Mounted as volumes rather than copied.
+data/
+outputs/
+results/
+
+# Reference material, not needed to build or run.
+docs/
+notebooks/
+tests/
+
+.env
+.env.local
+Thumbs.db
+.DS_Store

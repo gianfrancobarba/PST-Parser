@@ -1,0 +1,56 @@
+# Two profiles, matching the two images.
+#
+#   docker compose --profile train run --rm train prepare-data -c configs/experiments/baseline.yaml
+#   docker compose --profile eval  run --rm score --predictions results/predictions.jsonl -c configs/experiments/baseline.yaml
+#
+# The training service needs the NVIDIA Container Toolkit on the host. The
+# scoring service needs nothing beyond Docker.
+
+name: pstparser
+
+services:
+  train:
+    profiles: [train]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: train
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      HF_HOME: /cache/huggingface
+      # Required for deterministic algorithms to be selectable on CUDA.
+      CUBLAS_WORKSPACE_CONFIG: ":4096:8"
+    volumes:
+      - ../data:/workspace/data
+      - ../outputs:/workspace/outputs
+      - ../results:/workspace/results
+      - model-cache:/cache/huggingface
+    # The default 64 MB of shared memory is the usual cause of data loader
+    # crashes inside containers.
+    shm_size: "8gb"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  score:
+    profiles: [eval]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: eval
+    volumes:
+      - ../data:/workspace/data
+      - ../outputs:/workspace/outputs
+      - ../results:/workspace/results
+
+volumes:
+  model-cache:

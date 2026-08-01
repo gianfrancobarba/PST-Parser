@@ -14,9 +14,9 @@ from pathlib import Path
 import pytest
 
 from pstparser.config import ExperimentConfig, load_experiment
-from pstparser.data import prepare_corpus
+from pstparser.data import load_predictions, prepare_corpus
 from pstparser.evaluation import evaluate, write_report
-from pstparser.inference import GenerationOutcome, load_predictions, run_generation
+from pstparser.inference import GenerationOutcome, run_generation
 from pstparser.training import TrainingOutcome, run_training
 
 pytestmark = pytest.mark.slow

@@ -2,6 +2,7 @@
 
 from pstparser.data.cleaning import clean_field
 from pstparser.data.excel import CorpusError, iter_rows, read_corpus, sheet_names
+from pstparser.data.predictions import PredictionRecord, load_predictions, write_predictions
 from pstparser.data.prepare import (
     PreparationResult,
     PreparedRecord,
@@ -16,6 +17,7 @@ from pstparser.data.targets import build_target
 
 __all__ = [
     "CorpusError",
+    "PredictionRecord",
     "PreparationResult",
     "PreparedRecord",
     "QualityIssue",
@@ -25,6 +27,7 @@ __all__ = [
     "check_corpus",
     "clean_field",
     "iter_rows",
+    "load_predictions",
     "load_records",
     "load_split",
     "make_split",
@@ -33,5 +36,6 @@ __all__ = [
     "save_split",
     "select",
     "sheet_names",
+    "write_predictions",
     "write_records",
 ]
