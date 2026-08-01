@@ -12,6 +12,7 @@ from pstparser.data.prepare import (
 )
 from pstparser.data.quality import QualityIssue, QualityReport, check_corpus
 from pstparser.data.splits import Split, load_split, make_split, save_split
+from pstparser.data.targets import build_target
 
 __all__ = [
     "CorpusError",
@@ -20,6 +21,7 @@ __all__ = [
     "QualityIssue",
     "QualityReport",
     "Split",
+    "build_target",
     "check_corpus",
     "clean_field",
     "iter_rows",

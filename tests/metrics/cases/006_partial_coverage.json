@@ -1,0 +1,26 @@
+{
+  "description": "Only part of the prompt is accounted for.",
+  "prompt": "Summarise the report. Keep it under two hundred words please.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "Summarise the report."
+      ],
+      "context": {
+        "format": [],
+        "constrains": [
+          "Keep it under two hundred words please."
+        ],
+        "data": [],
+        "role": []
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

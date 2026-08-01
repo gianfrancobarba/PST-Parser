@@ -1,0 +1,26 @@
+{
+  "description": "Segments carrying non-ASCII characters.",
+  "prompt": "Riassumi il testo. Usa un tono formale — niente emoji.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "Riassumi il testo."
+      ],
+      "context": {
+        "format": [
+          "Usa un tono formale — niente emoji."
+        ],
+        "constrains": [],
+        "data": [],
+        "role": []
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Riassumi il testo.\"], \"context\": {\"format\": [\"Usa un tono formale \\u2014 niente emoji.\"], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

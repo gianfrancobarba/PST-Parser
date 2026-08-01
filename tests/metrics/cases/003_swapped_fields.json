@@ -1,0 +1,28 @@
+{
+  "description": "Correct segments placed in the wrong leaf.",
+  "prompt": "Summarise the report. Do not use markdown. Answer in JSON.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "Summarise the report."
+      ],
+      "context": {
+        "format": [
+          "Answer in JSON."
+        ],
+        "constrains": [
+          "Do not use markdown."
+        ],
+        "data": [],
+        "role": []
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [\"Do not use markdown.\", \"Answer in JSON.\"], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

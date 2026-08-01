@@ -1,0 +1,28 @@
+{
+  "description": "A populated leaf is left empty by the prediction.",
+  "prompt": "You are an expert. Summarise the report. Answer in JSON.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "Summarise the report."
+      ],
+      "context": {
+        "format": [
+          "Answer in JSON."
+        ],
+        "constrains": [],
+        "data": [],
+        "role": [
+          "You are an expert."
+        ]
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": [\"You are an expert.\"]}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

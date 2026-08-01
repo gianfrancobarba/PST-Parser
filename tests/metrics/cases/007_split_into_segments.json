@@ -1,0 +1,26 @@
+{
+  "description": "A single reference segment is returned as two.",
+  "prompt": "Act as a reviewer. Check the code and report the issues.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "Check the code and report the issues."
+      ],
+      "context": {
+        "format": [],
+        "constrains": [],
+        "data": [],
+        "role": [
+          "Act as a reviewer."
+        ]
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Check the code\", \"and report the issues.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": [\"Act as a reviewer.\"]}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

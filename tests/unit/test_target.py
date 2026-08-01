@@ -6,11 +6,11 @@ import json
 
 import pytest
 
+from pstparser.data import build_target
 from pstparser.pst import (
     LEAF_PATHS,
     ROOT_KEY,
     assemble,
-    build_target,
     collect_text,
     serialise_target,
     split_path,

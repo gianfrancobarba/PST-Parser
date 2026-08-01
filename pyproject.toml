@@ -144,6 +144,7 @@ disallow_untyped_calls = false
 module = [
     "apted.*",
     "datasets.*",
+    "outlines.*",
     "peft.*",
     "sklearn.*",
     "transformers.*",

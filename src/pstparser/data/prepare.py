@@ -11,7 +11,8 @@ from pstparser.config import DataConfig
 from pstparser.data.excel import CorpusError, iter_rows, read_corpus
 from pstparser.data.quality import QualityReport, check_corpus
 from pstparser.data.splits import Split, make_split, save_split
-from pstparser.pst.target import build_target, serialise_target
+from pstparser.data.targets import build_target
+from pstparser.pst.target import serialise_target
 from pstparser.pst.taxonomy import LEAF_PATHS
 
 RECORDS_FILE = "records.jsonl"

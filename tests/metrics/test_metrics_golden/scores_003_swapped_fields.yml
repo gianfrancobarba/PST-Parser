@@ -1,0 +1,26 @@
+confusion:
+  labels:
+  - prompt.context.constrains
+  - prompt.context.format
+  - prompt.main_instruction
+  matrix:
+  - - 0
+    - 1
+    - 0
+  - - 0
+    - 1
+    - 0
+  - - 0
+    - 0
+    - 1
+coverage_score:
+- 1.0
+field_f1:
+  prompt.context.constrains: 0.0
+  prompt.context.format: 0.0
+  prompt.main_instruction: 1.0
+hallucination_rate:
+- 0.0
+json_validity_rate: 1.0
+tree_edit_distance:
+- 4.0

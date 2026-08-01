@@ -1,0 +1,12 @@
+confusion:
+  labels: []
+  matrix: []
+coverage_score:
+- 1.0
+field_f1:
+  prompt.main_instruction: 0.75
+hallucination_rate:
+- 0.4
+json_validity_rate: 1.0
+tree_edit_distance:
+- 1.0

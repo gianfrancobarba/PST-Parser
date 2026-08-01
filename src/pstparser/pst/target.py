@@ -1,4 +1,4 @@
-"""Construction and serialisation of the target object."""
+"""Serialisation of the target object and the schema it conforms to."""
 
 from __future__ import annotations
 
@@ -6,25 +6,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from pstparser.data.cleaning import clean_field
-from pstparser.pst.taxonomy import LEAF_PATHS, ROOT_KEY, assemble, split_path
-
-
-def build_target(row: Mapping[str, Any], column_mapping: Mapping[str, str]) -> dict[str, Any]:
-    """Assemble the target tree for a single annotated record.
-
-    Args:
-        row: Spreadsheet row, keyed by column name.
-        column_mapping: Mapping from dotted leaf path to source column.
-
-    Returns:
-        The nested target tree.
-
-    Raises:
-        KeyError: If ``column_mapping`` does not cover every declared leaf.
-    """
-    values = {path: clean_field(row.get(column_mapping[path]), is_list=True) for path in LEAF_PATHS}
-    return assemble(values)
+from pstparser.pst.taxonomy import LEAF_PATHS, ROOT_KEY, split_path
 
 
 def serialise_target(target: Mapping[str, Any]) -> str:
@@ -43,8 +25,7 @@ def target_json_schema() -> dict[str, Any]:
     """Derive a JSON Schema describing a well-formed target.
 
     Every leaf holds a list of text segments. The schema is generated from the
-    taxonomy, so it cannot drift from the objects produced by
-    :func:`build_target`.
+    taxonomy, so it cannot drift from the objects the pipeline produces.
 
     Returns:
         A JSON Schema document.

@@ -12,6 +12,7 @@ from pstparser.config import load_experiment
 from pstparser.data import (
     CorpusError,
     PreparationResult,
+    build_target,
     iter_rows,
     load_records,
     load_split,
@@ -20,7 +21,7 @@ from pstparser.data import (
     select,
     sheet_names,
 )
-from pstparser.pst import build_target, serialise_target
+from pstparser.pst import serialise_target
 
 #: Digest of the serialised targets produced from the shipped corpus, newline
 #: separated. Any change to the taxonomy, to cell normalisation or to the corpus

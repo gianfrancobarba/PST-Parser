@@ -1,0 +1,24 @@
+{
+  "description": "Every leaf returned empty.",
+  "prompt": "Summarise the report.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "Summarise the report."
+      ],
+      "context": {
+        "format": [],
+        "constrains": [],
+        "data": [],
+        "role": []
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

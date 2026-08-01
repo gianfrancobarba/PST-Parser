@@ -61,6 +61,16 @@ uv run pstparser prepare-data --config configs/experiments/baseline.yaml
 uv run pstparser train --config configs/experiments/baseline.yaml
 ```
 
+```bash
+# Genera le predizioni per lo split di valutazione
+uv run pstparser generate --config configs/experiments/baseline.yaml --adapter outputs/<run>/adapter
+```
+
+```bash
+# Calcola le metriche. Non richiede GPU né modello.
+uv run pstparser score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
+```
+
 Ogni comando accetta `--set chiave.annidata=valore` per sovrascrivere puntualmente la
 configurazione, ad esempio `--set training.max_steps=50`. Le sovrascritture sono registrate nella
 configurazione risolta che accompagna ogni run.
@@ -83,6 +93,42 @@ Ogni esecuzione di `train` scrive una directory sotto `outputs/`:
 
 Il manifest è ciò che rende un risultato tracciabile: consente di risalire con esattezza a quale
 codice, quali dati e quale ambiente lo hanno prodotto.
+
+`generate` e `score` producono a loro volta `predictions.jsonl`, `results.json` e
+`eval_details.jsonl`.
+
+## Valutazione
+
+La generazione è separata dal calcolo delle metriche. `generate` è l'unico stadio che richiede un
+acceleratore e persiste le predizioni; `score` legge quel file e non carica alcun modello, quindi
+gira ovunque in pochi secondi. Le predizioni di riferimento sono versionate in `results/`, per cui
+ogni numero è ricalcolabile senza GPU.
+
+Sei metriche, calcolate sulle predizioni che risultano ben formate:
+
+| Metrica | Significato | Valore atteso |
+|---|---|---|
+| Validità JSON | quota di predizioni che si parsificano | alto |
+| F1 per campo | accordo token per token con il riferimento, per nodo foglia | alto |
+| Matrice di confusione | a quale nodo è stato assegnato un segmento, contro quello corretto | diagonale |
+| Distanza di edit fra alberi | quante modifiche separano la struttura predetta da quella attesa | basso |
+| Tasso di allucinazione | quota di token predetti assenti dal prompt | zero |
+| Copertura | quota di token del prompt collocati in un nodo | uno |
+
+Il comportamento di ciascuna metrica è bloccato da casi golden in `tests/metrics/cases/`, con i
+punteggi attesi versionati accanto: una variazione non spiegata è un difetto, non un cambiamento
+silenzioso di significato.
+
+### Decoding vincolato
+
+Impostando `inference.structured_output: true` (richiede l'extra `structured`) la generazione è
+vincolata allo schema derivato dalla tassonomia, e la validità JSON diventa garantita per
+costruzione anziché misurata.
+
+Va usato con una avvertenza metodologica: in quella modalità la validità JSON smette di dire
+alcunché sul fine-tuning, perché è imposta dall'esterno. Il valore sta nel confronto fra le due
+esecuzioni — libera per misurare quanto il modello ha interiorizzato il formato, vincolata per
+valutare la qualità del contenuto a parità di formato.
 
 ## Configurazione
 
