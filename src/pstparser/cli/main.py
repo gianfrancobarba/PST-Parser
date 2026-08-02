@@ -298,6 +298,38 @@ def score(
     console.print(f"\nresults  {results_path}\ndetails  {details_path}")
 
 
+@app.command("synth")
+def synth(config: ConfigOption, set_: SetOption = None) -> None:
+    """Generate prompts for the reasoning paradigms and export them for annotation."""
+    experiment = _load(config, set_)
+
+    from pstparser.synth import ProviderError, run_synthesis
+
+    try:
+        result = run_synthesis(experiment)
+    except ProviderError as exc:
+        error_console.print(f"[bold red]Provider error:[/] {exc}")
+        raise typer.Exit(code=1) from exc
+    except FileNotFoundError as exc:
+        error_console.print(f"[bold red]Missing input:[/] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    table = Table(title="Synthesis complete", show_header=False, box=None)
+    table.add_column(style="cyan")
+    table.add_column()
+    table.add_row("requested", str(result.requested))
+    table.add_row("accepted", str(len(result.prompts)))
+    table.add_row("rejected", str(result.rejected))
+    for paradigm, count in sorted(result.per_paradigm().items()):
+        table.add_row(f"  {paradigm}", str(count))
+    table.add_row("annotation sheet", str(result.sheet_path))
+    console.print(table)
+    console.print(
+        "\nThe sheet carries the prompts only. Fill in the annotation columns before "
+        "feeding it back to 'prepare-data'."
+    )
+
+
 def _format(value: float | None, template: str) -> str:
     """Render an optional metric, marking the absence of a value."""
     return template.format(value) if value is not None else "n/a"

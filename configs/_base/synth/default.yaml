@@ -1,0 +1,16 @@
+# Expansion of the corpus with prompts exercising the reasoning paradigms,
+# which real conversations attest only rarely.
+#
+# The credential is read from the environment, never from this file.
+synth:
+  seeds_path: data/seeds/paradigms.yaml
+  output_dir: data/synthetic
+  sheet_name: synthetic
+  per_paradigm: 50
+  temperature: 1.0
+  provider:
+    base_url: https://integrate.api.nvidia.com/v1
+    model: meta/llama-3.1-70b-instruct
+    api_key_env: NVIDIA_API_KEY
+    timeout: 120.0
+    attempts: 3

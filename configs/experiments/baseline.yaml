@@ -5,6 +5,7 @@ extends:
   - _base/model/llama31_8b.yaml
   - _base/train/sft_lora.yaml
   - _base/eval/default.yaml
+  - _base/synth/default.yaml
 
 name: baseline
 seed: 42

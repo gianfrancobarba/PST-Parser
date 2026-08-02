@@ -8,8 +8,10 @@ from pstparser.config.schema import (
     InferenceConfig,
     LoraConfig,
     ModelConfig,
+    ProviderConfig,
     QualityConfig,
     SplitConfig,
+    SynthConfig,
     TrainingConfig,
 )
 
@@ -21,8 +23,10 @@ __all__ = [
     "InferenceConfig",
     "LoraConfig",
     "ModelConfig",
+    "ProviderConfig",
     "QualityConfig",
     "SplitConfig",
+    "SynthConfig",
     "TrainingConfig",
     "dump_resolved",
     "load_experiment",

@@ -1,0 +1,159 @@
+# Seed prompts guiding synthetic generation.
+#
+# Ten per reasoning paradigm, in the software engineering domain the corpus is
+# drawn from. They act as stylistic and structural templates: the generator is
+# asked to produce new prompts that exercise the same paradigm without copying
+# their content.
+#
+# The first two of each list are the seeds reported in the original work; the
+# remainder were written to complete the set.
+
+zero_shot_cot:
+  - >-
+    Calculate the Time and Space complexity of the following recursive Java function for
+    traversing a binary tree. Instruction: Don't just give the Big-O notation. Step through the
+    recursion stack depth for a balanced vs. skewed tree. Analyze the auxiliary space separately
+    from the input space.
+  - >-
+    think of all the similar data types for this purpose and general message structures and create
+    a ros 2 message type and its fields. this message will be used by specific nodes to report
+    their system resource usages
+  - >-
+    This migration keeps failing on the staging database but passes locally. Walk through what
+    differs between the two environments before proposing a fix.
+  - >-
+    Review the following authentication middleware for security issues. Reason about the request
+    lifecycle step by step, then list what you found.
+  - >-
+    Our p99 latency tripled after the last deploy while p50 stayed flat. Think through what class
+    of change produces that shape before naming a cause.
+  - >-
+    Decide whether this class should be split. Consider its responsibilities one at a time, then
+    give a verdict.
+  - >-
+    Here is a failing test and the function it covers. Explain your reasoning about the mismatch
+    before you touch any code.
+  - >-
+    Estimate how many database round trips the following endpoint makes for a single request.
+    Trace the call path rather than guessing from the code length.
+  - >-
+    This regular expression is rejecting valid input. Work through what it matches character by
+    character, then correct it.
+  - >-
+    We need to deprecate this public method. Reason about who could be calling it and what
+    breaking them would look like, then propose a migration path.
+
+few_shot_cot:
+  - >-
+    Identify the correct HTTP code.
+    User: User tries to access /admin but is not logged in.
+    Model: Thought: Authentication is missing, not authorisation. Code: 401 Unauthorized.
+    User: User is logged in but lacks the admin role.
+    Model: Thought: The identity is known but insufficient. Code: 403 Forbidden.
+    User: User requests /reports/2019 and no such report exists.
+  - >-
+    Write unit tests for the provided function.
+    User: Function: sum(a, b) return a + b;
+    Model: Thought: I need to test the happy path with positive integers, negative numbers, and
+    zero. Test: expect(sum(2, 3)).toBe(5); expect(sum(-1, 1)).toBe(0);
+    User: Function: divide(a, b) return a / b;
+  - >-
+    Classify the severity of the incident.
+    User: A single background job retried once and succeeded.
+    Model: Thought: No user impact and the system self-healed. Severity: low.
+    User: Checkout returns 500 for all users.
+    Model: Thought: Total loss of the revenue path. Severity: critical.
+    User: One region shows elevated error rates on image uploads.
+  - >-
+    Decide whether the change needs a database migration.
+    User: Renaming a private Python helper.
+    Model: Thought: No persisted structure is touched. Answer: no migration.
+    User: Adding a nullable column used by a new feature flag.
+    Model: Thought: The schema changes even though the column is optional. Answer: migration
+    required, backwards compatible.
+    User: Changing a column from varchar to text.
+  - >-
+    Name the design pattern in use.
+    User: A class that exposes a single instance through a static accessor.
+    Model: Thought: Instance creation is controlled and global. Pattern: Singleton.
+    User: An interface with several implementations chosen at runtime by a factory method.
+    Model: Thought: Construction is deferred to a subtype. Pattern: Factory Method.
+    User: An object that wraps another and adds behaviour without changing its interface.
+  - >-
+    Given a commit message, say whether it follows the convention.
+    User: "fix: handle empty payload in the webhook receiver"
+    Model: Thought: Type prefix present, imperative, under seventy-two characters. Answer:
+    compliant.
+    User: "Fixed some stuff."
+    Model: Thought: No type, past tense, no scope of change. Answer: not compliant.
+    User: "feat(auth): add refresh token rotation"
+  - >-
+    Choose the right log level.
+    User: A retry succeeded on the second attempt.
+    Model: Thought: Expected transient condition, no action needed. Level: info.
+    User: A configuration key is missing and a default was used.
+    Model: Thought: The system continues but the operator should know. Level: warning.
+    User: The connection pool is exhausted and requests are being dropped.
+  - >-
+    State whether the two snippets are functionally equivalent.
+    User: A for loop accumulating into a list, and the same expressed as a list comprehension.
+    Model: Thought: Same iteration order, same result, no side effects. Answer: equivalent.
+    User: A filter followed by a map, and a map followed by a filter over the same predicate.
+    Model: Thought: The order changes which elements the map sees. Answer: not equivalent.
+    User: A recursive factorial and an iterative one, for non-negative inputs.
+  - >-
+    Identify the root cause category of the stack trace.
+    User: NullPointerException raised inside a getter after a failed dependency injection.
+    Model: Thought: The object was never wired. Category: configuration.
+    User: OutOfMemoryError during a bulk export of a large table.
+    Model: Thought: The whole result set is materialised. Category: resource exhaustion.
+    User: ConcurrentModificationException while iterating a shared collection.
+  - >-
+    Decide whether the API change is breaking.
+    User: Adding an optional query parameter.
+    Model: Thought: Existing calls keep working unchanged. Answer: not breaking.
+    User: Removing a field from the response body.
+    Model: Thought: Consumers reading that field will fail. Answer: breaking.
+    User: Making a previously optional request field required.
+
+tree_of_thoughts:
+  - >-
+    You are a CTO designing a social media feed system. We need to choose a database technology to
+    store user activity logs such as likes, clicks and views. Input: high write throughput of a
+    hundred thousand writes per second, flexible schema, eventual consistency is acceptable.
+    Process: generate three candidate options, evaluate each against the constraints, then commit
+    to one.
+  - >-
+    I am starting a large-scale React e-commerce application and need to decide on a state
+    management strategy. Generate options: React Context with useReducer only, Redux Toolkit, or a
+    lightweight atomic store. Evaluate each on testability, bundle size and team ramp-up, then
+    recommend one.
+  - >-
+    We must cut our cloud bill by a third within a quarter. Propose three distinct strategies,
+    estimate the saving and the risk of each, then argue for the one you would run first.
+  - >-
+    Our monolith needs to be broken up. Lay out at least three possible seams along which to split
+    it, weigh each against team boundaries and data coupling, then choose.
+  - >-
+    Design the retry policy for a payment webhook. Consider a fixed interval, exponential backoff
+    with jitter, and a dead letter queue after a bounded number of attempts. Compare them on
+    duplicate risk and operator burden before deciding.
+  - >-
+    We need to add full text search. Explore three approaches: the database's own search, a
+    dedicated search engine, and an external hosted service. Assess operational cost, relevance
+    quality and migration effort, then pick one.
+  - >-
+    Choose a rollout strategy for a change to the pricing engine. Consider a big-bang deploy, a
+    percentage rollout behind a flag, and a shadow run against production traffic. Evaluate each
+    on blast radius and time to signal, then decide.
+  - >-
+    Our test suite takes forty minutes. Generate three separate lines of attack, judge each on how
+    much time it saves against how much it costs to maintain, then commit to a plan.
+  - >-
+    Decide how to store uploaded documents. Weigh object storage with signed URLs, a blob column in
+    the primary database, and a dedicated file service. Compare on cost, backup complexity and
+    access control, then choose.
+  - >-
+    We need to support a second tenant with isolated data. Explore separate databases, a shared
+    database with a tenant column, and separate schemas. Evaluate each on isolation guarantees,
+    operational overhead and query complexity, then recommend one.
