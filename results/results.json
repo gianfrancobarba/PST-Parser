@@ -1,0 +1,88 @@
+{
+  "total": 88,
+  "valid": 82,
+  "json_validity_rate": 0.9318181818181818,
+  "field_f1": {
+    "prompt.context.constrains": 0.4829738358018135,
+    "prompt.context.data": 0.7974073946989787,
+    "prompt.context.format": 0.5237569368285849,
+    "prompt.context.role": 1.0,
+    "prompt.examples": 0.7774774774774775,
+    "prompt.main_instruction": 0.9127134613050772
+  },
+  "mean_tree_edit_distance": 1.548780487804878,
+  "mean_hallucination_rate": 0.003900616730829144,
+  "mean_coverage_score": 0.9971466998239609,
+  "confusion": {
+    "labels": [
+      "prompt.context.constrains",
+      "prompt.context.data",
+      "prompt.context.format",
+      "prompt.context.role",
+      "prompt.examples",
+      "prompt.main_instruction"
+    ],
+    "matrix": [
+      [
+        6,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        37,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        8,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        3,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        7,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        63
+      ]
+    ]
+  },
+  "top_confusions": [
+    {
+      "expected": "prompt.context.format",
+      "predicted": "prompt.context.constrains",
+      "count": 1
+    },
+    {
+      "expected": "prompt.context.data",
+      "predicted": "prompt.context.constrains",
+      "count": 1
+    }
+  ]
+}

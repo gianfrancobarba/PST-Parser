@@ -1,0 +1,173 @@
+{
+  "stage": "train",
+  "experiment": "baseline",
+  "created_at": "2026-08-02T13:19:48+00:00",
+  "package_version": "0.1.0",
+  "git": {
+    "commit": "e6c28b842644fc3b0fb29e548167a8a0afbe43ac",
+    "branch": "main",
+    "dirty": true
+  },
+  "config": {
+    "resolved": {
+      "name": "baseline",
+      "seed": 42,
+      "system_prompt_path": "prompts/system_pst.md",
+      "data": {
+        "source_path": "data/raw/prompt_dataset_v2.xlsx",
+        "sheet_name": "prompt_dataset_v2",
+        "prompt_column": "PROMPT",
+        "column_mapping": {
+          "main_instruction": "MAIN INSTRUCTION",
+          "context.format": "FORMAT",
+          "context.constrains": "CONSTRAINS",
+          "context.data": "DATA",
+          "context.role": "ROLE",
+          "examples": "EXAMPLES",
+          "reasoning.influence": "INFLUENCE",
+          "reasoning.reasoning_examples": "REASONING EXAMPLES",
+          "reasoning.paths": "PATHS"
+        },
+        "processed_dir": "data/processed",
+        "quality": {
+          "min_coverage_ratio": 0.9,
+          "fail_on_issues": false
+        },
+        "split": {
+          "eval_fraction": 0.09,
+          "random_state": 42,
+          "output_dir": "data/splits"
+        }
+      },
+      "model": {
+        "backend": "unsloth",
+        "name": "unsloth/Meta-Llama-3.1-8B-Instruct",
+        "revision": null,
+        "max_seq_length": 4096,
+        "load_in_4bit": true,
+        "dtype": null,
+        "chat_template": "llama-3.1"
+      },
+      "lora": {
+        "r": 16,
+        "alpha": 32,
+        "dropout": 0.0,
+        "bias": "none",
+        "target_modules": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "use_gradient_checkpointing": "unsloth",
+        "random_state": 3407
+      },
+      "training": {
+        "output_dir": "outputs",
+        "per_device_train_batch_size": 2,
+        "per_device_eval_batch_size": 2,
+        "gradient_accumulation_steps": 4,
+        "learning_rate": 0.0002,
+        "optim": "adamw_8bit",
+        "max_steps": 300,
+        "warmup_steps": 10,
+        "seed": 3407,
+        "eval_strategy": "steps",
+        "eval_steps": 50,
+        "logging_steps": 10,
+        "completion_only_loss": false,
+        "prediction_loss_only": false,
+        "load_best_model_at_end": false,
+        "precision": "auto"
+      },
+      "inference": {
+        "max_new_tokens": 4096,
+        "do_sample": false,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "structured_output": false,
+        "batch_size": 1
+      },
+      "evaluation": {
+        "ted_failure_penalty": 100.0,
+        "confusion_top_k": 5
+      },
+      "synth": {
+        "seeds_path": "data/seeds/paradigms.yaml",
+        "output_dir": "data/synthetic",
+        "sheet_name": "synthetic",
+        "per_paradigm": 50,
+        "temperature": 1.0,
+        "provider": {
+          "base_url": "https://integrate.api.nvidia.com/v1",
+          "model": "meta/llama-3.1-70b-instruct",
+          "api_key_env": "NVIDIA_API_KEY",
+          "timeout": 120.0,
+          "attempts": 3
+        }
+      }
+    },
+    "digest": "f841897326a173ec91fae146090f693e8f9f7d0ffb351799db3900ef5608b972"
+  },
+  "inputs": {
+    "corpus": "e88481cec1662af13596d502f6b20e43b0032f8e401b81c3815d1209e7552eb4",
+    "records": "6c7f5284b9a8a32875e17567807fd735e1c0d7cc9c4ed43bc0beb239ebfa2ff5",
+    "system_prompt": "cd4aa0d64e638463a7997d638d3dddaf737eb0eb62da96a7a09db21590012f30"
+  },
+  "seeds": {
+    "global_seed": 42,
+    "applied": {
+      "pythonhashseed": 42,
+      "random": 42,
+      "numpy": 42,
+      "torch": 42,
+      "torch.cuda": 42,
+      "transformers": 42
+    },
+    "unavailable": []
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.35",
+    "processor": "x86_64",
+    "packages": {
+      "torch": "2.11.0+cu128",
+      "transformers": "4.57.3",
+      "trl": "0.24.0",
+      "peft": "0.19.1",
+      "accelerate": "1.14.0",
+      "datasets": "4.3.0",
+      "bitsandbytes": "0.50.0",
+      "unsloth": "2025.12.9",
+      "unsloth_zoo": "2026.7.7",
+      "numpy": "2.0.2",
+      "pandas": "2.2.2",
+      "scikit-learn": "1.6.1"
+    },
+    "accelerator": {
+      "available": true,
+      "torch": "2.11.0+cu128",
+      "cuda": "12.8",
+      "devices": [
+        "NVIDIA L4"
+      ],
+      "capability": [
+        8,
+        9
+      ]
+    }
+  },
+  "dataset": {
+    "train_size": 887,
+    "eval_size": 88,
+    "chat_template_digest": "13fa181e503beab67515cef88b2ade67234338b325ac72180147e9cbe4efbd4d"
+  },
+  "parameters": {
+    "trainable": 41943040,
+    "total": 8072204288
+  },
+  "adapter_digest": "3674b6f0aafc967159a9bc8f5f432db5d1e9f9a69316a3c42a2223288f9269b1"
+}

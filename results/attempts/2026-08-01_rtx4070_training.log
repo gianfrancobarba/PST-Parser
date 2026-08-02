@@ -1,0 +1,52 @@
+/workspace/src/pstparser/models/loader.py:196: UserWarning: WARNING: Unsloth should be imported before [transformers] to ensure all optimizations are applied. Your code may run slower or encounter memory issues without these optimizations.
+
+Please restructure your imports with 'import unsloth' at the top of your file.
+  from unsloth import FastLanguageModel
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+[torchao|WARNING]Failed to load /opt/venv/lib/python3.11/site-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /opt/venv/lib/python3.11/site-packages/torchao/_C_cutlass_90a.abi3.so
+[torchao|WARNING]Failed to load /opt/venv/lib/python3.11/site-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /opt/venv/lib/python3.11/site-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2025.12.9: Fast Llama patching. Transformers: 4.57.3.
+   \\   /|    NVIDIA GeForce RTX 4070 Laptop GPU. Num GPUs = 1. Max memory: 7.996 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.11.0+cu128. CUDA: 8.9. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Unsloth 2025.12.9 patched 32 layers with 32 QKV layers, 32 O layers and 32 MLP layers.
+[trl.trainer.sft_trainer|WARNING][RANK 0] You are using a per_device_train_batch_size of 1 with padding-free training. Using a batch size of 1 anihilate the benefits of padding-free training. Please consider increasing the batch size to at least 2.
+Unsloth: We found double BOS tokens - we shall remove one automatically.
+
+Unsloth: Tokenizing ["text"] (num_proc=6):   0%|          | 0/887 [00:00<?, ? examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  17%|█▋        | 148/887 [00:01<00:06, 113.34 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  33%|███▎      | 296/887 [00:01<00:02, 239.51 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  50%|█████     | 444/887 [00:01<00:01, 333.25 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  67%|██████▋   | 592/887 [00:01<00:00, 424.02 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  83%|████████▎ | 740/887 [00:02<00:00, 531.06 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6): 100%|██████████| 887/887 [00:02<00:00, 562.00 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6): 100%|██████████| 887/887 [00:02<00:00, 373.77 examples/s]
+Unsloth: We found double BOS tokens - we shall remove one automatically.
+
+Unsloth: Tokenizing ["text"] (num_proc=6):   0%|          | 0/88 [00:00<?, ? examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  17%|█▋        | 15/88 [00:00<00:04, 16.97 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  34%|███▍      | 30/88 [00:01<00:01, 29.68 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  51%|█████     | 45/88 [00:01<00:01, 41.26 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  68%|██████▊   | 60/88 [00:01<00:00, 53.03 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6):  84%|████████▍ | 74/88 [00:01<00:00, 53.61 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6): 100%|██████████| 88/88 [00:01<00:00, 60.55 examples/s]
+Unsloth: Tokenizing ["text"] (num_proc=6): 100%|██████████| 88/88 [00:02<00:00, 43.71 examples/s]
+🦥 Unsloth: Padding-free auto-enabled, enabling faster training.
+The model is already on multiple devices. Skipping the move to device specified in `args`.
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 887 | Num Epochs = 3 | Total steps = 300
+O^O/ \_/ \    Batch size per device = 1 | Gradient accumulation steps = 8
+\        /    Data Parallel GPUs = 1 | Total batch size (1 x 8 x 1) = 8
+ "-____-"     Trainable parameters = 41,943,040 of 8,072,204,288 (0.52% trained)
+
+
+                                                  
+
+
+                                                  
+{'loss': 0.4276, 'grad_norm': 0.20047622919082642, 'learning_rate': 0.00019379310344827587, 'epoch': 0.18}
+
+EXIT=137
