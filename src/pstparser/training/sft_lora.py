@@ -234,6 +234,7 @@ def build_trainer(
         "eval_steps": training.eval_steps,
         "logging_steps": training.logging_steps,
         "completion_only_loss": training.completion_only_loss,
+        "prediction_loss_only": training.prediction_loss_only,
         "fp16": fp16,
         "bf16": bf16,
         "report_to": [],

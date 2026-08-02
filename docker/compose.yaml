@@ -11,6 +11,8 @@ name: pstparser
 services:
   train:
     profiles: [train]
+    # Naming the image explicitly keeps it from diverging from one built by hand.
+    image: pstparser:train
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -43,6 +45,7 @@ services:
 
   score:
     profiles: [eval]
+    image: pstparser:eval
     build:
       context: ..
       dockerfile: docker/Dockerfile

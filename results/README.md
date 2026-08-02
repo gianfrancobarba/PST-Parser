@@ -19,5 +19,14 @@ uv run pstparser score --config configs/experiments/baseline.yaml --predictions 
 Chiunque può così rigenerare ogni numero in pochi secondi, verificarlo, o applicare metriche
 diverse alle stesse predizioni.
 
-La directory è al momento vuota: popolarla richiede una run di training e generazione su GPU con
-il modello reale.
+La directory è al momento priva di predizioni: popolarla richiede una run di training e generazione
+su GPU con il modello reale.
+
+## Tentativi
+
+`attempts/` raccoglie i resoconti delle esecuzioni non andate a buon fine, con i registri completi.
+Servono a non ripetere diagnosi già fatte e a documentare i vincoli hardware incontrati.
+
+| Data | Hardware | Esito |
+|---|---|---|
+| 2026-08-01 | RTX 4070 Laptop, 8 GB | interrotto allo step 25 su 300 per throttling termico; nessun modello prodotto |

@@ -26,8 +26,10 @@ dependencies = [
 
 [project.optional-dependencies]
 # Torch build selection. These extras are mutually exclusive: pick exactly one.
-cpu = ["torch>=2.5"]
-cu128 = ["torch>=2.5"]
+# torchvision is listed alongside torch because the optimised backend requires it
+# and its native operators only register against the matching torch build.
+cpu = ["torch>=2.5", "torchvision>=0.20"]
+cu128 = ["torch>=2.5", "torchvision>=0.20"]
 
 # Model stack. Requires one of the torch extras above. Scoring does not need it,
 # which is what keeps the evaluation environment small and portable.
@@ -80,6 +82,10 @@ torch = [
     { index = "pytorch-cpu", extra = "cpu" },
     { index = "pytorch-cu128", extra = "cu128" },
 ]
+torchvision = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu128", extra = "cu128" },
+]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
@@ -106,6 +112,9 @@ packages = ["src/pstparser"]
 line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
+# The Colab notebook is a thin caller, not project source: it runs in an
+# environment this configuration does not describe.
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = [
@@ -145,6 +154,7 @@ disallow_untyped_calls = false
 module = [
     "apted.*",
     "datasets.*",
+    "openpyxl.*",
     "outlines.*",
     "peft.*",
     "sklearn.*",

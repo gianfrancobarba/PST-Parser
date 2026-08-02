@@ -174,6 +174,10 @@ def resolve_precision(precision: Precision) -> tuple[bool, bool]:
 def trainable_parameters(model: Model) -> tuple[int, int]:
     """Count the trainable and total parameters of a model.
 
+    Quantised weights are stored packed several to a byte, so the size of their
+    tensor is smaller than the number of parameters it represents. Those are
+    counted from the storage width rather than from the element count.
+
     Args:
         model: Any torch module.
 
@@ -183,11 +187,23 @@ def trainable_parameters(model: Model) -> tuple[int, int]:
     total = 0
     trainable = 0
     for parameter in model.parameters():
-        count = parameter.numel()
+        count = _parameter_count(parameter)
         total += count
         if parameter.requires_grad:
             trainable += count
     return trainable, total
+
+
+def _parameter_count(parameter: Any) -> int:
+    """Return how many parameters a tensor holds, undoing any packing."""
+    count: int = parameter.numel()
+    if type(parameter).__name__ != "Params4bit":
+        return count
+
+    storage = getattr(parameter, "quant_storage", None)
+    width = int(storage.itemsize) if storage is not None else int(parameter.element_size())
+    # Two values share every byte of storage.
+    return count * 2 * width
 
 
 def _import_unsloth() -> Any:

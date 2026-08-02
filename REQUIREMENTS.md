@@ -26,10 +26,42 @@ qualche centinaio di righe impiega pochi secondi.
 
 | Risorsa | Minimo | Note |
 |---|---|---|
-| GPU | NVIDIA con 16 GB di VRAM | Il modello base è caricato a 4 bit |
+| GPU | NVIDIA con 8 GB di VRAM | Il modello base è caricato a 4 bit |
 | Driver NVIDIA | 550 o successivo | Richiesto da CUDA 12.8 |
 | RAM di sistema | 16 GB | |
 | Spazio su disco | 40 GB | Immagine, pesi del modello base, artefatti delle run |
+
+#### GPU da 8 GB
+
+La configurazione di riferimento usa `per_device_train_batch_size: 2`, che su 8 GB di VRAM è al
+limite. La via corretta è **dimezzare il batch e raddoppiare l'accumulo**:
+
+```bash
+--set training.per_device_train_batch_size=1 --set training.gradient_accumulation_steps=8
+```
+
+La dimensione effettiva del batch resta 8, quindi la traiettoria di ottimizzazione è la stessa:
+cambia solo il picco di memoria per le attivazioni.
+
+Sul corpus disponibile le sequenze di training, comprensive del system prompt da 542 token, hanno
+questa distribuzione:
+
+| | token |
+|---|---:|
+| mediana | 836 |
+| 75° percentile | 1372 |
+| 90° percentile | 2162 |
+| 95° percentile | 2646 |
+| 99° percentile | 3415 |
+| massimo | 5314 |
+
+Solo **4 sequenze su 975 (0.4%)** superano i 4096 token e vengono troncate. La memoria occupata
+dalle attivazioni dipende dalla lunghezza effettiva del batch, non da `max_seq_length`: dato che
+metà degli esempi sta sotto gli 836 token, la maggior parte dei passi è ben al di sotto del caso
+peggiore.
+
+Se anche a batch 1 la memoria non basta, ridurre `model.max_seq_length` a 3072 tronca l'1.7% degli
+esempi invece dello 0.4%.
 
 Il modello base viene scaricato al primo utilizzo (circa 6 GB a 4 bit) e conservato nella cache di
 Hugging Face. In Docker la cache è un volume nominato, quindi sopravvive alla ricostruzione delle

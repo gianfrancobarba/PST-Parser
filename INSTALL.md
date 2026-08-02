@@ -17,7 +17,7 @@ docker build -f docker/Dockerfile --target eval -t pstparser:eval .
 docker compose -f docker/compose.yaml --profile eval run --rm score score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
 ```
 
-L'immagine non contiene PyTorch né alcuna libreria di modelli: pesa circa 660 MB e gira su qualsiasi
+L'immagine non contiene PyTorch né alcuna libreria di modelli: pesa 913 MB e gira su qualsiasi
 macchina.
 
 ### Senza Docker

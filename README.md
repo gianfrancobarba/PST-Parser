@@ -25,7 +25,7 @@ prompt
 
 - Python 3.11 o 3.12
 - [`uv`](https://docs.astral.sh/uv/) per la gestione dell'ambiente
-- Per il training: GPU NVIDIA con almeno 16 GB di VRAM e driver compatibili con CUDA 12.8
+- Per il training: GPU NVIDIA con almeno 8 GB di VRAM e driver compatibili con CUDA 12.8
 - Un token Hugging Face con permesso di lettura, se il modello base è ad accesso condizionato
 
 La sola valutazione non richiede GPU.
@@ -78,6 +78,17 @@ Ogni comando accetta `--set chiave.annidata=valore` per sovrascrivere puntualmen
 configurazione, ad esempio `--set training.max_steps=50`. Le sovrascritture sono registrate nella
 configurazione risolta che accompagna ogni run.
 
+I valori sono interpretati come YAML, dove `no`, `yes`, `on` e `off` sono booleani. Per passare una
+di quelle parole come testo va virgolettata: `--set 'training.eval_strategy="no"'`. Un tipo
+sbagliato viene comunque rifiutato dalla validazione prima che il run inizi.
+
+Su una GPU con 8 GB di VRAM, dimezzare il batch e raddoppiare l'accumulo lascia invariata la
+dimensione effettiva, e quindi la traiettoria di ottimizzazione:
+
+```bash
+uv run pstparser train --config configs/experiments/baseline.yaml --set training.per_device_train_batch_size=1 --set training.gradient_accumulation_steps=8
+```
+
 Per una prova rapida senza GPU, sostituendo il modello con uno giocattolo:
 
 ```bash
@@ -90,8 +101,8 @@ Due immagini, costruite dallo stesso `Dockerfile` con target diversi.
 
 | Target | Base | Contenuto | Dimensione |
 |---|---|---|---|
-| `train` | PyTorch con CUDA 12.8 | Stack completo di fine-tuning | grande, richiede GPU |
-| `eval` | Python 3.11 slim | Solo ciò che serve al calcolo delle metriche | circa 660 MB |
+| `train` | Python 3.11 slim | Stack completo di fine-tuning, richiede GPU | 12.8 GB |
+| `eval` | Python 3.11 slim | Solo ciò che serve al calcolo delle metriche | 913 MB |
 
 ```bash
 docker build -f docker/Dockerfile --target eval -t pstparser:eval .
@@ -170,6 +181,30 @@ Va usato con una avvertenza metodologica: in quella modalità la validità JSON 
 alcunché sul fine-tuning, perché è imposta dall'esterno. Il valore sta nel confronto fra le due
 esecuzioni — libera per misurare quanto il modello ha interiorizzato il formato, vincolata per
 valutare la qualità del contenuto a parità di formato.
+
+## Espansione del corpus
+
+Il corpus proviene da conversazioni reali fra sviluppatori e assistente, dove le richieste dirette
+dominano: i rami della tassonomia che descrivono il ragionamento sono quasi privi di esempi. Il
+comando `synth` genera prompt aggiuntivi per quei paradigmi, partendo da trenta seed scritti a mano
+in `data/seeds/paradigms.yaml`.
+
+```bash
+uv run pstparser synth --config configs/experiments/baseline.yaml
+```
+
+Il provider è un qualunque servizio con endpoint di chat completions compatibile con il formato
+OpenAI; la credenziale è letta dall'ambiente, mai da un file di configurazione.
+
+**Il comando produce prompt, non annotazioni.** L'output è un foglio con la colonna del prompt
+compilata e le colonne di annotazione vuote, con lo stesso layout del corpus: va etichettato a mano
+prima di poter rientrare in `prepare-data`. Questo passaggio resta lavoro umano.
+
+## Notebook Colab
+
+`notebooks/colab.ipynb` clona il repository e invoca la stessa interfaccia a riga di comando usata
+in locale e in container. Non contiene logica: logica duplicata sarebbe la prima cosa a divergere
+dal resto del progetto.
 
 ## Configurazione
 

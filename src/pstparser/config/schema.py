@@ -171,6 +171,10 @@ class TrainingConfig(_Base):
         logging_steps: Interval between training metric emissions.
         completion_only_loss: When true, the loss ignores the prompt tokens and
             is computed on the assistant turn alone.
+        prediction_loss_only: When true, evaluation reports the loss alone and
+            does not retain the predicted distributions. Those tensors are the
+            size of the vocabulary times the sequence length, so keeping them is
+            what makes evaluation more demanding than training.
         load_best_model_at_end: When true, the checkpoint with the best
             validation loss is restored once training finishes.
         precision: Compute precision. ``auto`` selects bf16 where the device
@@ -190,6 +194,7 @@ class TrainingConfig(_Base):
     eval_steps: int = Field(default=50, gt=0)
     logging_steps: int = Field(default=10, gt=0)
     completion_only_loss: bool = False
+    prediction_loss_only: bool = False
     load_best_model_at_end: bool = False
     precision: Precision = "auto"
 
@@ -248,6 +253,47 @@ class EvaluationConfig(_Base):
     confusion_top_k: int = Field(default=5, gt=0)
 
 
+class ProviderConfig(_Base):
+    """Remote service used to expand the corpus.
+
+    Attributes:
+        base_url: Root of a chat completions API compatible with the OpenAI wire
+            format.
+        model: Identifier of the model to call.
+        api_key_env: Environment variable holding the credential. The value is
+            never stored in a configuration file.
+        timeout: Seconds to wait for a response.
+        attempts: How many times a failing request is retried.
+    """
+
+    base_url: str = "https://integrate.api.nvidia.com/v1"
+    model: str = "meta/llama-3.1-70b-instruct"
+    api_key_env: str = "NVIDIA_API_KEY"
+    timeout: float = Field(default=120.0, gt=0.0)
+    attempts: int = Field(default=3, gt=0)
+
+
+class SynthConfig(_Base):
+    """Generation of additional prompts for the reasoning paradigms.
+
+    Attributes:
+        seeds_path: File holding the seed prompts, grouped by paradigm.
+        output_dir: Directory receiving the annotation sheet.
+        sheet_name: Name given to the worksheet, matching the corpus layout.
+        per_paradigm: How many prompts to request for each paradigm.
+        temperature: Sampling temperature. Higher values widen the variety at
+            the cost of adherence to the paradigm.
+        provider: The service producing the completions.
+    """
+
+    seeds_path: Path = Path("data/seeds/paradigms.yaml")
+    output_dir: Path = Path("data/synthetic")
+    sheet_name: str = "synthetic"
+    per_paradigm: int = Field(default=50, gt=0)
+    temperature: float = Field(default=1.0, ge=0.0, le=2.0)
+    provider: ProviderConfig = ProviderConfig()
+
+
 class ExperimentConfig(_Base):
     """Full description of a single experiment.
 
@@ -262,6 +308,7 @@ class ExperimentConfig(_Base):
         training: Fine-tuning hyperparameters.
         inference: Decoding parameters.
         evaluation: Scoring options.
+        synth: Options for expanding the corpus.
     """
 
     name: str = Field(min_length=1)
@@ -273,6 +320,7 @@ class ExperimentConfig(_Base):
     training: TrainingConfig = TrainingConfig()
     inference: InferenceConfig = InferenceConfig()
     evaluation: EvaluationConfig = EvaluationConfig()
+    synth: SynthConfig = SynthConfig()
 
     @field_validator("system_prompt_path")
     @classmethod
