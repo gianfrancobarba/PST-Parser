@@ -4,13 +4,19 @@
 
 | Componente | Versione | Note |
 |---|---|---|
-| Python | 3.11 o 3.12 | Gestito da `uv`, non serve installarlo a mano |
+| Python | 3.11 | Fissata in `.python-version`; `uv` la installa da sé |
 | [`uv`](https://docs.astral.sh/uv/) | 0.11 o successiva | Gestore di ambiente e dipendenze |
 | Git | qualsiasi | Il manifest di run registra il commit corrente |
 | Docker | 24 o successiva | Solo per l'esecuzione containerizzata |
 | NVIDIA Container Toolkit | 1.17 o successiva | Solo per il training in container |
 
 Le versioni esatte di tutte le dipendenze Python sono fissate in `uv.lock`, che è versionato.
+
+Il pacchetto dichiara di supportare sia 3.11 sia 3.12, ma l'ambiente del repository è fissato a
+**3.11** in `.python-version`. Senza quel vincolo `uv` sceglierebbe l'interprete più alto
+disponibile, e il lock risolve dipendenze diverse a seconda della versione: lo stesso `uv sync`
+produrrebbe ambienti diversi su macchine diverse. La versione fissata è anche quella su cui sono
+tarati il controllo dei tipi, le regole di stile e le immagini container.
 
 ## Hardware
 
