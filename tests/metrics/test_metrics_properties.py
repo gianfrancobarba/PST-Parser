@@ -119,7 +119,26 @@ def test_identical_trees_score_one_on_every_field(tree: dict[str, object]) -> No
 
     scores = field_f1_scores([serialised], [serialised])
 
-    assert all(value == 1.0 for value in scores.values())
+    assert all(score.f1 == 1.0 for score in scores.values() if score.support)
+
+
+@given(trees)
+def test_a_field_holding_nothing_is_left_unscored(tree: dict[str, object]) -> None:
+    serialised = serialise_target(tree)
+
+    scores = field_f1_scores([serialised], [serialised])
+
+    assert all(score.f1 is None for score in scores.values() if not score.support)
+
+
+@given(trees)
+def test_field_scores_stay_within_bounds(tree: dict[str, object]) -> None:
+    empty = serialise_target(assemble({path: [] for path in LEAF_PATHS}))
+
+    for score in field_f1_scores([serialise_target(tree)], [empty]).values():
+        assert 0.0 <= score.precision <= 1.0
+        assert 0.0 <= score.recall <= 1.0
+        assert score.f1 is None or 0.0 <= score.f1 <= 1.0
 
 
 @given(trees)
@@ -138,6 +157,14 @@ def test_segments_abutting_in_the_prompt_are_reported_as_invented() -> None:
 
     assert hallucination_rates([serialise_target(tree)], ["abcd"]) == [1.0]
     assert hallucination_rates([serialise_target(tree)], ["ab cd"]) == [0.0]
+
+
+def test_faithfulness_has_no_value_when_nothing_was_emitted() -> None:
+    # A share of what the model emitted is undefined when it emitted nothing.
+    # Reporting zero would read as perfect faithfulness for an empty answer.
+    empty = serialise_target(assemble({path: [] for path in LEAF_PATHS}))
+
+    assert hallucination_rates([empty], ["some prompt"]) == [None]
 
 
 @given(trees)

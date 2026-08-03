@@ -1,0 +1,24 @@
+{
+  "description": "A word the prompt repeats is placed once, which only counting sets forgives.",
+  "prompt": "log the error and log the warning",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "log the error and log the warning"
+      ],
+      "context": {
+        "format": [],
+        "constrains": [],
+        "data": [],
+        "role": []
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"log the error and\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

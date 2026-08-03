@@ -75,6 +75,32 @@ def test_means_are_absent_when_nothing_parses() -> None:
     assert report.field_f1 == {}
 
 
+def test_a_parseable_object_of_the_wrong_shape_is_not_valid() -> None:
+    reference = target(main_instruction=["Summarise."])
+
+    report = evaluate(['{"prompt": {}}'], [reference], ["Summarise."], CONFIG)
+
+    assert report.valid == 0
+    assert report.json_validity_rate == 0.0
+    assert report.parse_rate == 1.0
+
+
+def test_details_carry_the_reconstruction_of_each_example() -> None:
+    reference = target(main_instruction=["Summarise the report."])
+    partial = target(main_instruction=["Summarise"])
+
+    report = evaluate(
+        [reference, partial, "{broken"],
+        [reference] * 3,
+        ["Summarise the report."] * 3,
+        CONFIG,
+    )
+
+    assert [detail.reconstructed for detail in report.details] == [True, False, None]
+    assert [detail.alignment_rate for detail in report.details] == [1.0, 1.0, None]
+    assert report.reconstruction.exact_reconstruction_rate == pytest.approx(1 / 3)
+
+
 def test_misaligned_sequences_are_rejected() -> None:
     reference = target()
 
@@ -92,12 +118,21 @@ def test_report_serialises_every_metric() -> None:
         "total",
         "valid",
         "json_validity_rate",
+        "parse_rate",
         "field_f1",
+        "reconstruction",
         "mean_tree_edit_distance",
         "mean_hallucination_rate",
         "mean_coverage_score",
         "confusion",
         "top_confusions",
+    }
+    assert set(restored["field_f1"]["prompt.main_instruction"]) == {
+        "precision",
+        "recall",
+        "f1",
+        "support",
+        "predicted",
     }
 
 

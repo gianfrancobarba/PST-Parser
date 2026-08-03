@@ -4,7 +4,20 @@ confusion:
 coverage_score:
 - 0.0
 field_f1: {}
-hallucination_rate: []
+hallucination_rate:
+- null
 json_validity_rate: 0.0
+reconstruction:
+  alignment_rate: null
+  ambiguity_rate: null
+  ambiguous: 0
+  blank: 0
+  exact_reconstruction_rate: 0.0
+  located: 0
+  parsed: 0
+  parsed_reconstruction_rate: null
+  phrases: 0
+  reconstructed: 0
+  total: 1
 tree_edit_distance:
 - 100.0

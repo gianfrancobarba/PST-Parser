@@ -276,17 +276,32 @@ def score(
     summary.add_column(justify="right")
     summary.add_row("predictions", str(report.total))
     summary.add_row("JSON validity", f"{report.json_validity_rate:.2%}")
+    summary.add_row("parses", f"{report.parse_rate:.2%}")
     summary.add_row("coverage", _format(report.mean_coverage_score, "{:.2%}"))
     summary.add_row("hallucination", _format(report.mean_hallucination_rate, "{:.2%}"))
     summary.add_row("tree edit distance", _format(report.mean_tree_edit_distance, "{:.2f}"))
+    summary.add_row(
+        "exact reconstruction",
+        _format(report.reconstruction.exact_reconstruction_rate, "{:.2%}"),
+    )
+    summary.add_row("phrases located", _format(report.reconstruction.alignment_rate, "{:.2%}"))
     console.print(summary)
 
     if report.field_f1:
-        fields = Table(title="Field F1", box=None)
+        fields = Table(title="Field agreement", box=None)
         fields.add_column("field", style="cyan")
-        fields.add_column("score", justify="right")
-        for field, value in sorted(report.field_f1.items()):
-            fields.add_row(field, f"{value:.4f}")
+        fields.add_column("precision", justify="right")
+        fields.add_column("recall", justify="right")
+        fields.add_column("F1", justify="right")
+        fields.add_column("support", justify="right")
+        for field, score in sorted(report.field_f1.items()):
+            fields.add_row(
+                field,
+                f"{score.precision:.4f}",
+                f"{score.recall:.4f}",
+                _format(score.f1, "{:.4f}"),
+                str(score.support),
+            )
         console.print(fields)
 
     confusions = report.confusion.top_confusions(experiment.evaluation.confusion_top_k)
@@ -296,6 +311,75 @@ def score(
             console.print(f"  {count} x {expected} -> {predicted}")
 
     console.print(f"\nresults  {results_path}\ndetails  {details_path}")
+
+
+@app.command("align")
+def align(
+    config: ConfigOption,
+    predictions: Annotated[
+        Path,
+        typer.Option(
+            "--predictions",
+            "-p",
+            help="File holding the predictions to locate.",
+            exists=True,
+            dir_okay=False,
+        ),
+    ],
+    set_: SetOption = None,
+    run_dir: Annotated[
+        Path | None,
+        typer.Option("--run-dir", help="Directory for the alignments."),
+    ] = None,
+) -> None:
+    """Locate every phrase in its prompt and inject positions. Needs no model."""
+    experiment = _load(config, set_)
+
+    from pstparser.data import load_predictions
+    from pstparser.evaluation import run_alignment
+
+    records = load_predictions(predictions)
+    if not records:
+        error_console.print(f"[bold red]No predictions found in[/] {predictions}")
+        raise typer.Exit(code=1)
+
+    outcome = run_alignment(
+        records,
+        run_dir if run_dir is not None else predictions.parent,
+        levels=experiment.evaluation.alignment_levels,
+    )
+
+    predicted = outcome.prediction_scores
+    expected = outcome.target_scores
+
+    table = Table(title="Alignment", box=None)
+    table.add_column("", style="cyan")
+    table.add_column("prediction", justify="right")
+    table.add_column("reference", justify="right")
+    table.add_row("phrases", str(predicted.phrases), str(expected.phrases))
+    table.add_row(
+        "located",
+        _format(predicted.alignment_rate, "{:.2%}"),
+        _format(expected.alignment_rate, "{:.2%}"),
+    )
+    table.add_row(
+        "ambiguous",
+        _format(predicted.ambiguity_rate, "{:.2%}"),
+        _format(expected.ambiguity_rate, "{:.2%}"),
+    )
+    table.add_row(
+        "reconstructed",
+        _format(predicted.exact_reconstruction_rate, "{:.2%}"),
+        _format(expected.exact_reconstruction_rate, "{:.2%}"),
+    )
+    table.add_row(
+        "reconstructed, of those read",
+        _format(predicted.parsed_reconstruction_rate, "{:.2%}"),
+        _format(expected.parsed_reconstruction_rate, "{:.2%}"),
+    )
+    console.print(table)
+
+    console.print(f"\nalignments  {outcome.alignments_path}")
 
 
 @app.command("synth")

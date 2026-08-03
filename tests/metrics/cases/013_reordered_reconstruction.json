@@ -1,0 +1,26 @@
+{
+  "description": "The taxonomy orders the leaves against the order of the prompt.",
+  "prompt": "def add(a, b): return a + b\nExplain this function.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "\nExplain this function."
+      ],
+      "context": {
+        "format": [],
+        "constrains": [],
+        "data": [
+          "def add(a, b): return a + b"
+        ],
+        "role": []
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"\\nExplain this function.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [\"def add(a, b): return a + b\"], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

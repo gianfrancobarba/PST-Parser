@@ -1,0 +1,28 @@
+{
+  "description": "The whole prompt is segmented, with no gap and no overlap.",
+  "prompt": "You are a reviewer. Summarise the diff. Answer as JSON only.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        " Summarise the diff."
+      ],
+      "context": {
+        "format": [],
+        "constrains": [
+          " Answer as JSON only."
+        ],
+        "data": [],
+        "role": [
+          "You are a reviewer."
+        ]
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\" Summarise the diff.\"], \"context\": {\"format\": [], \"constrains\": [\" Answer as JSON only.\"], \"data\": [], \"role\": [\"You are a reviewer.\"]}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

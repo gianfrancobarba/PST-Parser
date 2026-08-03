@@ -5,15 +5,18 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 
-from pstparser.evaluation.metrics._text import flatten, normalise_text, tokenise
+from pstparser.evaluation.metrics._text import flatten, tokenise
 
 
 def coverage_scores(predictions: Sequence[str], prompts: Sequence[str]) -> list[float]:
-    """Fraction of prompt tokens that appear in the prediction, per prediction.
+    """Fraction of the prompt's distinct tokens that the prediction places.
 
-    Segmenting the whole prompt means every token is placed somewhere, so a
-    complete segmentation scores one. Predictions that do not parse score zero,
-    and an empty prompt scores one.
+    Both sides are token sets, so a word the prompt repeats counts once however
+    many times it occurs: the question is whether the segmentation accounts for
+    it, not how often. Segmenting the whole prompt scores one.
+
+    A prediction that cannot be read scores zero, since it places nothing, and
+    an empty prompt scores one, since there is nothing left to place.
 
     Args:
         predictions: The raw model outputs.
@@ -21,6 +24,9 @@ def coverage_scores(predictions: Sequence[str], prompts: Sequence[str]) -> list[
 
     Returns:
         One score per prediction, in input order.
+
+    Raises:
+        ValueError: If the two sequences have different lengths.
     """
     scores: list[float] = []
     for prediction, prompt in zip(predictions, prompts, strict=True):
@@ -30,13 +36,12 @@ def coverage_scores(predictions: Sequence[str], prompts: Sequence[str]) -> list[
             scores.append(0.0)
             continue
 
-        placed = set(tokenise(" ".join(flatten(predicted_tree).values())))
-        prompt_tokens = normalise_text(prompt).split()
-        if not prompt_tokens:
+        source = set(tokenise(prompt))
+        if not source:
             scores.append(1.0)
             continue
 
-        covered = [token for token in prompt_tokens if token in placed]
-        scores.append(len(covered) / len(prompt_tokens))
+        placed = set(tokenise(" ".join(flatten(predicted_tree).values())))
+        scores.append(len(source & placed) / len(source))
 
     return scores

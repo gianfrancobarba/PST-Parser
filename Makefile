@@ -8,7 +8,7 @@ PREDICTIONS ?= results/predictions.jsonl
 
 .DEFAULT_GOAL := help
 .PHONY: help install lint format typecheck test test-slow check \
-        validate-config prepare-data train generate score synth \
+        validate-config prepare-data train generate score align synth \
         docker-build-eval docker-build-train docker-score docker-train clean
 
 help: ## Show the available targets
@@ -58,6 +58,9 @@ generate: ## Produce predictions; pass ADAPTER=<dir>
 
 score: ## Compute metrics from PREDICTIONS; needs no accelerator
 	$(UV) run pstparser score --config $(CONFIG) --predictions $(PREDICTIONS)
+
+align: ## Locate the phrases of PREDICTIONS in their prompts; needs no accelerator
+	$(UV) run pstparser align --config $(CONFIG) --predictions $(PREDICTIONS)
 
 synth: ## Generate prompts for the reasoning paradigms and export them for annotation
 	$(UV) run pstparser synth --config $(CONFIG)

@@ -1,0 +1,26 @@
+{
+  "description": "The same phrase occurs twice in the prompt and is claimed twice.",
+  "prompt": "run it. run it. Then stop.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "run it. ",
+        "run it. ",
+        "Then stop."
+      ],
+      "context": {
+        "format": [],
+        "constrains": [],
+        "data": [],
+        "role": []
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"run it. \", \"run it. \", \"Then stop.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

@@ -1,0 +1,24 @@
+{
+  "description": "A character introduced by hand keeps the phrase from being found.",
+  "prompt": "Wait for it... then answer.",
+  "reference": {
+    "prompt": {
+      "main_instruction": [
+        "Wait for it… then answer."
+      ],
+      "context": {
+        "format": [],
+        "constrains": [],
+        "data": [],
+        "role": []
+      },
+      "examples": [],
+      "reasoning": {
+        "influence": [],
+        "reasoning_examples": [],
+        "paths": []
+      }
+    }
+  },
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Wait for it… then answer.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+}

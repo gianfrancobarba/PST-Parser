@@ -54,6 +54,52 @@ def target_json_schema() -> dict[str, Any]:
     }
 
 
+def conforms(payload: Any, schema: Mapping[str, Any] | None = None) -> bool:
+    """Report whether a parsed object satisfies the target schema.
+
+    Only the constructs :func:`target_json_schema` emits are interpreted, which
+    is what keeps the check free of a validation dependency. The schema defaults
+    to the one derived from the taxonomy, so the two cannot drift apart.
+
+    Args:
+        payload: The object to check, already parsed.
+        schema: Schema to check it against. Defaults to the target schema.
+
+    Returns:
+        ``True`` when the object satisfies the schema.
+    """
+    return _conforms(payload, target_json_schema() if schema is None else schema)
+
+
+def _conforms(payload: Any, schema: Mapping[str, Any]) -> bool:
+    """Check one node against one schema fragment, depth first."""
+    declared = schema.get("type")
+
+    if declared == "object":
+        if not isinstance(payload, dict):
+            return False
+        properties: Mapping[str, Any] = schema.get("properties", {})
+        if any(key not in payload for key in schema.get("required", ())):
+            return False
+        sealed = schema.get("additionalProperties") is False
+        if sealed and any(key not in properties for key in payload):
+            return False
+        return all(
+            _conforms(value, properties[key]) for key, value in payload.items() if key in properties
+        )
+
+    if declared == "array":
+        if not isinstance(payload, list):
+            return False
+        items = schema.get("items")
+        return items is None or all(_conforms(item, items) for item in payload)
+
+    if declared == "string":
+        return isinstance(payload, str)
+
+    return True
+
+
 def _seal(node: dict[str, Any]) -> None:
     """Forbid undeclared keys on every object of a schema, depth first."""
     node["additionalProperties"] = False

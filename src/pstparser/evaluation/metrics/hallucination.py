@@ -5,37 +5,50 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 
-from pstparser.evaluation.metrics._text import flatten, normalise_text, tokenise
+from pstparser.evaluation.metrics._text import flatten, tokenise
 
 
-def hallucination_rates(predictions: Sequence[str], prompts: Sequence[str]) -> list[float]:
-    """Fraction of predicted tokens absent from the prompt, per prediction.
+def hallucination_rates(
+    predictions: Sequence[str],
+    prompts: Sequence[str],
+) -> list[float | None]:
+    """Fraction of the prediction's distinct tokens absent from the prompt.
 
-    The task is extractive, so every token of the output should already occur in
-    the prompt and a faithful model scores zero. Predictions that do not parse
-    are omitted, and a prediction holding no text scores zero.
+    Both sides are token sets, matching the definition of the coverage score, so
+    that the two rates speak of the same quantities. The task is extractive, so
+    every token of the output should already occur in the prompt and a faithful
+    model scores zero.
+
+    The rate is a share of what the model emitted, so it is undefined when the
+    model emitted nothing to judge: a prediction that cannot be read, and one
+    whose leaves are all empty, both report ``None``. Reporting zero for the
+    latter would credit an empty answer with perfect faithfulness.
 
     Args:
         predictions: The raw model outputs.
         prompts: The source prompts, aligned with ``predictions``.
 
     Returns:
-        One rate per parseable prediction, in input order.
+        One rate per prediction, in input order, or ``None`` where the rate has
+        no meaning.
+
+    Raises:
+        ValueError: If the two sequences have different lengths.
     """
-    rates: list[float] = []
+    rates: list[float | None] = []
     for prediction, prompt in zip(predictions, prompts, strict=True):
         try:
             predicted_tree = json.loads(prediction)
         except json.JSONDecodeError:
+            rates.append(None)
             continue
 
-        predicted_tokens = tokenise(" ".join(flatten(predicted_tree).values()))
-        if not predicted_tokens:
-            rates.append(0.0)
+        generated = set(tokenise(" ".join(flatten(predicted_tree).values())))
+        if not generated:
+            rates.append(None)
             continue
 
-        available = set(normalise_text(prompt).split())
-        absent = [token for token in predicted_tokens if token not in available]
-        rates.append(len(absent) / len(predicted_tokens))
+        available = set(tokenise(prompt))
+        rates.append(len(generated - available) / len(generated))
 
     return rates
