@@ -1,0 +1,190 @@
+{
+  "total": 88,
+  "valid": 82,
+  "json_validity_rate": 0.9318181818181818,
+  "parse_rate": 0.9318181818181818,
+  "field_f1": {
+    "prompt.context.constrains": {
+      "precision": 0.7457627118644068,
+      "recall": 0.676923076923077,
+      "f1": 0.7096774193548386,
+      "support": 585,
+      "predicted": 531
+    },
+    "prompt.context.data": {
+      "precision": 0.956551255940258,
+      "recall": 0.8623011015911872,
+      "f1": 0.9069842291599614,
+      "support": 3268,
+      "predicted": 2946
+    },
+    "prompt.context.format": {
+      "precision": 0.8110944527736131,
+      "recall": 0.8098802395209581,
+      "f1": 0.8104868913857677,
+      "support": 668,
+      "predicted": 667
+    },
+    "prompt.context.role": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 24,
+      "predicted": 24
+    },
+    "prompt.examples": {
+      "precision": 0.5409836065573771,
+      "recall": 1.0,
+      "f1": 0.7021276595744682,
+      "support": 198,
+      "predicted": 366
+    },
+    "prompt.main_instruction": {
+      "precision": 0.8370473537604457,
+      "recall": 0.9289026275115919,
+      "f1": 0.8805860805860806,
+      "support": 1294,
+      "predicted": 1436
+    },
+    "prompt.reasoning.influence": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": null,
+      "support": 0,
+      "predicted": 0
+    },
+    "prompt.reasoning.paths": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": null,
+      "support": 0,
+      "predicted": 0
+    },
+    "prompt.reasoning.reasoning_examples": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": null,
+      "support": 0,
+      "predicted": 0
+    }
+  },
+  "reconstruction": {
+    "total": 88,
+    "parsed": 82,
+    "reconstructed": 64,
+    "phrases": 174,
+    "located": 154,
+    "ambiguous": 0,
+    "blank": 0,
+    "exact_reconstruction_rate": 0.7272727272727273,
+    "parsed_reconstruction_rate": 0.7804878048780488,
+    "alignment_rate": 0.8850574712643678,
+    "ambiguity_rate": 0.0
+  },
+  "mean_tree_edit_distance": 1.548780487804878,
+  "mean_hallucination_rate": 0.004063199833354211,
+  "mean_coverage_score": 0.9959973363303498,
+  "confusion": {
+    "labels": [
+      "prompt.context.constrains",
+      "prompt.context.data",
+      "prompt.context.format",
+      "prompt.context.role",
+      "prompt.examples",
+      "prompt.main_instruction",
+      "none"
+    ],
+    "matrix": [
+      [
+        160,
+        23,
+        117,
+        0,
+        0,
+        43,
+        82
+      ],
+      [
+        88,
+        3847,
+        116,
+        0,
+        0,
+        111,
+        622
+      ],
+      [
+        20,
+        0,
+        729,
+        0,
+        0,
+        49,
+        84
+      ],
+      [
+        0,
+        0,
+        0,
+        26,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        158,
+        0,
+        0
+      ],
+      [
+        21,
+        57,
+        0,
+        0,
+        0,
+        1217,
+        31
+      ],
+      [
+        59,
+        200,
+        7,
+        0,
+        473,
+        174,
+        2175
+      ]
+    ]
+  },
+  "top_confusions": [
+    {
+      "expected": "prompt.context.data",
+      "predicted": "none",
+      "count": 622
+    },
+    {
+      "expected": "none",
+      "predicted": "prompt.examples",
+      "count": 473
+    },
+    {
+      "expected": "none",
+      "predicted": "prompt.context.data",
+      "count": 200
+    },
+    {
+      "expected": "none",
+      "predicted": "prompt.main_instruction",
+      "count": 174
+    },
+    {
+      "expected": "prompt.context.constrains",
+      "predicted": "prompt.context.format",
+      "count": 117
+    }
+  ]
+}

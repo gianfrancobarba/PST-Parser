@@ -74,6 +74,11 @@ uv run pstparser generate --config configs/experiments/baseline.yaml --adapter o
 uv run pstparser score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
 ```
 
+```bash
+# Colloca ogni frase generata nel prompt e ne inietta la posizione. Nemmeno questo richiede GPU.
+uv run pstparser align --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
+```
+
 Ogni comando accetta `--set chiave.annidata=valore` per sovrascrivere puntualmente la
 configurazione, ad esempio `--set training.max_steps=50`. Le sovrascritture sono registrate nella
 configurazione risolta che accompagna ogni run.
@@ -146,8 +151,8 @@ Ogni esecuzione di `train` scrive una directory sotto `outputs/`:
 Il manifest è ciò che rende un risultato tracciabile: consente di risalire con esattezza a quale
 codice, quali dati e quale ambiente lo hanno prodotto.
 
-`generate` e `score` producono a loro volta `predictions.jsonl`, `results.json` e
-`eval_details.jsonl`.
+`generate`, `score` e `align` producono a loro volta `predictions.jsonl`, `results.json`,
+`eval_details.jsonl` e `alignments.jsonl`.
 
 ## Valutazione
 
@@ -156,16 +161,29 @@ acceleratore e persiste le predizioni; `score` legge quel file e non carica alcu
 gira ovunque in pochi secondi. Le predizioni di riferimento sono versionate in `results/`, per cui
 ogni numero è ricalcolabile senza GPU.
 
-Sei metriche, calcolate sulle predizioni che risultano ben formate:
+Le metriche di contenuto sono calcolate sulle predizioni che risultano ben formate:
 
 | Metrica | Significato | Valore atteso |
 |---|---|---|
-| Validità JSON | quota di predizioni che si parsificano | alto |
-| F1 per campo | accordo token per token con il riferimento, per nodo foglia | alto |
-| Matrice di confusione | a quale nodo è stato assegnato un segmento, contro quello corretto | diagonale |
+| Validità JSON | quota di predizioni che si parsificano **e** rispettano lo schema | alto |
+| F1 per campo | accordo token per token con il riferimento, per nodo foglia, con il support | alto |
+| Matrice di confusione | a quale nodo è stato assegnato ogni token del prompt, contro quello corretto | diagonale |
 | Distanza di edit fra alberi | quante modifiche separano la struttura predetta da quella attesa | basso |
 | Tasso di allucinazione | quota di token predetti assenti dal prompt | zero |
 | Copertura | quota di token del prompt collocati in un nodo | uno |
+| Ricostruzione esatta | quota di prompt che si riottengono concatenando le foglie in ordine | uno |
+| Frasi collocate | quota di frasi generate ritrovate nel prompt | uno |
+
+### Ricostruzione e posizioni
+
+Il modello genera solo il testo delle foglie. Un secondo stadio, deterministico e senza modello,
+ricolloca ogni frase nel prompt da cui è stata estratta e ne ricava la posizione: ogni frase
+rivendica un intervallo di caratteri, due intervalli non possono sovrapporsi, e la posizione è il
+rango dell'intervallo. Da lì discende l'artefatto con foglie `{"position": ..., "phrase": ...}` e la
+verifica diretta che il prompt si riottenga concatenando le foglie in ordine.
+
+La copertura è solo un sostituto di quella proprietà: dice quali parole sono state collocate, mai in
+che ordine. Un output che rimescolasse completamente le frasi otterrebbe comunque copertura piena.
 
 Il comportamento di ciascuna metrica è bloccato da casi golden in `tests/metrics/cases/`, con i
 punteggi attesi versionati accanto: una variazione non spiegata è un difetto, non un cambiamento
