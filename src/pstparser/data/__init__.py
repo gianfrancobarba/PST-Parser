@@ -1,5 +1,11 @@
 """Corpus reading, conversion, integrity checking and partitioning."""
 
+from pstparser.data.alignments import (
+    ALIGNMENTS_FILE,
+    AlignmentRecord,
+    load_alignments,
+    write_alignments,
+)
 from pstparser.data.cleaning import clean_field
 from pstparser.data.excel import CorpusError, iter_rows, read_corpus, sheet_names
 from pstparser.data.predictions import PredictionRecord, load_predictions, write_predictions
@@ -16,6 +22,8 @@ from pstparser.data.splits import Split, load_split, make_split, save_split
 from pstparser.data.targets import build_target
 
 __all__ = [
+    "ALIGNMENTS_FILE",
+    "AlignmentRecord",
     "CorpusError",
     "PredictionRecord",
     "PreparationResult",
@@ -27,6 +35,7 @@ __all__ = [
     "check_corpus",
     "clean_field",
     "iter_rows",
+    "load_alignments",
     "load_predictions",
     "load_records",
     "load_split",
@@ -36,6 +45,7 @@ __all__ = [
     "save_split",
     "select",
     "sheet_names",
+    "write_alignments",
     "write_predictions",
     "write_records",
 ]

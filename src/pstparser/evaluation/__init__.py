@@ -1,5 +1,6 @@
-"""Scoring of predictions."""
+"""Scoring of predictions, and locating them in their prompts."""
 
+from pstparser.evaluation.align import AlignmentOutcome, run_alignment
 from pstparser.evaluation.report import (
     DETAILS_FILE,
     RESULTS_FILE,
@@ -12,8 +13,10 @@ from pstparser.evaluation.report import (
 __all__ = [
     "DETAILS_FILE",
     "RESULTS_FILE",
+    "AlignmentOutcome",
     "EvaluationReport",
     "ExampleScore",
     "evaluate",
+    "run_alignment",
     "write_report",
 ]

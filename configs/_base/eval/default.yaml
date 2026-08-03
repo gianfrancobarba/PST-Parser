@@ -11,3 +11,11 @@ inference:
 evaluation:
   ted_failure_penalty: 100.0
   confusion_top_k: 5
+
+  # Tried in order when locating a phrase in its prompt. The first accepts only
+  # a verbatim match, the second tolerates a different run of whitespace, the
+  # third ignores whitespace altogether.
+  alignment_levels:
+    - exact
+    - collapsed
+    - stripped

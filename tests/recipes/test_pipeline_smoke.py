@@ -1,4 +1,4 @@
-"""The whole pipeline on a tiny model: prepare, train, generate, score.
+"""The whole pipeline on a tiny model: prepare, train, generate, score, align.
 
 The model is untrained noise, so the scores mean nothing. What is verified is
 that every stage runs, hands its artefacts to the next one, and records what it
@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 
 from pstparser.config import ExperimentConfig, load_experiment
-from pstparser.data import load_predictions, prepare_corpus
-from pstparser.evaluation import evaluate, write_report
+from pstparser.data import load_alignments, load_predictions, prepare_corpus
+from pstparser.evaluation import evaluate, run_alignment, write_report
 from pstparser.inference import GenerationOutcome, run_generation
 from pstparser.training import TrainingOutcome, run_training
 
@@ -172,3 +172,24 @@ def test_scoring_runs_on_the_generated_predictions(
     assert 0.0 <= results["json_validity_rate"] <= 1.0
     assert len(details) == len(records)
     assert {detail["index"] for detail in details} == {record.index for record in records}
+
+
+def test_alignment_runs_on_the_generated_predictions(
+    config: ExperimentConfig,
+    generated: GenerationOutcome,
+    workspace: Path,
+) -> None:
+    records = load_predictions(generated.predictions_path)
+
+    outcome = run_alignment(
+        records,
+        workspace / "aligned",
+        levels=config.evaluation.alignment_levels,
+    )
+
+    assert len(outcome.records) == len(records)
+    assert load_alignments(outcome.alignments_path) == outcome.records
+    assert outcome.target_scores.total == len(records)
+    # The reference is built from the corpus, so every phrase of it must be
+    # found in its own prompt: a miss would be an annotation defect.
+    assert outcome.target_scores.alignment_rate == 1.0

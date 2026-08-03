@@ -13,6 +13,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from pstparser.pst.alignment import DEFAULT_LEVELS, MatchLevel
+
 Precision = Literal["auto", "fp16", "bf16"]
 ModelBackend = Literal["unsloth", "hf"]
 
@@ -247,10 +249,22 @@ class EvaluationConfig(_Base):
         ted_failure_penalty: Distance assigned to a pair of trees that cannot be
             compared because the prediction is not parseable.
         confusion_top_k: Number of most frequent label confusions reported.
+        alignment_levels: Normalisations attempted when locating a phrase in its
+            prompt, from the most conservative. Widening the scale locates more
+            phrases and makes the reconstruction rate less strict, so it belongs
+            to the experiment rather than to the command line.
     """
 
     ted_failure_penalty: float = Field(default=100.0, ge=0.0)
     confusion_top_k: int = Field(default=5, gt=0)
+    alignment_levels: tuple[MatchLevel, ...] = DEFAULT_LEVELS
+
+    @field_validator("alignment_levels")
+    @classmethod
+    def _levels_must_not_be_empty(cls, value: tuple[MatchLevel, ...]) -> tuple[MatchLevel, ...]:
+        if not value:
+            raise ValueError("alignment_levels must list at least one normalisation")
+        return value
 
 
 class ProviderConfig(_Base):
