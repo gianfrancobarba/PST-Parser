@@ -6,8 +6,13 @@ import collections
 import re
 from typing import Any
 
+from pstparser.pst.alignment import iter_leaves
+
 #: Runs of non-word characters collapsed during normalisation.
 _NON_WORD = re.compile(r"\W+")
+
+#: A token: the maximal run of word characters that normalisation leaves whole.
+_WORD = re.compile(r"\w+")
 
 #: List indices appended to a flattened key, removed when aggregating by field.
 _LIST_INDEX = re.compile(r"\[\d+\]")
@@ -37,6 +42,21 @@ def tokenise(text: str) -> list[str]:
     return normalise_text(text).split()
 
 
+def tokenise_spans(text: str) -> list[tuple[str, int, int]]:
+    """Split a string into tokens, keeping where each one sits in the original.
+
+    The tokens are the ones :func:`tokenise` produces; only their offsets are
+    added, which is what allows a token to be traced to the segment covering it.
+
+    Args:
+        text: The string to tokenise.
+
+    Returns:
+        Triples of token, start offset and end offset, in order of appearance.
+    """
+    return [(match.group().lower(), match.start(), match.end()) for match in _WORD.finditer(text)]
+
+
 def generalise_key(key: str) -> str:
     """Drop list indices from a flattened key so that fields can be aggregated.
 
@@ -52,8 +72,8 @@ def generalise_key(key: str) -> str:
 def flatten(node: Any, prefix: str = "") -> dict[str, str]:
     """Flatten a tree into a mapping from path to text segment.
 
-    Dictionary keys extend the path with a dot; list positions extend it with a
-    bracketed index. Only text leaves are kept.
+    The traversal is the one the alignment relies on, so that a path names the
+    same segment on both sides and the two cannot drift apart.
 
     Args:
         node: A tree, a subtree, a list of segments or a single segment.
@@ -62,17 +82,7 @@ def flatten(node: Any, prefix: str = "") -> dict[str, str]:
     Returns:
         A mapping from path to the segment stored there.
     """
-    flattened: dict[str, str] = {}
-    if isinstance(node, dict):
-        for key, value in node.items():
-            path = f"{prefix}.{key}" if prefix else key
-            flattened.update(flatten(value, path))
-    elif isinstance(node, list):
-        for position, item in enumerate(node):
-            flattened.update(flatten(item, f"{prefix}[{position}]"))
-    elif isinstance(node, str):
-        flattened[prefix] = node
-    return flattened
+    return dict(iter_leaves(node, prefix))
 
 
 def token_f1(prediction: str, reference: str) -> float:
