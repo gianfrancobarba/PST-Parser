@@ -10,7 +10,7 @@
         "format": [
           "Usa un tono formale — niente emoji."
         ],
-        "constrains": [],
+        "constraints": [],
         "data": [],
         "role": []
       },
@@ -22,5 +22,5 @@
       }
     }
   },
-  "prediction": "{\"prompt\": {\"main_instruction\": [\"Riassumi il testo.\"], \"context\": {\"format\": [\"Usa un tono formale \\u2014 niente emoji.\"], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Riassumi il testo.\"], \"context\": {\"format\": [\"Usa un tono formale \\u2014 niente emoji.\"], \"constraints\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
 }

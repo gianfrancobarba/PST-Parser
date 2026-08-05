@@ -8,7 +8,7 @@
       ],
       "context": {
         "format": [],
-        "constrains": [
+        "constraints": [
           "Keep it under two hundred words please."
         ],
         "data": [],
@@ -22,5 +22,5 @@
       }
     }
   },
-  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [], \"constraints\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
 }

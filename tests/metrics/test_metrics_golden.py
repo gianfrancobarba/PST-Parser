@@ -163,7 +163,7 @@ def test_misplaced_segment_appears_in_the_confusion_matrix() -> None:
 
     # "Do not use markdown." belongs to the restrictive node and was placed in
     # the presentational one: four tokens, not one misplaced value.
-    assert ("prompt.context.constrains", "prompt.context.format", 4) in misassignments
+    assert ("prompt.context.constraints", "prompt.context.format", 4) in misassignments
 
 
 def test_the_whole_prompt_is_recovered_when_nothing_is_left_out() -> None:

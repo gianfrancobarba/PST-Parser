@@ -10,7 +10,7 @@ confusion:
 coverage_score:
 - 0.8
 field_f1:
-  prompt.context.constrains:
+  prompt.context.constraints:
     f1: null
     precision: 0.0
     predicted: 0

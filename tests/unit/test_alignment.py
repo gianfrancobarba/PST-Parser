@@ -289,12 +289,36 @@ slices = st.lists(st.text(min_size=1, max_size=12), min_size=1, max_size=6)
 
 @given(slices)
 @settings(max_examples=200)
-def test_a_partition_of_the_prompt_aligns_completely(parts: list[str]) -> None:
+def test_every_part_of_a_partition_is_accounted_for(parts: list[str]) -> None:
+    # Each part is a slice of the prompt, so none of them can be missing from
+    # it. A part the rules cannot place is reported as contested; what must
+    # never happen is a part being called absent, or given someone else's span.
     prompt = "".join(parts)
     aligned = align_tree(prompt, tree(main_instruction=parts))
 
-    assert aligned.located == len(aligned.scored)
-    assert aligned.reconstructs()
+    assert not any(leaf.absent for leaf in aligned.scored)
+    assert aligned.located + aligned.contested == len(aligned.scored)
+
+
+@given(slices)
+@settings(max_examples=200)
+def test_a_partition_that_places_fully_reconstructs_the_prompt(parts: list[str]) -> None:
+    prompt = "".join(parts)
+    aligned = align_tree(prompt, tree(main_instruction=parts))
+
+    if aligned.located == len(aligned.scored):
+        assert aligned.reconstructs()
+
+
+def test_a_periodic_prompt_can_leave_a_phrase_without_a_home() -> None:
+    # "aba" occurs at both ends, and either choice sits across one of the two
+    # places "ab" could go. Choosing between them is the assignment problem the
+    # rules only approximate, so the outcome is reported rather than forced.
+    aligned = align_tree("abababa", tree(main_instruction=["ab", "aba", "ba"]))
+
+    assert aligned.contested == 1
+    assert aligned.located == 2
+    assert not aligned.reconstructs()
 
 
 @given(slices)

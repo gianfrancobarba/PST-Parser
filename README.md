@@ -11,7 +11,7 @@ prompt
 ├── main_instruction
 ├── context
 │   ├── format          istruzioni positive sulla presentazione dell'output
-│   ├── constrains      vincoli restrittivi sulla generazione
+│   ├── constraints     vincoli restrittivi sulla generazione
 │   ├── data            contenuto grezzo da processare
 │   └── role            definizione della persona
 ├── examples            coppie input-output per few-shot learning
@@ -20,6 +20,11 @@ prompt
     ├── reasoning_examples  esempi con passi intermedi espliciti
     └── paths               rami alternativi di ragionamento
 ```
+
+Ogni foglia è una **lista di segmenti**: una categoria può comparire in più punti del prompt, e
+tenerne i pezzi separati è ciò che permette di ricostruire il testo di partenza. Nel corpus
+l'annotatore segna la discontinuità con il token `<sep>`, che la preparazione traduce in segmenti
+distinti.
 
 ## Requisiti
 
@@ -244,7 +249,7 @@ possibile risalire ai parametri esatti con cui un risultato è stato prodotto.
 configs/      configurazioni degli esperimenti
 docker/       Dockerfile multi-target e compose
 data/raw/     corpus annotato, immutabile
-data/splits/  identificativi delle partizioni, congelati
+data/splits/  identificativi delle tre partizioni, congelati
 prompts/      system prompt versionato
 src/pstparser/
   config/     schema tipizzato e composizione YAML
@@ -263,6 +268,29 @@ Le dipendenze fra i package sono aciclee e orientate verso il basso: `pst/` non 
 `data/` dipende da `pst/`, `evaluation/` dipende da `data/`, e solo `models/`, `training/` e
 `inference/` toccano PyTorch. È questa direzione a rendere possibile un ambiente di valutazione
 privo dello stack di modelli.
+
+## Partizione del corpus
+
+Tre insiemi, non due. Sorvegliare un insieme durante il training e poi riportare i risultati sullo
+stesso insieme non misura la generalizzazione: misura quanto bene si è fermato il training. Il
+**validation** è ciò che il ciclo di addestramento può guardare; il **test** è ciò da cui si citano
+i risultati, e si legge una volta sola.
+
+I record che condividono un prompt finiscono dalla stessa parte. Il corpus contiene prompt ripetuti,
+e lasciarne uno in training e un altro in test permetterebbe di essere valutati su testo già visto.
+I record identici sia nel prompt sia nell'annotazione vengono ridotti a uno.
+
+`generate` produce predizioni per il **test** in modo predefinito; `--split val` serve alle verifiche
+fatte durante lo sviluppo.
+
+## Correzioni all'annotazione
+
+Il foglio di calcolo in `data/raw/` è un input e resta esattamente come è stato consegnato. Le
+correzioni vivono in `data/raw/annotation_fixes.yaml`, ciascuna con la riga a cui si applica e il
+motivo per cui è stata fatta: virgolette aggiunte durante il copia-incolla, un carattere digitato per
+un altro, un passaggio riscritto in prima persona, una cella che il foglio di calcolo ha letto come
+formula e distrutto. Una correzione che non descrive più la sua cella è un errore, non un'operazione
+a vuoto, quindi il corpus e le sue correzioni non possono divergere senza che qualcuno se ne accorga.
 
 ## Limiti noti
 

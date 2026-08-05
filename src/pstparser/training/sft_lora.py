@@ -80,7 +80,7 @@ def run_training(config: ExperimentConfig, run_dir: str | Path | None = None) ->
     system_prompt = Path(config.system_prompt_path).read_text(encoding="utf-8")
 
     train_dataset = build_dataset(select(records, split.train), system_prompt)
-    eval_dataset = build_dataset(select(records, split.eval), system_prompt)
+    eval_dataset = build_dataset(select(records, split.val), system_prompt)
 
     model, tokenizer = load_base(config.model)
     model = attach_adapter(model, config.model, config.lora)

@@ -10,7 +10,7 @@
         "format": [
           "Answer in JSON."
         ],
-        "constrains": [],
+        "constraints": [],
         "data": [],
         "role": [
           "You are an expert."
@@ -24,5 +24,5 @@
       }
     }
   },
-  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [\"Answer in JSON.\"], \"constrains\": [], \"data\": [], \"role\": [\"You are an expert.\"]}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [\"Answer in JSON.\"], \"constraints\": [], \"data\": [], \"role\": [\"You are an expert.\"]}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
 }

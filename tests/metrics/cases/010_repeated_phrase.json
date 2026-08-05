@@ -10,7 +10,7 @@
       ],
       "context": {
         "format": [],
-        "constrains": [],
+        "constraints": [],
         "data": [],
         "role": []
       },
@@ -22,5 +22,5 @@
       }
     }
   },
-  "prediction": "{\"prompt\": {\"main_instruction\": [\"run it. \", \"run it. \", \"Then stop.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"run it. \", \"run it. \", \"Then stop.\"], \"context\": {\"format\": [], \"constraints\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
 }

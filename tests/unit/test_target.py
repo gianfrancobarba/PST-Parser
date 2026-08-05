@@ -20,7 +20,7 @@ from pstparser.pst import (
 COLUMN_MAPPING = {
     "main_instruction": "MAIN INSTRUCTION",
     "context.format": "FORMAT",
-    "context.constrains": "CONSTRAINS",
+    "context.constraints": "CONSTRAINS",
     "context.data": "DATA",
     "context.role": "ROLE",
     "examples": "EXAMPLES",
@@ -45,7 +45,7 @@ def test_assembled_tree_has_the_declared_key_order() -> None:
 
     root = tree[ROOT_KEY]
     assert list(root) == ["main_instruction", "context", "examples", "reasoning"]
-    assert list(root["context"]) == ["format", "constrains", "data", "role"]
+    assert list(root["context"]) == ["format", "constraints", "data", "role"]
     assert list(root["reasoning"]) == ["influence", "reasoning_examples", "paths"]
 
 
@@ -74,7 +74,7 @@ def test_build_target_places_each_column_at_its_leaf() -> None:
 
     assert tree["main_instruction"] == ["Summarise the code."]
     assert tree["context"]["format"] == ["Answer as JSON."]
-    assert tree["context"]["constrains"] == []
+    assert tree["context"]["constraints"] == []
     assert tree["context"]["role"] == ["You are a senior engineer."]
     assert tree["reasoning"]["paths"] == []
 
@@ -87,7 +87,7 @@ def test_serialised_target_is_stable() -> None:
 
     assert serialised == (
         '{"prompt": {"main_instruction": ["Do the thing."], '
-        '"context": {"format": [], "constrains": [], "data": [], "role": []}, '
+        '"context": {"format": [], "constraints": [], "data": [], "role": []}, '
         '"examples": [], '
         '"reasoning": {"influence": [], "reasoning_examples": [], "paths": []}}}'
     )
@@ -125,7 +125,7 @@ def test_schema_mirrors_the_taxonomy() -> None:
     root = schema["properties"][ROOT_KEY]
     assert schema["required"] == [ROOT_KEY]
     assert root["additionalProperties"] is False
-    assert root["properties"]["context"]["properties"]["constrains"] == {
+    assert root["properties"]["context"]["properties"]["constraints"] == {
         "type": "array",
         "items": {"type": "string"},
     }

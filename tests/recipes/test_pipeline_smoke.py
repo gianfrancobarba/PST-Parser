@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from pstparser.config import ExperimentConfig, load_experiment
-from pstparser.data import load_alignments, load_predictions, prepare_corpus
+from pstparser.data import load_alignments, load_predictions, load_split, prepare_corpus
 from pstparser.evaluation import evaluate, run_alignment, write_report
 from pstparser.inference import GenerationOutcome, run_generation
 from pstparser.training import TrainingOutcome, run_training
@@ -69,9 +69,17 @@ def test_only_adapters_are_trainable(trained: TrainingOutcome) -> None:
     assert 0 < trained.trainable < trained.total
 
 
-def test_corpus_is_split_between_the_two_datasets(trained: TrainingOutcome) -> None:
-    assert trained.train_size + trained.eval_size == 7
+def test_training_sees_the_training_set_and_watches_the_validation_set(
+    trained: TrainingOutcome,
+    config: ExperimentConfig,
+) -> None:
+    split = load_split(config.data.split.output_dir)
+
+    assert trained.train_size == len(split.train)
+    assert trained.eval_size == len(split.val)
     assert trained.eval_size > 0
+    # The test set is not among the records the training run ever reads.
+    assert len(split) == 7
 
 
 def test_training_loss_is_finite(trained: TrainingOutcome) -> None:

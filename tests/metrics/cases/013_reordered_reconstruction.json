@@ -8,7 +8,7 @@
       ],
       "context": {
         "format": [],
-        "constrains": [],
+        "constraints": [],
         "data": [
           "def add(a, b): return a + b"
         ],
@@ -22,5 +22,5 @@
       }
     }
   },
-  "prediction": "{\"prompt\": {\"main_instruction\": [\"\\nExplain this function.\"], \"context\": {\"format\": [], \"constrains\": [], \"data\": [\"def add(a, b): return a + b\"], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"\\nExplain this function.\"], \"context\": {\"format\": [], \"constraints\": [], \"data\": [\"def add(a, b): return a + b\"], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
 }

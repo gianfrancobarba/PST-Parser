@@ -1,0 +1,155 @@
+# Corrections applied to the annotated corpus while it is read.
+#
+# The spreadsheet is an input and stays exactly as it was handed over. Every
+# correction is recorded here instead, against the record it applies to and with
+# the reason it was made, so that what changed can be read without opening a
+# binary and diffing it.
+#
+# The annotation is extractive: each cell holds text copied verbatim from the
+# prompt, and each piece of the prompt belongs to one node only. Every entry
+# below is a place where one of those two rules was broken while labelling, and
+# the correction is the smallest edit that restores it. None of them changes
+# which node a passage belongs to.
+#
+# A correction that no longer describes its cell is an error, not a silent
+# no-op, so this file and the corpus cannot drift apart unnoticed.
+
+fixes:
+  # --- Text that does not occur in the prompt --------------------------------
+
+  - row: 26
+    column: DATA
+    reason: a stray apostrophe was typed after the end of the pasted snippet
+    find: "content=image_data, headers=headers)'"
+    replace: "content=image_data, headers=headers)"
+
+  - row: 94
+    column: MAIN INSTRUCTION
+    reason: an ellipsis character was typed where the prompt has three full stops
+    find: "…"
+    replace: "..."
+
+  - row: 101
+    column: DATA
+    reason: the pasted block was enclosed in quotation marks that the prompt does not have
+    unwrap: '"'
+
+  - row: 155
+    column: MAIN INSTRUCTION
+    reason: a stray letter was typed after the question mark
+    find: "'crocodiles'?ù"
+    replace: "'crocodiles'?"
+
+  - row: 232
+    column: FORMAT
+    reason: the pasted block was enclosed in quotation marks that the prompt does not have
+    unwrap: '"'
+
+  - row: 288
+    column: DATA
+    reason: the pasted block was enclosed in quotation marks that the prompt does not have
+    unwrap: '"'
+
+  - row: 288
+    column: DATA
+    reason: a word was capitalised while copying, where the prompt has it in lower case
+    find: "The CV Can be"
+    replace: "The CV can be"
+
+  - row: 423
+    column: DATA
+    reason: the pasted block was enclosed in quotation marks that the prompt does not have
+    unwrap: '"'
+
+  - row: 512
+    column: DATA
+    reason: >
+      the separator was typed inside a lambda capture, and the angle bracket of
+      the arrow was duplicated across the break
+    find: "[]<sep>> (Node& node)"
+    replace: "[]<sep>(Node& node)"
+
+  - row: 724
+    column: CONSTRAINS
+    reason: >
+      The cell holds a spreadsheet error value. The annotated passage begins
+      with a hyphen, which the spreadsheet read as the start of a formula and
+      then failed to evaluate, destroying the text. It is restored here, exactly
+      as it reads in the prompt, and it is the only part of that prompt no node
+      accounts for.
+    expect: "#ERROR!"
+    set: "- make sure put extra GPT stank on it. It needs to be efficient and flashy"
+
+  - row: 749
+    column: ROLE
+    reason: >
+      the passage was rewritten from the first person to the second while being
+      copied, so it no longer occurs in the prompt
+    find: "Hello, You are a software developer"
+    replace: "Hello, I am a software developer"
+
+  # --- Text claimed by two nodes at once -------------------------------------
+
+  - row: 10
+    column: MAIN INSTRUCTION
+    reason: >
+      the instruction was extended by one digit into the passage that the
+      restrictive node also claims
+    find: "of ai 5"
+    replace: "of ai"
+
+  - row: 39
+    column: CONSTRAINS
+    reason: >
+      a truncated copy of the following segment was left in front of it, so the
+      same passage was claimed twice
+    find: "<sep> Before starting, check if you <sep> Before starting"
+    replace: "<sep> Before starting"
+
+  - row: 247
+    column: DATA
+    reason: >
+      the working set was extended over the task block, which the instruction
+      node also claims
+    find: "\n\n\n# Task\n\nFix the following issue!\n\nUse the package.json in the current working dir.\nWhen file not found, return affected fields empty."
+    replace: ""
+
+  - row: 552
+    column: DATA
+    reason: >
+      the pasted block was extended over the instruction, which the instruction
+      node also claims
+    find: "problem. I'd like you to refactor the program <sep>"
+    replace: "problem. <sep>"
+
+  # --- Passages of a prompt that no node accounted for ----------------------
+
+  - row: 386
+    column: DATA
+    reason: >
+      The data block was started in the middle of the query the user had
+      written so far. The opening of that same query is extended back into it,
+      so that no part of the prompt is left unassigned.
+    find: "AS sales_count, orders.ship_region"
+    replace: "So far, I have:\nSELECT products.product_id, SUM(order_details.quantity) AS sales_count, orders.ship_region"
+
+  - row: 392
+    column: FORMAT
+    reason: >
+      The specification of the desired behaviour was annotated only as far as
+      its first section. The rest of the same document was left unassigned, and
+      is added here as a further segment of the node that already holds the
+      section before it.
+    append: "Desired usage:\n\n    $ zalgz load [<repo/plugin>]\n\nWhen <repo/plugin> are given,\
+      \ clones https://github.com/repo/plugin.git to $CONF_FILES/zalgz/plugins/<repo>/<plugin>,\
+      \ creating parent diretories as required, and saves the plugin to the database (<repo/plugin>\
+      \ <git_ref>).\n\nFor example, running the following command:\n\n    $ zalgz load romkatv/powerlevel10k\n\
+      \nshould clone https://github.com/romkatv/powerlevel10k.git to ~/CONF_FILES/zalgz/plugins/romkatv/powerlevel10k,\
+      \ and add the following line:\n\n    romkatv/powerlevel10k origin/master\n\nto $CONF_FILES/zalgz/plugins.txt.\n\
+      \nRunning without a <repo/plugin>:\n\n    $ zalgz load\n\nwill do a plugin sync (reads plugins.txt\
+      \ and checks out all plugins as need).\n\n### Subcommand: zalgz update\n\nDesired usage:\n\
+      \n    $ zalgz update <all|repo/plugin>\n\nUpdates the specified plugin(s) (either all plugins\
+      \ if the string \"all\" is passed, otherwise repo/plugin) according to plugins.txt. Might\
+      \ work to just do a git remote update in each package and then do a git reset --hard <git_ref>.\n\
+      \nExample:\n\n    $ zalgz update all\n\nUpdates all plugins, fetching latest for each one\
+      \ from git.\n\nOr you can update a single plugin:\n\n    $ zalgz update romkatv/powerlevel10k"

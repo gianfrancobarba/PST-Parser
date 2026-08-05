@@ -23,11 +23,19 @@ uv run pstparser score --config configs/experiments/baseline.yaml --predictions 
 Chiunque può così rigenerare ogni numero in pochi secondi, verificarlo, o applicare metriche
 diverse alle stesse predizioni.
 
-> **`results.json` ed `eval_details.jsonl` non vanno rigenerati.** Sono l'output del codice al tag
-> `baseline-as-is` e servono da termine di paragone; il codice corrente calcola le metriche in modo
-> diverso e li sovrascriverebbe. Per riprodurli serve quel tag:
-> `git worktree add ../pst-asis baseline-as-is`. Ogni nuovo punteggio va scritto in una
-> sottodirectory, con `--run-dir`.
+> **Nessuno dei punteggi in questa directory va rigenerato con il codice corrente.**
+>
+> `results.json` ed `eval_details.jsonl` sono l'output del codice al tag `baseline-as-is`; per
+> riprodurli serve quel tag (`git worktree add ../pst-asis baseline-as-is`).
+>
+> `conformant/` è stato prodotto dopo la correzione delle metriche ma **prima** della correzione
+> dello schema. Il nodo restrittivo si chiamava allora `constrains`, ed è ciò che questo modello è
+> stato addestrato a emettere. Con lo schema corretto in `constraints`, tutte e 82 le predizioni
+> parsificabili risultano non conformi, e i punteggi che ne uscirebbero sarebbero privi di
+> significato. **È la dimostrazione concreta che il rename impone un nuovo addestramento**, e il
+> motivo per cui questi numeri appartengono alla revisione che li ha prodotti.
+>
+> Ogni nuovo punteggio va scritto in una sottodirectory, con `--run-dir`.
 
 I pesi dell'adapter non sono versionati: pesano 167 MB e non servono a riprodurre alcuna metrica.
 Servono solo a generare nuove predizioni, e per quello basta rieseguire il training a partire dal

@@ -42,17 +42,32 @@ class QualityConfig(_Base):
 
 
 class SplitConfig(_Base):
-    """Parameters of the train/evaluation partition.
+    """Parameters of the three-way partition.
 
     Attributes:
-        eval_fraction: Fraction of records held out for evaluation.
+        val_fraction: Share of records watched while training.
+        test_fraction: Share of records the reported results are computed on.
         random_state: Seed controlling the shuffle applied before partitioning.
+        deduplicate: Whether records identical in both prompt and target are
+            reduced to one. They carry no further signal, and keeping them lets
+            the same example be counted twice.
         output_dir: Directory where the resulting identifier files are written.
     """
 
-    eval_fraction: float = Field(default=0.09, gt=0.0, lt=1.0)
+    val_fraction: float = Field(default=0.09, gt=0.0, lt=1.0)
+    test_fraction: float = Field(default=0.09, gt=0.0, lt=1.0)
     random_state: int = 42
+    deduplicate: bool = True
     output_dir: Path = Path("data/splits")
+
+    @model_validator(mode="after")
+    def _fractions_must_leave_a_training_set(self) -> SplitConfig:
+        if self.val_fraction + self.test_fraction >= 1.0:
+            raise ValueError(
+                f"val_fraction ({self.val_fraction}) and test_fraction "
+                f"({self.test_fraction}) must leave a training set"
+            )
+        return self
 
 
 class DataConfig(_Base):
@@ -68,6 +83,10 @@ class DataConfig(_Base):
         prompt_column: Column containing the raw, unsegmented prompt.
         column_mapping: Mapping from dotted leaf path of the target schema to
             the spreadsheet column supplying its content.
+        fixes_path: File holding the corrections applied to the annotations as
+            they are read. The spreadsheet itself is never modified, so this is
+            where every departure from it is recorded. When omitted the corpus
+            is used exactly as delivered.
         processed_dir: Directory where the serialised records are written.
         quality: Integrity check thresholds.
         split: Partitioning parameters.
@@ -77,6 +96,7 @@ class DataConfig(_Base):
     sheet_name: str
     prompt_column: str = "PROMPT"
     column_mapping: dict[str, str]
+    fixes_path: Path | None = None
     processed_dir: Path = Path("data/processed")
     quality: QualityConfig = QualityConfig()
     split: SplitConfig = SplitConfig()

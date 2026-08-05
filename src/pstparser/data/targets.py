@@ -22,5 +22,5 @@ def build_target(row: Mapping[str, Any], column_mapping: Mapping[str, str]) -> d
     Raises:
         KeyError: If ``column_mapping`` does not cover every declared leaf.
     """
-    values = {path: clean_field(row.get(column_mapping[path]), is_list=True) for path in LEAF_PATHS}
+    values = {path: clean_field(row.get(column_mapping[path])) for path in LEAF_PATHS}
     return assemble(values)

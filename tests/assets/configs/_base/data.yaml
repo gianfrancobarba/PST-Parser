@@ -5,7 +5,7 @@ data:
   column_mapping:
     main_instruction: MAIN INSTRUCTION
     context.format: FORMAT
-    context.constrains: CONSTRAINS
+    context.constraints: CONSTRAINS
     context.data: DATA
     context.role: ROLE
     examples: EXAMPLES
@@ -16,5 +16,6 @@ data:
     min_coverage_ratio: 0.90
     fail_on_issues: false
   split:
-    eval_fraction: 0.3
+    val_fraction: 0.15
+    test_fraction: 0.15
     random_state: 42

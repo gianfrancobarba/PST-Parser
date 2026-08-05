@@ -49,9 +49,8 @@ def test_short_annotation_is_reported() -> None:
     issue = report.issues[0]
     assert issue.index == 0
     assert issue.kind == "low_coverage"
-    assert issue.source_length is not None
-    assert issue.reconstructed_length is not None
-    assert issue.reconstructed_length < issue.source_length
+    assert issue.coverage is not None
+    assert issue.coverage < 0.90
 
 
 def test_annotation_just_above_the_threshold_passes() -> None:
@@ -65,20 +64,52 @@ def test_annotation_just_above_the_threshold_passes() -> None:
     assert report.passed
 
 
+def test_a_segment_the_prompt_does_not_hold_is_reported() -> None:
+    # Length alone cannot see this: the annotation is as long as the prompt.
+    report = check_corpus(
+        prompts=["Summarise the code."],
+        targets=[target_with(main_instruction=["Summarise the text."])],
+        min_coverage_ratio=0.0,
+    )
+
+    issue = report.issues[0]
+    assert issue.kind == "absent_segment"
+    assert issue.segment == "Summarise the text."
+
+
+def test_a_segment_claimed_by_two_nodes_is_reported() -> None:
+    # The instruction swallows the passage that the restrictive node also holds.
+    report = check_corpus(
+        prompts=["Summarise the code. Be brief."],
+        targets=[
+            target_with(
+                main_instruction=["Summarise the code. Be brief."],
+                **{"context.constraints": ["Be brief."]},
+            )
+        ],
+        min_coverage_ratio=0.0,
+    )
+
+    issue = report.issues[0]
+    assert issue.kind == "contested_segment"
+    assert issue.segment == "Be brief."
+
+
+def test_a_repeated_passage_is_not_mistaken_for_a_clash() -> None:
+    # The passage really does occur twice, so both segments find a home.
+    report = check_corpus(
+        prompts=["stop. go. stop."],
+        targets=[target_with(main_instruction=["stop.", "stop."])],
+        min_coverage_ratio=0.0,
+    )
+
+    assert report.passed
+
+
 def test_unparseable_target_is_reported() -> None:
     report = check_corpus(
         prompts=["anything"],
         targets=["{not valid json"],
-        min_coverage_ratio=0.90,
-    )
-
-    assert report.issues[0].kind == "unparseable_target"
-
-
-def test_target_without_root_key_is_reported() -> None:
-    report = check_corpus(
-        prompts=["anything"],
-        targets=[json.dumps({"unexpected": {}})],
         min_coverage_ratio=0.90,
     )
 
@@ -101,6 +132,7 @@ def test_report_is_serialisable() -> None:
 
     assert payload["total"] == 1
     assert payload["issue_count"] == 1
+    assert payload["affected_records"] == 1
     assert payload["issues"][0]["kind"] == "low_coverage"
 
 

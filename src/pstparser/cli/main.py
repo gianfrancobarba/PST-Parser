@@ -7,7 +7,7 @@ delegate to the corresponding module. No pipeline logic lives here.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, cast
 
 import typer
 from rich.console import Console
@@ -109,7 +109,7 @@ def prepare_data(config: ConfigOption, set_: SetOption = None) -> None:
     experiment = _load(config, set_)
 
     try:
-        result = prepare_corpus(experiment.data)
+        result = prepare_corpus(experiment.data, experiment.evaluation.alignment_levels)
     except CorpusError as exc:
         error_console.print(f"[bold red]Corpus error:[/] {exc}")
         raise typer.Exit(code=1) from exc
@@ -118,8 +118,11 @@ def prepare_data(config: ConfigOption, set_: SetOption = None) -> None:
     table.add_column(style="cyan")
     table.add_column()
     table.add_row("records", str(len(result.records)))
+    table.add_row("annotation fixes", str(len(result.fixes)))
     table.add_row("training", str(len(result.split.train)))
-    table.add_row("evaluation", str(len(result.split.eval)))
+    table.add_row("validation", str(len(result.split.val)))
+    table.add_row("test", str(len(result.split.test)))
+    table.add_row("dropped as duplicate", str(len(result.records) - len(result.split)))
     table.add_row("integrity issues", str(len(result.quality.issues)))
     table.add_row("records file", str(result.records_path))
     table.add_row("integrity report", str(result.report_path))
@@ -203,15 +206,30 @@ def generate(
         int | None,
         typer.Option("--limit", help="Stop after this many records.", min=1),
     ] = None,
+    split: Annotated[
+        str,
+        typer.Option("--split", help="Side of the partition to generate for."),
+    ] = "test",
 ) -> None:
-    """Produce predictions for the evaluation split."""
+    """Produce predictions for one side of the partition."""
     experiment = _load(config, set_)
 
     from pstparser.inference import run_generation
+    from pstparser.inference.generate import SplitSide
     from pstparser.models import BackendError
 
+    if split not in ("train", "val", "test"):
+        error_console.print(f"[bold red]Unknown split:[/] {split}")
+        raise typer.Exit(code=1)
+
     try:
-        outcome = run_generation(experiment, adapter_dir=adapter, run_dir=run_dir, limit=limit)
+        outcome = run_generation(
+            experiment,
+            adapter_dir=adapter,
+            run_dir=run_dir,
+            limit=limit,
+            side=cast(SplitSide, split),
+        )
     except BackendError as exc:
         error_console.print(f"[bold red]Backend error:[/] {exc}")
         raise typer.Exit(code=1) from exc

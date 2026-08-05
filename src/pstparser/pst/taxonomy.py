@@ -3,6 +3,12 @@
 This module is the single source of truth for the shape of the target object.
 The order in which leaves are declared here determines the key order of every
 serialised target, so it must not be changed without regenerating the corpus.
+
+A leaf holds the text that was extracted and nothing else. Where that text sat in
+the prompt is not something the model is asked to produce: it is recovered
+afterwards, by locating each phrase in the source, and belongs to the aligned
+artefact rather than to the training target. Keeping the two apart is what lets
+the model attend to segmenting rather than to counting characters.
 """
 
 from __future__ import annotations
@@ -19,7 +25,7 @@ PATH_SEPARATOR: Final = "."
 LEAF_PATHS: Final[tuple[str, ...]] = (
     "main_instruction",
     "context.format",
-    "context.constrains",
+    "context.constraints",
     "context.data",
     "context.role",
     "examples",

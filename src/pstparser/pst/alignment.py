@@ -12,6 +12,13 @@ the problem this way is what makes it tractable: the non-overlap constraint is t
 mutual exclusivity the segmentation is defined by, and the ranking of the spans is
 what the recoverability of the prompt rests on.
 
+Choosing which occurrence of a phrase to take, when it occurs more than once, is
+an assignment problem that is NP-hard in general, so the rules below are local
+and the outcome is not always the best one available. Where they fail, a phrase
+is left without a home and reported as contested rather than quietly given a
+span that belongs to another: the error is always in the direction of claiming
+less than was established, never more.
+
 Nothing here reaches outside the standard library, so locating a phrase costs no
 more than reading the prediction file.
 """
@@ -190,7 +197,9 @@ class AlignedLeaf:
         start: Index of its first character in the prompt.
         end: Index just past its last character in the prompt.
         level: Normalisation at which the phrase was found.
-        candidates: Occurrences found at that level; ``0`` when unlocated.
+        candidates: Occurrences the phrase had. For a located phrase these are
+            the occurrences at the level it was placed at; for one that was not
+            placed, the occurrences that were all already claimed.
     """
 
     path: str
@@ -214,7 +223,23 @@ class AlignedLeaf:
     @property
     def ambiguous(self) -> bool:
         """Whether more than one occurrence could have been chosen."""
-        return self.candidates > 1
+        return self.located and self.candidates > 1
+
+    @property
+    def contested(self) -> bool:
+        """Whether the phrase occurs, but only where another one already sits.
+
+        Two segments claiming the same span is not a failure of the search: it
+        is the annotation placing one piece of text under two nodes, which the
+        segmentation forbids. Telling this apart from a phrase that simply is
+        not there keeps the two defects from being reported as one.
+        """
+        return not self.located and self.candidates > 0
+
+    @property
+    def absent(self) -> bool:
+        """Whether the phrase does not occur in the prompt at all."""
+        return not self.located and not self.candidates
 
     def as_dict(self) -> dict[str, Any]:
         """Return a JSON-serialisable view of the leaf."""
@@ -258,6 +283,11 @@ class Alignment:
     def ambiguous(self) -> int:
         """How many non-blank phrases had more than one candidate occurrence."""
         return sum(leaf.ambiguous for leaf in self.scored)
+
+    @property
+    def contested(self) -> int:
+        """How many phrases occur only where another phrase already sits."""
+        return sum(leaf.contested for leaf in self.scored)
 
     def ordered(self) -> tuple[AlignedLeaf, ...]:
         """Return the located phrases in the order they occur in the prompt."""
@@ -310,6 +340,7 @@ class Alignment:
             "phrases": len(self.scored),
             "located": self.located,
             "ambiguous": self.ambiguous,
+            "contested": self.contested,
             "reconstructs": self.reconstructs(),
             "leaves": [leaf.as_dict() for leaf in self.leaves],
         }
@@ -322,12 +353,20 @@ def align_phrases(
 ) -> tuple[AlignedLeaf, ...]:
     """Assign each phrase a span of the prompt, no two spans overlapping.
 
-    Three rules make the outcome deterministic and are applied in this order.
+    Four rules make the outcome deterministic and are applied in this order.
     Every level is exhausted before the next one is tried, so a phrase found
     verbatim is never displaced by one found only after normalisation. Within a
     level the longest phrases claim their span first, since a short phrase is
     often a substring of a long one and would otherwise pierce it. Among the
-    spans still free, the leftmost is taken.
+    spans still free, the one standing in the way of the fewest phrases still
+    looking for a home is taken; and where several are equally in the way, the
+    leftmost.
+
+    That third rule is what keeps a phrase from being stranded. In ``ababa``
+    cut into ``ab`` and ``aba``, the longer phrase occurs at both ends, and
+    taking the leftmost would sit across the only place the shorter one fits.
+    Counting the obstruction first costs nothing when phrases occur once, which
+    is the ordinary case, and settles the periodic ones correctly.
 
     Args:
         prompt: The text to locate the phrases in.
@@ -342,17 +381,32 @@ def align_phrases(
 
     pending = [order for order, (_, phrase) in enumerate(phrases) if phrase.strip()]
     claimed: list[tuple[int, int]] = []
+    outbid: dict[int, int] = {}
 
     for level in levels:
         projection = projections[level]
+        at_level = {
+            order: occurrences(projection, project_phrase(phrases[order][1], level))
+            for order in pending
+        }
         for order in sorted(pending, key=lambda index: (-len(phrases[index][1]), index)):
             path, phrase = phrases[order]
-            found = occurrences(projection, project_phrase(phrase, level))
+            found = at_level[order]
+            if found and order not in outbid:
+                outbid[order] = len(found)
+
             free = [span for span in found if not _overlaps(claimed, span)]
             if not free:
                 continue
 
-            start, end = free[0]
+            rival = [
+                span
+                for other in pending
+                if other != order
+                for span in at_level[other]
+                if not _overlaps(claimed, span)
+            ]
+            start, end = min(free, key=lambda span: (_obstruction(rival, span), span))
             bisect.insort(claimed, (start, end))
             pending.remove(order)
             results[order] = AlignedLeaf(
@@ -363,6 +417,10 @@ def align_phrases(
                 level=level,
                 candidates=len(found),
             )
+
+    for order, count in outbid.items():
+        if results[order].start is None:
+            results[order] = replace(results[order], candidates=count)
 
     spans: list[tuple[int, int, int]] = []
     for order, leaf in enumerate(results):
@@ -394,6 +452,20 @@ def align_tree(
         tree=tree,
         leaves=align_phrases(prompt, list(iter_leaves(tree)), levels),
     )
+
+
+def _obstruction(rival: Sequence[tuple[int, int]], span: tuple[int, int]) -> int:
+    """Count the places a span would take away from the phrases still waiting.
+
+    Args:
+        rival: Spans that phrases without a home could still occupy.
+        span: The span under consideration.
+
+    Returns:
+        How many of those spans it intersects.
+    """
+    start, end = span
+    return sum(other_start < end and start < other_end for other_start, other_end in rival)
 
 
 def _overlaps(claimed: Sequence[tuple[int, int]], span: tuple[int, int]) -> bool:

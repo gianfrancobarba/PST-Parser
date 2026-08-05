@@ -11,7 +11,7 @@ import json
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import torch
 
@@ -24,6 +24,9 @@ from pstparser.repro.manifest import build_manifest, digest_directory, write_man
 from pstparser.repro.seeding import seed_everything
 
 PREDICTIONS_FILE = "predictions.jsonl"
+
+#: Sides of the partition predictions can be generated for.
+SplitSide = Literal["train", "val", "test"]
 
 
 @dataclass(frozen=True)
@@ -48,8 +51,9 @@ def run_generation(
     adapter_dir: str | Path,
     run_dir: str | Path | None = None,
     limit: int | None = None,
+    side: SplitSide = "test",
 ) -> GenerationOutcome:
-    """Generate a prediction for every record of the evaluation split.
+    """Generate a prediction for every record of one side of the partition.
 
     Args:
         config: The resolved experiment configuration.
@@ -58,6 +62,9 @@ def run_generation(
             ``adapter_dir``, so that predictions sit beside the model that
             produced them.
         limit: Stop after this many records, for a quick check.
+        side: Which side of the partition to generate for. The test set is the
+            default because it is what results are quoted from; the validation
+            set is there for the checks made while developing.
 
     Returns:
         The predictions and the paths they were written to.
@@ -76,7 +83,7 @@ def run_generation(
     split = load_split(config.data.split.output_dir)
     system_prompt = Path(config.system_prompt_path).read_text(encoding="utf-8")
 
-    evaluation_records = select(records, split.eval)
+    evaluation_records = select(records, getattr(split, side))
     if limit is not None:
         evaluation_records = evaluation_records[:limit]
 
@@ -105,6 +112,7 @@ def run_generation(
             extra={
                 "adapter": str(adapter_dir),
                 "adapter_digest": digest_directory(adapter_dir),
+                "split": side,
                 "generated": len(predictions),
             },
         ),

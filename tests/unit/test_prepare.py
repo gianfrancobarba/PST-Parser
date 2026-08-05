@@ -12,8 +12,10 @@ from pstparser.config import load_experiment
 from pstparser.data import (
     CorpusError,
     PreparationResult,
+    apply_fixes,
     build_target,
     iter_rows,
+    load_fixes,
     load_records,
     load_split,
     prepare_corpus,
@@ -24,12 +26,12 @@ from pstparser.data import (
 from pstparser.pst import serialise_target
 
 #: Digest of the serialised targets produced from the shipped corpus, newline
-#: separated. Any change to the taxonomy, to cell normalisation or to the corpus
-#: itself moves this value.
-SHIPPED_TARGETS_DIGEST = "47051dba751f452a644d8cbd2fc077152add090bd2287f1cf1b2bae903088a12"
+#: separated. Any change to the taxonomy, to cell normalisation, to the
+#: corrections or to the corpus itself moves this value.
+SHIPPED_TARGETS_DIGEST = "513e1e40745325afae6130156d5649d2e2cab371ca24034486f76fd64dad5154"
 
 #: Digest of the system message the model is conditioned on.
-SYSTEM_PROMPT_DIGEST = "cd4aa0d64e638463a7997d638d3dddaf737eb0eb62da96a7a09db21590012f30"
+SYSTEM_PROMPT_DIGEST = "bc2282e04b35c1055a36edc30050286e3ead4bfec159385c09f0462763fd79d7"
 
 SHIPPED_RECORD_COUNT = 975
 
@@ -62,16 +64,21 @@ def test_targets_are_parseable(prepared: PreparationResult) -> None:
         assert "prompt" in json.loads(record.target)
 
 
-def test_multi_segment_cell_stays_a_single_segment(prepared: PreparationResult) -> None:
+def test_a_cell_marked_as_disjoint_becomes_two_segments(prepared: PreparationResult) -> None:
     tree = json.loads(prepared.records[2].target)["prompt"]
 
-    assert tree["context"]["data"] == ["class A: pass<sep>class B: pass"]
+    assert tree["context"]["data"] == ["class A: pass", "class B: pass"]
 
 
-def test_list_shaped_cell_becomes_several_segments(prepared: PreparationResult) -> None:
+def test_a_list_shaped_cell_is_kept_as_the_prompt_writes_it(
+    prepared: PreparationResult,
+) -> None:
+    # The prompt itself contains the brackets and quotes, so the annotation is
+    # a faithful span of it. Reading the cell as a literal would replace that
+    # span with two words the prompt never held on their own.
     tree = json.loads(prepared.records[6].target)["prompt"]
 
-    assert tree["context"]["data"] == ["alpha", "beta"]
+    assert tree["context"]["data"] == ["['alpha', 'beta']"]
 
 
 def test_missing_annotation_becomes_an_empty_leaf(prepared: PreparationResult) -> None:
@@ -82,10 +89,8 @@ def test_missing_annotation_becomes_an_empty_leaf(prepared: PreparationResult) -
 
 
 def test_under_annotated_row_is_reported(prepared: PreparationResult) -> None:
-    # Row 4 is annotated only in part. Row 6 falls below the threshold because
-    # parsing its cell as a literal drops the brackets and quotes that the
-    # prompt contains.
-    assert [issue.index for issue in prepared.quality.issues] == [4, 6]
+    # Row 4 is annotated only in part, and is the only row that is.
+    assert [issue.index for issue in prepared.quality.issues] == [4]
 
 
 def test_artefacts_are_written(prepared: PreparationResult) -> None:
@@ -159,6 +164,8 @@ def test_shipped_corpus_produces_stable_targets() -> None:
         config.data.sheet_name,
         required_columns=[config.data.prompt_column, *config.data.column_mapping.values()],
     )
+    assert config.data.fixes_path is not None
+    frame = apply_fixes(frame, load_fixes(config.data.fixes_path))
 
     targets = [
         serialise_target(build_target(row, config.data.column_mapping)) for row in iter_rows(frame)

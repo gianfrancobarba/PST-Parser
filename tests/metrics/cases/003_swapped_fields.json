@@ -10,7 +10,7 @@
         "format": [
           "Answer in JSON."
         ],
-        "constrains": [
+        "constraints": [
           "Do not use markdown."
         ],
         "data": [],
@@ -24,5 +24,5 @@
       }
     }
   },
-  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [\"Do not use markdown.\", \"Answer in JSON.\"], \"constrains\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
+  "prediction": "{\"prompt\": {\"main_instruction\": [\"Summarise the report.\"], \"context\": {\"format\": [\"Do not use markdown.\", \"Answer in JSON.\"], \"constraints\": [], \"data\": [], \"role\": []}, \"examples\": [], \"reasoning\": {\"influence\": [], \"reasoning_examples\": [], \"paths\": []}}}"
 }
