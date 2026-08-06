@@ -3,19 +3,21 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from pstparser.config import DataConfig
-from pstparser.data.excel import CorpusError, iter_rows, read_corpus
+from pstparser.config import CorpusSource, DataConfig
+from pstparser.data.annotations import read_annotations
+from pstparser.data.errors import CorpusError
+from pstparser.data.excel import iter_rows, read_corpus
 from pstparser.data.fixes import AnnotationFix, apply_fixes, load_fixes
 from pstparser.data.quality import QualityReport, check_corpus
 from pstparser.data.splits import Split, group_key, make_split, save_split
-from pstparser.data.targets import build_target
+from pstparser.data.targets import RawRecord, build_leaves
 from pstparser.pst.alignment import DEFAULT_LEVELS, MatchLevel
 from pstparser.pst.target import serialise_target
-from pstparser.pst.taxonomy import LEAF_PATHS
+from pstparser.pst.taxonomy import LEAF_PATHS, assemble
 
 RECORDS_FILE = "records.jsonl"
 QUALITY_REPORT_FILE = "quality_report.json"
@@ -30,15 +32,30 @@ class PreparedRecord:
             records by this value.
         prompt: The raw, unsegmented prompt.
         target: The serialised target tree.
+        paradigm: The reasoning paradigm the prompt was written to exercise,
+            where its source records one.
     """
 
     index: int
     prompt: str
     target: str
+    paradigm: str | None = None
 
     def as_dict(self) -> dict[str, object]:
-        """Return a JSON-serialisable view of the record."""
-        return {"index": self.index, "prompt": self.prompt, "target": self.target}
+        """Return a JSON-serialisable view of the record.
+
+        The paradigm is left out when there is none, so that a corpus of sources
+        that do not record it serialises exactly as it did before the field
+        existed.
+        """
+        payload: dict[str, object] = {
+            "index": self.index,
+            "prompt": self.prompt,
+            "target": self.target,
+        }
+        if self.paradigm is not None:
+            payload["paradigm"] = self.paradigm
+        return payload
 
 
 @dataclass(frozen=True)
@@ -50,6 +67,10 @@ class PreparationResult:
         quality: Outcome of the integrity check.
         split: The training and evaluation partition.
         fixes: Corrections applied to the annotations before conversion.
+        counts: How many records each source contributed, in the order the
+            sources were read. The integrity check reports a record by its
+            position in the whole corpus, which says nothing about which file it
+            came from once there is more than one.
         records_path: File the records were written to.
         report_path: File the integrity report was written to.
         split_dir: Directory the partition was written to.
@@ -59,6 +80,7 @@ class PreparationResult:
     quality: QualityReport
     split: Split
     fixes: list[AnnotationFix]
+    counts: list[tuple[str, int]]
     records_path: Path
     report_path: Path
     split_dir: Path
@@ -88,25 +110,24 @@ def prepare_corpus(
     if missing_leaves:
         raise CorpusError(f"column_mapping does not cover: {', '.join(missing_leaves)}")
 
-    required = [config.prompt_column, *config.column_mapping.values()]
     fixes: list[AnnotationFix] = []
     records: list[PreparedRecord] = []
+    counts: list[tuple[str, int]] = []
 
     for source in config.sources:
-        frame = read_corpus(source.path, source.sheet, required_columns=required)
-        if source.fixes is not None:
-            applied = load_fixes(source.fixes)
-            frame = apply_fixes(frame, applied)
-            fixes.extend(applied)
+        raw, applied = read_source(source, config.prompt_column, config.column_mapping)
+        fixes.extend(applied)
+        counts.append((str(source.path), len(raw)))
 
         base = len(records)
         records.extend(
             PreparedRecord(
                 index=base + offset,
-                prompt=str(row[config.prompt_column]),
-                target=serialise_target(build_target(row, config.column_mapping)),
+                prompt=record.prompt,
+                target=serialise_target(assemble(record.leaves)),
+                paradigm=record.paradigm,
             )
-            for offset, row in enumerate(iter_rows(frame))
+            for offset, record in enumerate(raw)
         )
 
     report = check_corpus(
@@ -144,10 +165,51 @@ def prepare_corpus(
         quality=report,
         split=split,
         fixes=fixes,
+        counts=counts,
         records_path=records_path,
         report_path=report_path,
         split_dir=Path(config.split.output_dir),
     )
+
+
+def read_source(
+    source: CorpusSource,
+    prompt_column: str,
+    column_mapping: Mapping[str, str],
+) -> tuple[list[RawRecord], list[AnnotationFix]]:
+    """Read one source into records, whatever format it is written in.
+
+    Args:
+        source: The source to read.
+        prompt_column: Column holding the prompt, for a spreadsheet source.
+        column_mapping: Mapping from dotted leaf path to source column, for a
+            spreadsheet source.
+
+    Returns:
+        The records the source contributed, and the corrections applied while
+        reading it.
+
+    Raises:
+        CorpusError: If the source is unreadable or does not have the expected
+            layout.
+    """
+    if source.format == "yaml":
+        return read_annotations(source.path), []
+
+    if source.sheet is None:
+        raise CorpusError(f"a spreadsheet source must name a worksheet: {source.path}")
+
+    required = [prompt_column, *column_mapping.values()]
+    frame = read_corpus(source.path, source.sheet, required_columns=required)
+    applied = load_fixes(source.fixes) if source.fixes is not None else []
+    if applied:
+        frame = apply_fixes(frame, applied)
+
+    records = [
+        RawRecord(prompt=str(row[prompt_column]), leaves=build_leaves(row, column_mapping))
+        for row in iter_rows(frame)
+    ]
+    return records, applied
 
 
 def deduplicate(records: Sequence[PreparedRecord]) -> list[PreparedRecord]:
@@ -157,6 +219,12 @@ def deduplicate(records: Sequence[PreparedRecord]) -> list[PreparedRecord]:
     lets the same example be counted twice, once on each side of a partition.
     Records that share a prompt but were annotated differently are all kept, and
     the partition puts them on the same side instead.
+
+    The first occurrence is the one kept, so a prompt annotated identically in
+    two sources is credited to whichever is listed first, and the provenance the
+    other carried goes with it. That is the right way round — the delivered
+    material is what the training signal came from — but it is a consequence of
+    the order the sources are declared in, not of anything stated here.
 
     Args:
         records: The prepared records, in corpus order.
@@ -215,11 +283,13 @@ def load_records(source: str | Path) -> list[PreparedRecord]:
         if not line.strip():
             continue
         payload = json.loads(line)
+        paradigm = payload.get("paradigm")
         records.append(
             PreparedRecord(
                 index=int(payload["index"]),
                 prompt=str(payload["prompt"]),
                 target=str(payload["target"]),
+                paradigm=None if paradigm is None else str(paradigm),
             )
         )
     return records

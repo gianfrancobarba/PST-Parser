@@ -22,6 +22,19 @@ pipeline:
 The three reasoning columns that carry no annotation in the production corpus are
 also empty here, so the inferred column types match.
 
+## `tiny_annotations.yaml`
+
+Three records annotated as text rather than on a worksheet, standing in for a
+corpus written in this repository. All satisfy the extraction contract, so the
+integrity check passes on them. Three is also the fewest a three-way partition
+can be drawn from:
+
+| Record | Purpose |
+|-------:|---------|
+| 1 | Every leaf a single segment, a paradigm recorded, most leaves left out |
+| 2 | No paradigm, and a leaf holding two disjoint parts as two entries |
+| 3 | A segment spanning several lines, at a leaf of the reasoning branch |
+
 ## `system_prompt.md`
 
 Short stand-in for the production system message. Its content is irrelevant to the

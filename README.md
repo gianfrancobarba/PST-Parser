@@ -22,9 +22,10 @@ prompt
 ```
 
 Ogni foglia è una **lista di segmenti**: una categoria può comparire in più punti del prompt, e
-tenerne i pezzi separati è ciò che permette di ricostruire il testo di partenza. Nel corpus
-l'annotatore segna la discontinuità con il token `<sep>`, che la preparazione traduce in segmenti
-distinti.
+tenerne i pezzi separati è ciò che permette di ricostruire il testo di partenza. Come la
+discontinuità venga segnata dipende dal formato in cui il corpus è annotato: in un foglio di calcolo
+con il token `<sep>`, perché una cella regge una stringa sola; in un file di testo scrivendo un
+segmento per voce di lista, perché una sequenza non ha bisogno di un token che dica dove si divide.
 
 ## Requisiti
 
@@ -219,13 +220,17 @@ uv run pstparser synth --config configs/experiments/baseline.yaml
 Il provider è un qualunque servizio con endpoint di chat completions compatibile con il formato
 OpenAI; la credenziale è letta dall'ambiente, mai da un file di configurazione.
 
-**Il comando produce prompt, non annotazioni.** L'output è un foglio con la colonna del prompt
-compilata e le colonne di annotazione vuote, con lo stesso layout del corpus: va etichettato a mano
-prima di poter rientrare in `prepare-data`. Questo passaggio resta lavoro umano.
+**Il comando produce prompt, non annotazioni.** L'output è un file con il prompt e il paradigma
+compilati e le nove foglie vuote, nello stesso formato che `prepare-data` legge: va etichettato a
+mano prima di poter rientrare. Questo passaggio resta lavoro umano.
 
-Il foglio annotato non va fuso nel corpus di partenza: si aggiunge a `data.sources`, che li
-concatena mantenendoli file distinti. Ogni sorgente porta le proprie correzioni, e il materiale
-consegnato resta separato da quello annotato dopo.
+Il formato coincide di proposito. Trascrivere 150 prompt da un formato a un altro sono 150 occasioni
+di rompere l'estrazione esatta, e il controllo a valle riporterebbe un errore di trascrizione come
+se fosse un errore di annotazione.
+
+Il file annotato non va fuso nel corpus di partenza: si aggiunge a `data.sources`, che li concatena
+mantenendoli file distinti. Il materiale consegnato resta separato da quello annotato dopo, e
+`prepare-data` riporta quanti record ha portato ciascuna sorgente.
 
 ## Notebook Colab
 
@@ -250,22 +255,23 @@ possibile risalire ai parametri esatti con cui un risultato è stato prodotto.
 ## Struttura
 
 ```
-configs/      configurazioni degli esperimenti
-docker/       Dockerfile multi-target e compose
-data/raw/     corpus annotato, immutabile
-data/splits/  identificativi delle tre partizioni, congelati
-prompts/      system prompt versionato
+configs/         configurazioni degli esperimenti
+docker/          Dockerfile multi-target e compose
+data/raw/        corpus consegnato, immutabile
+data/annotated/  annotazioni scritte qui, come testo modificabile
+data/splits/     identificativi delle tre partizioni, congelati
+prompts/         system prompt versionato
 src/pstparser/
-  config/     schema tipizzato e composizione YAML
-  pst/        tassonomia, serializzazione e schema derivato
-  data/       lettura, normalizzazione, integrità, partizioni, formati di scambio
-  models/     caricamento del modello base e degli adapter
-  training/   ricetta di fine-tuning
-  inference/  generazione delle predizioni
-  evaluation/ metriche e report
-  repro/      seeding e manifest di run
-results/      predizioni e metriche di riferimento
-tests/        suite di test
+  config/        schema tipizzato e composizione YAML
+  pst/           tassonomia, serializzazione e schema derivato
+  data/          lettura, normalizzazione, integrità, partizioni, formati di scambio
+  models/        caricamento del modello base e degli adapter
+  training/      ricetta di fine-tuning
+  inference/     generazione delle predizioni
+  evaluation/    metriche e report
+  repro/         seeding e manifest di run
+results/         predizioni e metriche di riferimento
+tests/           suite di test
 ```
 
 Le dipendenze fra i package sono aciclee e orientate verso il basso: `pst/` non dipende da nulla,
@@ -287,6 +293,57 @@ I record identici sia nel prompt sia nell'annotazione vengono ridotti a uno.
 `generate` produce predizioni per il **test** in modo predefinito; `--split val` serve alle verifiche
 fatte durante lo sviluppo.
 
+## Formati del corpus
+
+Una sorgente dichiara come è scritta. Dedurlo dal suffisso farebbe dipendere il comportamento da come
+il file è stato chiamato, e direbbe la stessa cosa due volte — nell'estensione e nella presenza di un
+foglio — senza nulla che tenga d'accordo le due.
+
+| | `excel` | `yaml` |
+|---|---|---|
+| Cos'è | Il foglio di calcolo consegnato | Annotazioni scritte in questo repository |
+| `sheet` | obbligatorio | assente |
+| `fixes` | ammesse | vietate: si corregge il file |
+| Foglia indirizzata da | intestazione di colonna | percorso nella tassonomia |
+| Segmenti disgiunti | token `<sep>` nella cella | una voce di lista ciascuno |
+
+```yaml
+data:
+  sources:
+    - path: data/raw/prompt_dataset_v2.xlsx
+      sheet: prompt_dataset_v2
+      fixes: data/raw/annotation_fixes.yaml
+    - path: data/annotated/reasoning.yaml
+      format: yaml
+```
+
+Un record annotato come testo si legge per intero in un diff, che è la ragione per cui il formato
+esiste: una revisione di cento annotazioni fatta riga per riga non è la stessa cosa di una fatta
+aprendo un binario. E nominando le foglie per percorso, un file scritto qui non eredita
+l'intestazione `CONSTRAINS` che il foglio consegnato porta per compatibilità.
+
+```yaml
+records:
+  - paradigm: tree_of_thoughts
+    prompt: |-
+      class A: pass
+
+      class B: pass
+
+      Rename these classes to something meaningful.
+      Do not change their behaviour.
+    leaves:
+      main_instruction: Rename these classes to something meaningful.
+      context.constraints: Do not change their behaviour.
+      context.data:
+        - "class A: pass"
+        - "class B: pass"
+```
+
+Una foglia omessa non ha segmenti; una stringa è un segmento; una lista è un segmento per voce. Il
+prompt va scritto con uno scalare **letterale** (`|-`): quello ripiegato (`>-`) trasforma le andate a
+capo in spazi, e il testo cambierebbe senza dirlo.
+
 ## Correzioni all'annotazione
 
 Il foglio di calcolo in `data/raw/` è un input e resta esattamente come è stato consegnato. Le
@@ -295,6 +352,11 @@ motivo per cui è stata fatta: virgolette aggiunte durante il copia-incolla, un 
 un altro, un passaggio riscritto in prima persona, una cella che il foglio di calcolo ha letto come
 formula e distrutto. Una correzione che non descrive più la sua cella è un errore, non un'operazione
 a vuoto, quindi il corpus e le sue correzioni non possono divergere senza che qualcuno se ne accorga.
+
+Il meccanismo vale per le sole sorgenti a foglio di calcolo, ed è una restrizione dichiarata dallo
+schema. Esiste perché quel file non si può modificare; un'annotazione scritta qui si corregge dove
+sta, e la storia di ciò che è cambiato è già il diff. Due posti in cui cercare la verità di un record
+sono peggio di uno.
 
 ## Limiti noti
 

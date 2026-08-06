@@ -1,0 +1,59 @@
+# Three records annotated as text, standing in for a corpus written here rather
+# than delivered as a worksheet. All satisfy the extraction contract, so the
+# integrity check passes on them and a test may assert that it does. Three is
+# the fewest a three-way partition can be drawn from.
+
+records:
+  # Every segment written as a single string, one leaf holding nothing.
+  - paradigm: zero_shot_cot
+    prompt: |-
+      You are a senior Go reviewer.
+      Think step by step.
+      Does this loop leak the ticker?
+
+      for range time.Tick(time.Second) { work() }
+
+      Answer as a bulleted list.
+    leaves:
+      main_instruction: Does this loop leak the ticker?
+      context.format: Answer as a bulleted list.
+      context.role: You are a senior Go reviewer.
+      context.data: "for range time.Tick(time.Second) { work() }"
+      reasoning.influence: Think step by step.
+
+  # No paradigm: not every annotated prompt was written to exercise one. One
+  # leaf holds two parts of the prompt that are not next to each other, written
+  # as two entries rather than joined by a separator.
+  - prompt: |-
+      class A: pass
+
+      class B: pass
+
+      Rename these classes to something meaningful.
+      Do not change their behaviour.
+    leaves:
+      main_instruction: Rename these classes to something meaningful.
+      context.constraints: Do not change their behaviour.
+      context.data:
+        - "class A: pass"
+        - "class B: pass"
+
+  # A segment spanning several lines, at a leaf of the reasoning branch.
+  - paradigm: few_shot_cot
+    prompt: |-
+      You are a log triage assistant.
+
+      Input: retried once and succeeded
+      Thought: the system self-healed.
+      Output: info
+
+      Classify the severity of the last line.
+      Reply with one word.
+    leaves:
+      main_instruction: Classify the severity of the last line.
+      context.constraints: Reply with one word.
+      context.role: You are a log triage assistant.
+      reasoning.reasoning_examples: |-
+        Input: retried once and succeeded
+        Thought: the system self-healed.
+        Output: info

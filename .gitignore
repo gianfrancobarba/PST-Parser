@@ -20,9 +20,11 @@ env/
 .env
 .env.local
 
-# Artefatti generati dalla pipeline
-# data/raw/, data/splits/ e results/ restano versionati: sono input immutabili
-# e output di riferimento del progetto.
+# Artefatti
+# data/raw/, data/annotated/, data/splits/ e results/ restano versionati: sono
+# gli input del progetto — quelli consegnati e quelli annotati qui — e i suoi
+# output di riferimento. data/synthetic/ no: contiene i prompt,
+# che non sono ancora annotati e che l'annotazione porta in data/annotated/.
 data/processed/
 data/synthetic/
 outputs/

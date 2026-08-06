@@ -170,6 +170,121 @@ def test_a_source_can_carry_no_corrections(config_dir: Path, tmp_path: Path) -> 
     assert result.quality.passed
 
 
+def annotated_source(config_dir: Path, tmp_path: Path) -> tuple[Path, CorpusSource]:
+    """Copy the text-annotated fixture next to the other temporary files."""
+    destination = tmp_path / "annotated.yaml"
+    destination.write_text(
+        Path("tests/assets/tiny_annotations.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    return destination, CorpusSource(path=destination, format="yaml")
+
+
+def test_a_text_source_prepares_on_its_own(config_dir: Path, tmp_path: Path) -> None:
+    _, source = annotated_source(config_dir, tmp_path)
+    config = load_experiment(
+        config_dir / "valid.yaml",
+        overrides=[
+            f"data.processed_dir={(tmp_path / 'processed').as_posix()}",
+            f"data.split.output_dir={(tmp_path / 'splits').as_posix()}",
+        ],
+        root=config_dir,
+    )
+
+    result = prepare_corpus(config.data.model_copy(update={"sources": [source]}))
+
+    assert [record.index for record in result.records] == [0, 1, 2]
+    # The fixture is written to satisfy the extraction contract, so the same
+    # check that guards the delivered corpus passes on it unchanged.
+    assert result.quality.passed
+    assert result.fixes == []
+
+
+def test_a_text_source_concatenates_after_a_worksheet(config_dir: Path, tmp_path: Path) -> None:
+    _, source = annotated_source(config_dir, tmp_path)
+    config = load_experiment(
+        config_dir / "valid.yaml",
+        overrides=[
+            f"data.processed_dir={(tmp_path / 'processed').as_posix()}",
+            f"data.split.output_dir={(tmp_path / 'splits').as_posix()}",
+        ],
+        root=config_dir,
+    )
+    sources = [*config.data.sources, source]
+
+    result = prepare_corpus(config.data.model_copy(update={"sources": sources}))
+
+    assert len(result.records) == 10
+    assert [record.index for record in result.records] == list(range(10))
+    assert result.records[7].prompt.startswith("You are a senior Go reviewer.")
+    # Which file a record came from, which its corpus-wide index no longer says.
+    assert [count for _, count in result.counts] == [7, 3]
+    assert Path(result.counts[1][0]).name == "annotated.yaml"
+
+
+def test_a_text_record_serialises_in_taxonomy_order(config_dir: Path, tmp_path: Path) -> None:
+    _, source = annotated_source(config_dir, tmp_path)
+    config = load_experiment(
+        config_dir / "valid.yaml",
+        overrides=[
+            f"data.processed_dir={(tmp_path / 'processed').as_posix()}",
+            f"data.split.output_dir={(tmp_path / 'splits').as_posix()}",
+        ],
+        root=config_dir,
+    )
+
+    result = prepare_corpus(config.data.model_copy(update={"sources": [source]}))
+    target = json.loads(result.records[0].target)
+
+    assert list(target["prompt"]) == ["main_instruction", "context", "examples", "reasoning"]
+    assert target["prompt"]["reasoning"]["influence"] == ["Think step by step."]
+
+
+def test_the_paradigm_travels_with_the_record(config_dir: Path, tmp_path: Path) -> None:
+    _, source = annotated_source(config_dir, tmp_path)
+    config = load_experiment(
+        config_dir / "valid.yaml",
+        overrides=[
+            f"data.processed_dir={(tmp_path / 'processed').as_posix()}",
+            f"data.split.output_dir={(tmp_path / 'splits').as_posix()}",
+        ],
+        root=config_dir,
+    )
+
+    result = prepare_corpus(config.data.model_copy(update={"sources": [source]}))
+    lines = result.records_path.read_text(encoding="utf-8").splitlines()
+
+    assert [record.paradigm for record in result.records] == [
+        "zero_shot_cot",
+        None,
+        "few_shot_cot",
+    ]
+    assert json.loads(lines[0])["paradigm"] == "zero_shot_cot"
+    # A record whose source records no paradigm serialises exactly as it did
+    # before the field existed, rather than gaining a null.
+    assert "paradigm" not in json.loads(lines[1])
+    assert load_records(result.records_path) == result.records
+
+
+def test_a_worksheet_record_carries_no_paradigm(prepared: PreparationResult) -> None:
+    lines = prepared.records_path.read_text(encoding="utf-8").splitlines()
+
+    assert all(record.paradigm is None for record in prepared.records)
+    assert all("paradigm" not in json.loads(line) for line in lines)
+
+
+def test_a_spreadsheet_source_without_a_worksheet_is_rejected(
+    config_dir: Path, tmp_path: Path
+) -> None:
+    config = load_experiment(config_dir / "valid.yaml", root=config_dir)
+    # The schema forbids it; model_copy does not revalidate, which is what makes
+    # the guard in the reader reachable rather than dead.
+    source = config.data.sources[0].model_copy(update={"sheet": None})
+
+    with pytest.raises(CorpusError, match="must name a worksheet"):
+        prepare_corpus(config.data.model_copy(update={"sources": [source]}))
+
+
 def test_incomplete_column_mapping_is_rejected(config_dir: Path, tmp_path: Path) -> None:
     config = load_experiment(config_dir / "valid.yaml", root=config_dir)
     mapping = dict(config.data.column_mapping)

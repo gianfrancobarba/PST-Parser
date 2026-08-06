@@ -7,8 +7,15 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pydantic import ValidationError
 
-from pstparser.config import ConfigError, ExperimentConfig, dump_resolved, load_experiment
+from pstparser.config import (
+    ConfigError,
+    CorpusSource,
+    ExperimentConfig,
+    dump_resolved,
+    load_experiment,
+)
 from pstparser.data import CorpusError, prepare_corpus
 
 
@@ -17,6 +24,9 @@ def test_composition_merges_every_base(config_dir: Path) -> None:
 
     # Values contributed by the data fragment.
     assert config.data.sources[0].sheet == "corpus"
+    # A source that does not say how it is written is a worksheet, which is what
+    # keeps every configuration written before the second format valid.
+    assert config.data.sources[0].format == "excel"
     assert len(config.data.column_mapping) == 9
     # Values contributed by the model fragment.
     assert config.model.backend == "hf"
@@ -24,6 +34,30 @@ def test_composition_merges_every_base(config_dir: Path) -> None:
     # Values declared by the experiment itself.
     assert config.name == "fixture"
     assert config.seed == 7
+
+
+def test_the_shipped_corpus_is_read_as_a_worksheet() -> None:
+    config = load_experiment("configs/experiments/baseline.yaml")
+
+    assert config.data.sources[0].format == "excel"
+    assert config.data.sources[0].sheet == "prompt_dataset_v2"
+
+
+def test_a_spreadsheet_source_must_name_a_worksheet() -> None:
+    with pytest.raises(ValidationError, match="must name a worksheet"):
+        CorpusSource(path=Path("corpus.xlsx"))
+
+
+def test_a_text_source_has_no_worksheet() -> None:
+    with pytest.raises(ValidationError, match="has no worksheet"):
+        CorpusSource(path=Path("corpus.yaml"), format="yaml", sheet="corpus")
+
+
+def test_a_text_source_takes_no_corrections() -> None:
+    # Corrections exist because the delivered spreadsheet cannot be edited. A
+    # file written here is corrected where it is, and the diff is the record.
+    with pytest.raises(ValidationError, match="takes no corrections"):
+        CorpusSource(path=Path("corpus.yaml"), format="yaml", fixes=Path("fixes.yaml"))
 
 
 def test_experiment_values_win_over_bases(config_dir: Path) -> None:

@@ -90,7 +90,10 @@ def validate_config(config: ConfigOption, set_: SetOption = None) -> None:
     table.add_column(style="cyan")
     table.add_column()
     for position, source in enumerate(experiment.data.sources):
-        table.add_row("corpus" if position == 0 else "", f"{source.path} [{source.sheet}]")
+        label = source.sheet if source.sheet is not None else source.format
+        # Round brackets, not square: the console reads those as markup and
+        # swallows them, which is how the worksheet name went unprinted.
+        table.add_row("corpus" if position == 0 else "", f"{source.path} ({label})")
     table.add_row("leaves", str(len(experiment.data.column_mapping)))
     table.add_row("model", f"{experiment.model.name} ({experiment.model.backend})")
     table.add_row("adapter", f"r={experiment.lora.r}, alpha={experiment.lora.alpha}")
@@ -122,6 +125,9 @@ def prepare_data(config: ConfigOption, set_: SetOption = None) -> None:
     table.add_column(style="cyan")
     table.add_column()
     table.add_row("records", str(len(result.records)))
+    if len(result.counts) > 1:
+        for path, count in result.counts:
+            table.add_row("", f"{count} from {path}")
     table.add_row("annotation fixes", str(len(result.fixes)))
     table.add_row("training", str(len(result.split.train)))
     table.add_row("validation", str(len(result.split.val)))
@@ -428,11 +434,11 @@ def synth(config: ConfigOption, set_: SetOption = None) -> None:
     table.add_row("rejected", str(result.rejected))
     for paradigm, count in sorted(result.per_paradigm().items()):
         table.add_row(f"  {paradigm}", str(count))
-    table.add_row("annotation sheet", str(result.sheet_path))
+    table.add_row("annotation file", str(result.sheet_path))
     console.print(table)
     console.print(
-        "\nThe sheet carries the prompts only. Fill in the annotation columns before "
-        "feeding it back to 'prepare-data'."
+        "\nThe file carries the prompts only. Fill in the leaves before adding it to "
+        "'data.sources' and running 'prepare-data'."
     )
 
 

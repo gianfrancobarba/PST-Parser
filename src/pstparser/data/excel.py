@@ -8,9 +8,7 @@ from typing import Any, cast
 
 import pandas as pd
 
-
-class CorpusError(RuntimeError):
-    """Raised when the corpus cannot be read or does not have the expected layout."""
+from pstparser.data.errors import CorpusError
 
 
 def read_corpus(
