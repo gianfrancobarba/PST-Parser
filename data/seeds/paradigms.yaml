@@ -7,6 +7,20 @@
 #
 # The first two of each list are the seeds reported in the original work; the
 # remainder were written to complete the set.
+#
+# The tree-of-thoughts seeds are deliberately of three kinds, because the leaf
+# collecting alternatives holds only those a prompt supplies, never the
+# instruction to invent some. Four describe a procedure and supply nothing, so
+# that leaf is rightly left empty. Three name their alternatives in running
+# prose. Three set them out as labelled options, one to a line, which is the
+# form that can be annotated without stranding the words that join them: in
+# "consider A, B and C" the commas and the conjunction belong to no node, and
+# every part of a prompt has to belong to one.
+#
+# Curating for that is a claim worth stating rather than burying. A corpus
+# arranged so that a node can be measured is no longer a sample of how such
+# prompts are ordinarily written, and the support the leaf ends up with should
+# be read with that in mind.
 
 zero_shot_cot:
   - >-
@@ -134,25 +148,31 @@ tree_of_thoughts:
   - >-
     Our monolith needs to be broken up. Lay out at least three possible seams along which to split
     it, weigh each against team boundaries and data coupling, then choose.
-  - >-
-    Design the retry policy for a payment webhook. Consider a fixed interval, exponential backoff
-    with jitter, and a dead letter queue after a bounded number of attempts. Compare them on
-    duplicate risk and operator burden before deciding.
+  - |-
+    Design the retry policy for a payment webhook.
+    Option A: a fixed interval, retrying every thirty seconds.
+    Option B: exponential backoff with jitter, capped at an hour.
+    Option C: three attempts, then a dead letter queue an operator drains.
+    Compare them on duplicate risk and operator burden before deciding.
   - >-
     We need to add full text search. Explore three approaches: the database's own search, a
     dedicated search engine, and an external hosted service. Assess operational cost, relevance
     quality and migration effort, then pick one.
-  - >-
-    Choose a rollout strategy for a change to the pricing engine. Consider a big-bang deploy, a
-    percentage rollout behind a flag, and a shadow run against production traffic. Evaluate each
-    on blast radius and time to signal, then decide.
+  - |-
+    Choose a rollout strategy for a change to the pricing engine.
+    Option A: a big-bang deploy over a quiet weekend.
+    Option B: a percentage rollout behind a flag, widening daily.
+    Option C: a shadow run against production traffic, comparing outputs.
+    Evaluate each on blast radius and time to signal, then decide.
   - >-
     Our test suite takes forty minutes. Generate three separate lines of attack, judge each on how
     much time it saves against how much it costs to maintain, then commit to a plan.
-  - >-
-    Decide how to store uploaded documents. Weigh object storage with signed URLs, a blob column in
-    the primary database, and a dedicated file service. Compare on cost, backup complexity and
-    access control, then choose.
+  - |-
+    Decide how to store uploaded documents.
+    Option A: object storage with signed URLs.
+    Option B: a blob column in the primary database.
+    Option C: a dedicated file service behind an internal API.
+    Compare on cost, backup complexity and access control, then choose.
   - >-
     We need to support a second tenant with isolated data. Explore separate databases, a shared
     database with a tenant column, and separate schemas. Evaluate each on isolation guarantees,
