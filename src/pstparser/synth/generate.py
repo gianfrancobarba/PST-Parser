@@ -11,16 +11,38 @@ with the prompt column filled and the rest empty, ready for a human to label.
 
 from __future__ import annotations
 
+import random
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 import yaml
 
 from pstparser.config import SynthConfig
-from pstparser.pst.taxonomy import LEAF_PATHS
+from pstparser.data.annotations import write_annotation_skeleton
 from pstparser.synth.providers import Provider, ProviderError
+
+#: How many requests may be spent for each prompt asked for, before a paradigm
+#: is left short. It is what keeps the count a target without letting a
+#: provider that repeats itself run forever.
+ATTEMPT_RATIO: Final = 3
+
+#: How many seeds are shown in one request. Fewer than the paradigm holds, so
+#: that no two requests are quite the same.
+SEEDS_PER_REQUEST: Final = 4
+
+#: How many requests may fail in a row before a run gives up. A provider that
+#: has refused several times running is down rather than unlucky, and going on
+#: only spends the retry backoff to arrive at nothing.
+CONSECUTIVE_FAILURES: Final = 5
+
+#: Pairs of marks a model wraps an answer in when asked for text and nothing
+#: else. They belong to no prompt, and an annotator copying them in would
+#: record an extraction that cannot be found in its own source. The curly pairs
+#: are written as escapes, being indistinguishable from their straight
+#: counterparts in a source file.
+QUOTE_PAIRS: Final = (('"', '"'), ("'", "'"), ("\u201c", "\u201d"), ("\u2018", "\u2019"))
 
 #: Instruction given to the generating model.
 SYSTEM_PROMPT = """\
@@ -34,9 +56,14 @@ Rules:
 1. Return only the prompt itself. No preamble, no quotes, no explanation.
 2. Match the paradigm of the examples, not their topic. Do not reuse their
    subject matter.
-3. Write the way a developer writes: concrete, occasionally terse, sometimes
+3. Reproduce their structure, not only their intent. Where the examples carry
+   worked demonstrations, carry worked demonstrations too, showing the
+   intermediate reasoning and keeping the labels they use. Where they set out
+   alternatives to choose between, set out alternatives. A prompt that keeps
+   only the closing question has not used the paradigm.
+4. Write the way a developer writes: concrete, occasionally terse, sometimes
    including a snippet or an error message.
-4. Keep it under two hundred words.
+5. Keep it under two hundred words.
 """
 
 
@@ -114,8 +141,16 @@ def generate_prompts(
 ) -> tuple[list[SyntheticPrompt], int]:
     """Ask the provider for new prompts in each paradigm.
 
-    Completions that are empty, or that repeat a seed or an earlier completion,
-    are discarded rather than retried, so a run always terminates.
+    The configured count is how many prompts are wanted, not how many requests
+    are spent: a completion that is empty, or that repeats a seed or an earlier
+    completion, is discarded and asked for again. Each paradigm may spend
+    :data:`ATTEMPT_RATIO` requests per prompt before being left short, which is
+    what keeps a provider that has run out of things to say from looping.
+
+    Every request shows a different handful of the paradigm's seeds, drawn from
+    the global generator that the run seeds from the experiment. Showing all of
+    them every time made fifty identical requests and asked temperature alone
+    for the variety.
 
     Args:
         seeds: Seed prompts, keyed by paradigm.
@@ -124,21 +159,36 @@ def generate_prompts(
 
     Returns:
         The accepted prompts and the number of discarded completions.
+
+    Raises:
+        ProviderError: If :data:`CONSECUTIVE_FAILURES` requests fail in a row,
+            which is a service that is down rather than one that is flaky.
     """
     accepted: list[SyntheticPrompt] = []
     rejected = 0
+    failures = 0
 
     for paradigm, examples in seeds.items():
         seen = {_fingerprint(example) for example in examples}
-        instruction = _instruction(paradigm, examples)
+        produced = 0
+        budget = config.per_paradigm * ATTEMPT_RATIO
 
-        for _ in range(config.per_paradigm):
+        while produced < config.per_paradigm and budget > 0:
+            budget -= 1
+            instruction = _instruction(paradigm, _sample(examples))
             try:
-                text = provider.complete(SYSTEM_PROMPT, instruction, config.temperature).strip()
-            except ProviderError:
+                answer = provider.complete(SYSTEM_PROMPT, instruction, config.temperature)
+            except ProviderError as exc:
                 rejected += 1
+                failures += 1
+                if failures >= CONSECUTIVE_FAILURES:
+                    raise ProviderError(
+                        f"gave up after {failures} requests failed in a row: {exc}"
+                    ) from exc
                 continue
 
+            failures = 0
+            text = _unquote(answer.strip())
             fingerprint = _fingerprint(text)
             if not fingerprint or fingerprint in seen:
                 rejected += 1
@@ -146,55 +196,69 @@ def generate_prompts(
 
             seen.add(fingerprint)
             accepted.append(SyntheticPrompt(paradigm=paradigm, text=text))
+            produced += 1
 
     return accepted, rejected
 
 
-def write_annotation_sheet(
-    prompts: Sequence[SyntheticPrompt],
-    destination: str | Path,
-    column_mapping: Mapping[str, str],
-    prompt_column: str,
-    sheet_name: str,
-) -> Path:
-    """Write the generated prompts as a spreadsheet ready for annotation.
+def write_annotation_file(prompts: Sequence[SyntheticPrompt], destination: str | Path) -> Path:
+    """Write the generated prompts as a file awaiting annotation.
 
-    The layout matches the annotated corpus, so the completed sheet can be fed
-    straight back into the preparation stage.
+    The layout is the one the preparation reads, so what gets filled in here is
+    fed back without being copied between formats. Copying is where an
+    extraction stops being exact, and the check downstream would then report a
+    transcription slip as an annotation error.
 
     Args:
-        prompts: The prompts to write, one per row.
+        prompts: The prompts to write, in order.
         destination: File to write. Parent directories are created.
-        column_mapping: Mapping from leaf path to column name, used to lay out
-            the empty annotation columns.
-        prompt_column: Name of the column holding the prompt.
-        sheet_name: Name given to the worksheet.
 
     Returns:
         The path that was written.
     """
-    from openpyxl import Workbook
-
-    destination = Path(destination)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-
-    headers = [prompt_column, *(column_mapping[path] for path in LEAF_PATHS)]
-    workbook = Workbook()
-    worksheet = workbook.active
-    worksheet.title = sheet_name
-    worksheet.append(headers)
-    worksheet.freeze_panes = "A2"
-
-    for prompt in prompts:
-        worksheet.append([prompt.text, *([None] * len(LEAF_PATHS))])
-
-    workbook.save(destination)
-    return destination
+    return write_annotation_skeleton(
+        ((prompt.paradigm, prompt.text) for prompt in prompts), destination
+    )
 
 
 def _fingerprint(text: str) -> str:
     """Reduce a prompt to a form suitable for equality checks."""
     return " ".join(text.casefold().split())
+
+
+def _sample(examples: Sequence[str]) -> list[str]:
+    """Pick the seeds shown in one request.
+
+    Args:
+        examples: Every seed of the paradigm.
+
+    Returns:
+        A subset of them, or all of them when there are no more than
+        :data:`SEEDS_PER_REQUEST`.
+    """
+    if len(examples) <= SEEDS_PER_REQUEST:
+        return list(examples)
+    return random.sample(list(examples), SEEDS_PER_REQUEST)
+
+
+def _unquote(text: str) -> str:
+    """Remove one pair of marks enclosing the whole answer.
+
+    The pair is only removed when the closing mark occurs nowhere else, so a
+    prompt that genuinely opens and closes on quoted passages is left alone.
+
+    Args:
+        text: The answer as the provider returned it.
+
+    Returns:
+        The answer without the marks that enclose all of it.
+    """
+    for opening, closing in QUOTE_PAIRS:
+        if len(text) > len(opening) + len(closing) and text.startswith(opening):
+            inner = text[len(opening) :]
+            if inner.endswith(closing) and closing not in inner[: -len(closing)]:
+                return inner[: -len(closing)].strip()
+    return text
 
 
 def _instruction(paradigm: str, examples: Sequence[str]) -> str:

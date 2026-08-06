@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import http.client
+import io
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
-from openpyxl import load_workbook
 
 from pstparser.config import SynthConfig
 from pstparser.config.loader import load_experiment
+from pstparser.data import read_annotations
 from pstparser.pst import LEAF_PATHS
 from pstparser.synth import (
     ProviderError,
@@ -19,8 +22,10 @@ from pstparser.synth import (
     load_seeds,
     provider_from_env,
     run_synthesis,
-    write_annotation_sheet,
+    write_annotation_file,
 )
+from pstparser.synth import providers as providers_module
+from pstparser.synth import run as run_module
 
 SEEDS = {
     "zero_shot_cot": ["Think through the migration before fixing it."],
@@ -50,6 +55,44 @@ class FailingProvider:
         raise ProviderError("unreachable")
 
 
+class FlakyProvider:
+    """Refuses a given number of times, then answers."""
+
+    def __init__(self, failures: int, answers: list[str]) -> None:
+        """Queue the refusals and the answers that follow them."""
+        self.remaining = failures
+        self.answers = list(answers)
+
+    def complete(self, system: str, user: str, temperature: float) -> str:
+        """Refuse while refusals remain, then pop the next answer."""
+        if self.remaining > 0:
+            self.remaining -= 1
+            raise ProviderError("connection reset")
+        return self.answers.pop(0) if self.answers else ""
+
+
+class _Response:
+    """A stand-in for the object ``urlopen`` returns."""
+
+    def __init__(self, body: dict[str, Any]) -> None:
+        self.body = body
+
+    def __enter__(self) -> _Response:
+        return self
+
+    def __exit__(self, *excinfo: object) -> bool:
+        return False
+
+    def read(self) -> bytes:
+        """Return the body, as the real handle does."""
+        return json.dumps(self.body).encode("utf-8")
+
+
+def _answer(content: str) -> _Response:
+    """Build a response carrying one completion."""
+    return _Response({"choices": [{"message": {"content": content}}]})
+
+
 def test_seeds_are_read_and_grouped() -> None:
     seeds = load_seeds("data/seeds/paradigms.yaml")
 
@@ -71,7 +114,7 @@ def test_seed_file_without_entries_is_rejected(tmp_path: Path) -> None:
         load_seeds(path)
 
 
-def test_one_prompt_is_requested_per_paradigm_and_slot() -> None:
+def test_every_paradigm_receives_the_requested_count() -> None:
     provider = ScriptedProvider(["a", "b", "c", "d"])
 
     prompts, rejected = generate_prompts(SEEDS, provider, SynthConfig(per_paradigm=2))
@@ -108,13 +151,14 @@ def test_temperature_is_passed_through() -> None:
     assert all(call[2] == pytest.approx(0.4) for call in provider.calls)
 
 
-def test_duplicate_completions_are_discarded() -> None:
+def test_duplicate_completions_are_discarded_and_asked_for_again() -> None:
     provider = ScriptedProvider(["same", "SAME", "other", "x"])
 
     prompts, rejected = generate_prompts(
-        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=4)
+        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=3)
     )
 
+    # The repeat costs a request, not a prompt: three were asked for, three came.
     assert [prompt.text for prompt in prompts] == ["same", "other", "x"]
     assert rejected == 1
 
@@ -123,7 +167,7 @@ def test_completion_repeating_a_seed_is_discarded() -> None:
     provider = ScriptedProvider([SEEDS["zero_shot_cot"][0], "fresh"])
 
     prompts, rejected = generate_prompts(
-        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=2)
+        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=1)
     )
 
     assert [prompt.text for prompt in prompts] == ["fresh"]
@@ -134,49 +178,204 @@ def test_empty_completion_is_discarded() -> None:
     provider = ScriptedProvider(["", "   ", "kept"])
 
     prompts, rejected = generate_prompts(
-        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=3)
+        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=1)
     )
 
     assert [prompt.text for prompt in prompts] == ["kept"]
     assert rejected == 2
 
 
-def test_provider_failures_do_not_abort_the_run() -> None:
-    prompts, rejected = generate_prompts(SEEDS, FailingProvider(), SynthConfig(per_paradigm=2))
+def test_the_requested_count_is_a_target_not_a_budget() -> None:
+    # Every other answer repeats the one before it, so reaching four prompts
+    # takes seven requests.
+    provider = ScriptedProvider(["a", "a", "b", "b", "c", "c", "d"])
 
-    assert prompts == []
-    assert rejected == 4
+    prompts, rejected = generate_prompts(
+        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=4)
+    )
+
+    assert [prompt.text for prompt in prompts] == ["a", "b", "c", "d"]
+    assert rejected == 3
+    assert len(provider.calls) == 7
 
 
-def test_annotation_sheet_matches_the_corpus_layout(tmp_path: Path) -> None:
-    config = load_experiment("configs/experiments/baseline.yaml")
+def test_a_provider_that_repeats_itself_stops_at_the_attempt_cap() -> None:
+    provider = ScriptedProvider(["same"] * 100)
+
+    prompts, _ = generate_prompts(
+        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=5)
+    )
+
+    assert [prompt.text for prompt in prompts] == ["same"]
+    assert len(provider.calls) == 5 * 3
+
+
+def test_an_occasional_failure_costs_a_request_and_not_the_run() -> None:
+    provider = FlakyProvider(failures=2, answers=["first", "second"])
+
+    prompts, rejected = generate_prompts(
+        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=2)
+    )
+
+    assert [prompt.text for prompt in prompts] == ["first", "second"]
+    assert rejected == 2
+
+
+def test_a_provider_that_has_stopped_answering_ends_the_run() -> None:
+    with pytest.raises(ProviderError, match="failed in a row"):
+        generate_prompts(SEEDS, FailingProvider(), SynthConfig(per_paradigm=50))
+
+
+def test_marks_enclosing_the_whole_answer_are_removed() -> None:
+    provider = ScriptedProvider(['"Refactor this loop."'])
+
+    prompts, _ = generate_prompts(
+        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=1)
+    )
+
+    assert [prompt.text for prompt in prompts] == ["Refactor this loop."]
+
+
+def test_marks_inside_the_answer_are_left_alone() -> None:
+    quoted = '"Top product" means the largest quantity. Explain the query below.'
+    provider = ScriptedProvider([quoted])
+
+    prompts, _ = generate_prompts(
+        {"zero_shot_cot": SEEDS["zero_shot_cot"]}, provider, SynthConfig(per_paradigm=1)
+    )
+
+    assert [prompt.text for prompt in prompts] == [quoted]
+
+
+def test_requests_do_not_all_show_the_same_seeds() -> None:
+    paradigm = {"zero_shot_cot": [f"seed number {n}" for n in range(10)]}
+    provider = ScriptedProvider([f"generated {n}" for n in range(20)])
+
+    generate_prompts(paradigm, provider, SynthConfig(per_paradigm=20))
+
+    requests = {call[1] for call in provider.calls}
+    assert len(requests) > 1
+    # A request carries a handful of the seeds, never all ten.
+    shown = [sum(seed in call[1] for seed in paradigm["zero_shot_cot"]) for call in provider.calls]
+    assert set(shown) == {4}
+
+
+def test_generated_prompts_are_written_in_the_format_preparation_reads(tmp_path: Path) -> None:
     prompts = [
         SyntheticPrompt(paradigm="zero_shot_cot", text="first"),
         SyntheticPrompt(paradigm="tree_of_thoughts", text="second"),
     ]
 
-    path = write_annotation_sheet(
-        prompts,
-        tmp_path / "nested" / "sheet.xlsx",
-        column_mapping=config.data.column_mapping,
-        prompt_column=config.data.prompt_column,
-        sheet_name="synthetic",
-    )
+    path = write_annotation_file(prompts, tmp_path / "nested" / "annotation.yaml")
+    records = read_annotations(path)
 
-    worksheet = load_workbook(path)["synthetic"]
-    headers = [cell.value for cell in worksheet[1]]
-
-    assert headers[0] == "PROMPT"
-    assert len(headers) == len(LEAF_PATHS) + 1
-    assert headers[1:] == [config.data.column_mapping[path] for path in LEAF_PATHS]
-    assert [row[0].value for row in worksheet.iter_rows(min_row=2)] == ["first", "second"]
-    # The annotation columns are left for a human to fill in.
-    assert all(cell.value is None for cell in worksheet[2][1:])
+    assert [record.prompt for record in records] == ["first", "second"]
+    assert [record.paradigm for record in records] == ["zero_shot_cot", "tree_of_thoughts"]
+    assert all(set(record.leaves) == set(LEAF_PATHS) for record in records)
+    # The leaves are left for a human to fill in.
+    assert all(not any(record.leaves.values()) for record in records)
 
 
 def test_missing_credential_is_reported() -> None:
     with pytest.raises(ProviderError, match="ABSENT_VARIABLE is not set"):
         provider_from_env("https://example.invalid/v1", "some/model", "ABSENT_VARIABLE")
+
+
+def test_credential_is_read_with_the_configured_transport_options(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SYNTH_TEST_KEY", "secret")
+
+    provider = provider_from_env(
+        "https://example.invalid/v1", "some/model", "SYNTH_TEST_KEY", timeout=7.5, attempts=9
+    )
+
+    assert provider.timeout == pytest.approx(7.5)
+    assert provider.attempts == 9
+
+
+def test_a_connection_closed_midway_is_retried(monkeypatch: pytest.MonkeyPatch) -> None:
+    # RemoteDisconnected is a reset socket and a malformed status line at once,
+    # and belongs to neither of the families the obvious clauses name. It ended
+    # a whole generation before the boundary was sealed.
+    seen: list[float] = []
+
+    def urlopen(request: object, timeout: float) -> _Response:
+        seen.append(timeout)
+        if len(seen) == 1:
+            raise http.client.RemoteDisconnected("closed without response")
+        return _answer("recovered")
+
+    monkeypatch.setattr(providers_module.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(providers_module, "RETRY_BACKOFF_SECONDS", 0.0)
+    provider = providers_module.ChatCompletionsProvider(
+        "https://example.invalid/v1", "some/model", "secret", timeout=3.0
+    )
+
+    assert provider.complete("system", "user", 1.0) == "recovered"
+    assert seen == [3.0, 3.0]
+
+
+def test_a_connection_that_never_recovers_is_reported_as_a_provider_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = 0
+
+    def urlopen(request: object, timeout: float) -> _Response:
+        nonlocal calls
+        calls += 1
+        raise http.client.RemoteDisconnected("closed without response")
+
+    monkeypatch.setattr(providers_module.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(providers_module, "RETRY_BACKOFF_SECONDS", 0.0)
+    provider = providers_module.ChatCompletionsProvider(
+        "https://example.invalid/v1", "some/model", "secret", attempts=3
+    )
+
+    with pytest.raises(ProviderError, match="RemoteDisconnected"):
+        provider.complete("system", "user", 1.0)
+    assert calls == 3
+
+
+def test_a_failure_no_clause_names_still_leaves_as_a_provider_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The point of the guard is that the list of transport failures is never
+    # complete: whatever arrives, one request costs one prompt, not the run.
+    def urlopen(request: object, timeout: float) -> _Response:
+        raise RuntimeError("something the clauses do not name")
+
+    monkeypatch.setattr(providers_module.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(providers_module, "RETRY_BACKOFF_SECONDS", 0.0)
+    provider = providers_module.ChatCompletionsProvider(
+        "https://example.invalid/v1", "some/model", "secret", attempts=1
+    )
+
+    with pytest.raises(ProviderError, match="RuntimeError"):
+        provider.complete("system", "user", 1.0)
+
+
+def test_a_refusal_the_service_would_repeat_is_not_retried(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = 0
+
+    def urlopen(request: object, timeout: float) -> _Response:
+        nonlocal calls
+        calls += 1
+        raise providers_module.urllib.error.HTTPError(
+            "https://example.invalid/v1", 401, "Unauthorized", {}, io.BytesIO(b"bad key")
+        )
+
+    monkeypatch.setattr(providers_module.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(providers_module, "RETRY_BACKOFF_SECONDS", 0.0)
+    provider = providers_module.ChatCompletionsProvider(
+        "https://example.invalid/v1", "some/model", "secret", attempts=3
+    )
+
+    with pytest.raises(ProviderError, match="HTTP 401"):
+        provider.complete("system", "user", 1.0)
+    assert calls == 1
 
 
 def test_run_writes_sheet_summary_and_manifest(tmp_path: Path) -> None:
@@ -207,3 +406,32 @@ def test_run_writes_sheet_summary_and_manifest(tmp_path: Path) -> None:
     assert manifest["stage"] == "synth"
     assert manifest["inputs"]["seeds"]
     assert manifest["synthesis"]["accepted"] == 3
+
+
+def test_run_builds_the_provider_the_configuration_describes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The two transport options were validated and recorded in the manifest
+    # while never reaching the provider, which no test could see.
+    captured: dict[str, object] = {}
+
+    def build(**kwargs: object) -> ScriptedProvider:
+        captured.update(kwargs)
+        return ScriptedProvider([f"generated {n}" for n in range(10)])
+
+    monkeypatch.setattr(run_module, "provider_from_env", build)
+    config = load_experiment(
+        "configs/experiments/baseline.yaml",
+        overrides=[
+            f"synth.output_dir={(tmp_path / 'synthetic').as_posix()}",
+            "synth.per_paradigm=1",
+            "synth.provider.timeout=7.5",
+            "synth.provider.attempts=9",
+        ],
+    )
+
+    run_synthesis(config)
+
+    assert captured["timeout"] == pytest.approx(7.5)
+    assert captured["attempts"] == 9
+    assert captured["api_key_env"] == "NVIDIA_API_KEY"

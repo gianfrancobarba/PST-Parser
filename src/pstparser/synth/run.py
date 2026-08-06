@@ -13,11 +13,11 @@ from pstparser.synth.generate import (
     generate_prompts,
     load_seeds,
     summarise,
-    write_annotation_sheet,
+    write_annotation_file,
 )
 from pstparser.synth.providers import Provider, provider_from_env
 
-SHEET_FILE = "annotation_sheet.xlsx"
+ANNOTATION_FILE = "annotation.yaml"
 SUMMARY_FILE = "synthesis_summary.json"
 
 
@@ -46,17 +46,13 @@ def run_synthesis(config: ExperimentConfig, provider: Provider | None = None) ->
             base_url=synth.provider.base_url,
             model=synth.provider.model,
             api_key_env=synth.provider.api_key_env,
+            timeout=synth.provider.timeout,
+            attempts=synth.provider.attempts,
         )
 
     prompts, rejected = generate_prompts(seed_prompts, provider, synth)
 
-    sheet_path = write_annotation_sheet(
-        prompts,
-        Path(synth.output_dir) / SHEET_FILE,
-        column_mapping=config.data.column_mapping,
-        prompt_column=config.data.prompt_column,
-        sheet_name=synth.sheet_name,
-    )
+    sheet_path = write_annotation_file(prompts, Path(synth.output_dir) / ANNOTATION_FILE)
 
     result = SynthesisResult(
         prompts=prompts,

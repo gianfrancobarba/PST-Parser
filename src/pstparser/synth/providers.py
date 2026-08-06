@@ -106,7 +106,28 @@ class ChatCompletionsProvider:
             raise ProviderError(f"unexpected response shape from {self.base_url}: {exc}") from exc
 
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
-        """Send a JSON request, retrying transient failures."""
+        """Send a JSON request, retrying transient failures.
+
+        Everything but a refusal the service would repeat is retried, and
+        nothing leaves as anything other than a :class:`ProviderError`. The
+        breadth is deliberate. A request can fail through unrelated exception
+        hierarchies, and a connection the peer closes midway arrives as
+        ``RemoteDisconnected``, which is a reset socket and a malformed status
+        line at once while belonging to neither of the families the obvious
+        clauses name. Naming them is a list that stays correct until the next
+        one appears, and the cost of it being incomplete is not one lost
+        request but a run of many that ends with nothing to show.
+
+        Args:
+            path: Endpoint path appended to the base URL.
+            payload: Body to send, serialised as JSON.
+
+        Returns:
+            The decoded response body.
+
+        Raises:
+            ProviderError: If every attempt fails.
+        """
         request = urllib.request.Request(
             f"{self.base_url}{path}",
             data=json.dumps(payload).encode("utf-8"),
@@ -118,7 +139,7 @@ class ChatCompletionsProvider:
             method="POST",
         )
 
-        last_error: Exception | None = None
+        last_error = ProviderError(f"no attempt was made against {self.base_url}")
         for attempt in range(1, self.attempts + 1):
             try:
                 with urllib.request.urlopen(request, timeout=self.timeout) as handle:
@@ -129,22 +150,32 @@ class ChatCompletionsProvider:
                 last_error = ProviderError(f"HTTP {exc.code} from {self.base_url}: {detail}")
                 if exc.code < 500 and exc.code != 429:
                     break
-            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-                last_error = ProviderError(f"request to {self.base_url} failed: {exc}")
+            except Exception as exc:
+                last_error = ProviderError(
+                    f"request to {self.base_url} failed: {type(exc).__name__}: {exc}"
+                )
 
             if attempt < self.attempts:
                 time.sleep(RETRY_BACKOFF_SECONDS * attempt)
 
-        raise ProviderError(str(last_error))
+        raise last_error
 
 
-def provider_from_env(base_url: str, model: str, api_key_env: str) -> ChatCompletionsProvider:
+def provider_from_env(
+    base_url: str,
+    model: str,
+    api_key_env: str,
+    timeout: float = DEFAULT_TIMEOUT,
+    attempts: int = DEFAULT_ATTEMPTS,
+) -> ChatCompletionsProvider:
     """Build a provider, reading its credential from the environment.
 
     Args:
         base_url: Root of the API.
         model: Identifier of the model to call.
         api_key_env: Name of the variable holding the credential.
+        timeout: Seconds to wait for a response.
+        attempts: How many times a failing request is retried.
 
     Returns:
         A configured provider.
@@ -155,4 +186,10 @@ def provider_from_env(base_url: str, model: str, api_key_env: str) -> ChatComple
     api_key = os.environ.get(api_key_env, "").strip()
     if not api_key:
         raise ProviderError(f"environment variable {api_key_env} is not set")
-    return ChatCompletionsProvider(base_url=base_url, model=model, api_key=api_key)
+    return ChatCompletionsProvider(
+        base_url=base_url,
+        model=model,
+        api_key=api_key,
+        timeout=timeout,
+        attempts=attempts,
+    )

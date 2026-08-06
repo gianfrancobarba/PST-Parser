@@ -6,7 +6,7 @@ from pstparser.synth.generate import (
     generate_prompts,
     load_seeds,
     summarise,
-    write_annotation_sheet,
+    write_annotation_file,
 )
 from pstparser.synth.providers import (
     ChatCompletionsProvider,
@@ -27,5 +27,5 @@ __all__ = [
     "provider_from_env",
     "run_synthesis",
     "summarise",
-    "write_annotation_sheet",
+    "write_annotation_file",
 ]
