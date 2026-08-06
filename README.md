@@ -223,6 +223,10 @@ OpenAI; la credenziale è letta dall'ambiente, mai da un file di configurazione.
 compilata e le colonne di annotazione vuote, con lo stesso layout del corpus: va etichettato a mano
 prima di poter rientrare in `prepare-data`. Questo passaggio resta lavoro umano.
 
+Il foglio annotato non va fuso nel corpus di partenza: si aggiunge a `data.sources`, che li
+concatena mantenendoli file distinti. Ogni sorgente porta le proprie correzioni, e il materiale
+consegnato resta separato da quello annotato dopo.
+
 ## Notebook Colab
 
 `notebooks/colab.ipynb` clona il repository e invoca la stessa interfaccia a riga di comando usata
@@ -297,7 +301,7 @@ a vuoto, quindi il corpus e le sue correzioni non possono divergere senza che qu
 - **Il corpus disponibile non è quello usato nel lavoro originale.** Il notebook di partenza legge
   un file da circa 1208 righe che non è stato consegnato; questo repository contiene la versione da
   975 righe. I risultati numerici non sono quindi direttamente confrontabili con quelli pubblicati.
-  Se il file originale venisse recuperato, è sufficiente aggiornare `source_path` e `sheet_name` in
+  Se il file originale venisse recuperato, basta aggiungerlo a `data.sources` in
   `configs/_base/data/`.
 - **Tre nodi foglia su nove non sono supervisionati.** Il ramo `reasoning` conta tre esempi
   annotati in tutto: `reasoning_examples` e `paths` non hanno alcun esempio positivo, e le metriche

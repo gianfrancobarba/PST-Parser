@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pstparser import __version__
-from pstparser.config import ConfigError, ExperimentConfig, load_experiment
+from pstparser.config import ConfigError, ExperimentConfig, load_env_file, load_experiment
 from pstparser.data import CorpusError, prepare_corpus
 
 app = typer.Typer(
@@ -64,6 +64,9 @@ def main(
     ] = False,
 ) -> None:
     """Entry point for the pstparser command line."""
+    # Credentials are read from the environment, and this is where a developer
+    # keeps them locally. Anything already exported wins over the file.
+    load_env_file()
 
 
 def _load(config: Path, overrides: list[str] | None) -> ExperimentConfig:
@@ -86,7 +89,8 @@ def validate_config(config: ConfigOption, set_: SetOption = None) -> None:
     table = Table(title=f"Experiment: {experiment.name}", show_header=False, box=None)
     table.add_column(style="cyan")
     table.add_column()
-    table.add_row("corpus", f"{experiment.data.source_path} [{experiment.data.sheet_name}]")
+    for position, source in enumerate(experiment.data.sources):
+        table.add_row("corpus" if position == 0 else "", f"{source.path} [{source.sheet}]")
     table.add_row("leaves", str(len(experiment.data.column_mapping)))
     table.add_row("model", f"{experiment.model.name} ({experiment.model.backend})")
     table.add_row("adapter", f"r={experiment.lora.r}, alpha={experiment.lora.alpha}")

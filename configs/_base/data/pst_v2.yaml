@@ -1,8 +1,13 @@
 # Annotated corpus: one row per prompt, one column per leaf of the target schema.
 # Paths are relative to the repository root.
 data:
-  source_path: data/raw/prompt_dataset_v2.xlsx
-  sheet_name: prompt_dataset_v2
+  # Worksheets contributing records, in order. Records are numbered across the
+  # concatenation, and each source carries its own corrections.
+  sources:
+    - path: data/raw/prompt_dataset_v2.xlsx
+      sheet: prompt_dataset_v2
+      fixes: data/raw/annotation_fixes.yaml
+
   prompt_column: PROMPT
 
   # Dotted leaf path in the target schema -> spreadsheet column supplying it.
@@ -18,9 +23,6 @@ data:
     reasoning.influence: INFLUENCE
     reasoning.reasoning_examples: REASONING EXAMPLES
     reasoning.paths: PATHS
-
-  # Departures from the delivered spreadsheet, each with the reason for it.
-  fixes_path: data/raw/annotation_fixes.yaml
 
   processed_dir: data/processed
 

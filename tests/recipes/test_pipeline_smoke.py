@@ -102,7 +102,7 @@ def test_training_manifest_records_provenance(trained: TrainingOutcome) -> None:
     assert manifest["seeds"]["applied"]["torch"] == 7
     assert manifest["config"]["resolved"]["lora"]["r"] == 2
     assert manifest["config"]["digest"]
-    assert manifest["inputs"]["corpus"]
+    assert manifest["inputs"]["corpus[0]"]
     assert manifest["inputs"]["records"]
     assert manifest["dataset"]["chat_template_digest"]
     assert manifest["adapter_digest"]

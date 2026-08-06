@@ -16,7 +16,7 @@ def test_composition_merges_every_base(config_dir: Path) -> None:
     config = load_experiment(config_dir / "valid.yaml", root=config_dir)
 
     # Values contributed by the data fragment.
-    assert config.data.sheet_name == "corpus"
+    assert config.data.sources[0].sheet == "corpus"
     assert len(config.data.column_mapping) == 9
     # Values contributed by the model fragment.
     assert config.model.backend == "hf"
@@ -84,16 +84,14 @@ def test_missing_file_is_rejected(config_dir: Path) -> None:
 def test_missing_corpus_is_accepted_until_it_is_read(config_dir: Path) -> None:
     # Scoring never opens the corpus, so a configuration that names an absent
     # one is still usable. The failure surfaces when preparation reads it.
-    config = load_experiment(
-        config_dir / "valid.yaml",
-        overrides=["data.source_path=tests/assets/absent.xlsx"],
-        root=config_dir,
-    )
+    config = load_experiment(config_dir / "valid.yaml", root=config_dir)
+    absent = config.data.sources[0].model_copy(update={"path": Path("tests/assets/absent.xlsx")})
+    data = config.data.model_copy(update={"sources": [absent]})
 
-    assert config.data.source_path.name == "absent.xlsx"
+    assert data.sources[0].path.name == "absent.xlsx"
 
     with pytest.raises(CorpusError, match="corpus not found"):
-        prepare_corpus(config.data)
+        prepare_corpus(data)
 
 
 def test_unknown_key_is_rejected(config_dir: Path) -> None:

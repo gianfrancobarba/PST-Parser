@@ -115,7 +115,7 @@ def test_manifest_captures_configuration_and_inputs(config_dir: Path, tmp_path: 
         config=config,
         seeds=seeds,
         stage="unit-test",
-        inputs={"corpus": config.data.source_path, "absent": tmp_path / "nope"},
+        inputs={"corpus": config.data.sources[0].path, "absent": tmp_path / "nope"},
         extra={"custom": 1},
     )
 

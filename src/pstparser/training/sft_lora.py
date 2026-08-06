@@ -106,7 +106,10 @@ def run_training(config: ExperimentConfig, run_dir: str | Path | None = None) ->
             seeds=seeds,
             stage="train",
             inputs={
-                "corpus": config.data.source_path,
+                **{
+                    f"corpus[{position}]": source.path
+                    for position, source in enumerate(config.data.sources)
+                },
                 "records": records_path,
                 "system_prompt": config.system_prompt_path,
             },

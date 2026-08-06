@@ -1,6 +1,7 @@
 data:
-  source_path: tests/assets/tiny_corpus.xlsx
-  sheet_name: corpus
+  sources:
+    - path: tests/assets/tiny_corpus.xlsx
+      sheet: corpus
   prompt_column: PROMPT
   column_mapping:
     main_instruction: MAIN INSTRUCTION

@@ -70,36 +70,58 @@ class SplitConfig(_Base):
         return self
 
 
+class CorpusSource(_Base):
+    """One annotated worksheet contributing records to the corpus.
+
+    Attributes:
+        path: Spreadsheet holding the manual annotations.
+        sheet: Worksheet to read within it.
+        fixes: File holding the corrections applied to this worksheet as it is
+            read. The spreadsheet itself is never modified, so this is where
+            every departure from it is recorded. When omitted the worksheet is
+            used exactly as delivered.
+    """
+
+    path: Path
+    sheet: str
+    fixes: Path | None = None
+
+
 class DataConfig(_Base):
     """Location and layout of the annotated corpus.
+
+    The corpus may be assembled from more than one worksheet: the material
+    handed over and whatever has been annotated since are separate files, and
+    keeping them separate is what lets each carry its own corrections. Records
+    are numbered across the concatenation, in the order the sources are listed.
 
     The corpus is only read while preparing the data, so its presence is checked
     at that point rather than here. Scoring a prediction file therefore needs no
     access to the annotations.
 
     Attributes:
-        source_path: Spreadsheet holding the manual annotations.
-        sheet_name: Worksheet to read within the spreadsheet.
+        sources: Worksheets contributing records, in order.
         prompt_column: Column containing the raw, unsegmented prompt.
         column_mapping: Mapping from dotted leaf path of the target schema to
             the spreadsheet column supplying its content.
-        fixes_path: File holding the corrections applied to the annotations as
-            they are read. The spreadsheet itself is never modified, so this is
-            where every departure from it is recorded. When omitted the corpus
-            is used exactly as delivered.
         processed_dir: Directory where the serialised records are written.
         quality: Integrity check thresholds.
         split: Partitioning parameters.
     """
 
-    source_path: Path
-    sheet_name: str
+    sources: list[CorpusSource]
     prompt_column: str = "PROMPT"
     column_mapping: dict[str, str]
-    fixes_path: Path | None = None
     processed_dir: Path = Path("data/processed")
     quality: QualityConfig = QualityConfig()
     split: SplitConfig = SplitConfig()
+
+    @field_validator("sources")
+    @classmethod
+    def _sources_must_not_be_empty(cls, value: list[CorpusSource]) -> list[CorpusSource]:
+        if not value:
+            raise ValueError("sources must declare at least one worksheet")
+        return value
 
     @field_validator("column_mapping")
     @classmethod

@@ -88,24 +88,26 @@ def prepare_corpus(
     if missing_leaves:
         raise CorpusError(f"column_mapping does not cover: {', '.join(missing_leaves)}")
 
-    frame = read_corpus(
-        config.source_path,
-        config.sheet_name,
-        required_columns=[config.prompt_column, *config.column_mapping.values()],
-    )
+    required = [config.prompt_column, *config.column_mapping.values()]
+    fixes: list[AnnotationFix] = []
+    records: list[PreparedRecord] = []
 
-    fixes = load_fixes(config.fixes_path) if config.fixes_path is not None else []
-    if fixes:
-        frame = apply_fixes(frame, fixes)
+    for source in config.sources:
+        frame = read_corpus(source.path, source.sheet, required_columns=required)
+        if source.fixes is not None:
+            applied = load_fixes(source.fixes)
+            frame = apply_fixes(frame, applied)
+            fixes.extend(applied)
 
-    records = [
-        PreparedRecord(
-            index=index,
-            prompt=str(row[config.prompt_column]),
-            target=serialise_target(build_target(row, config.column_mapping)),
+        base = len(records)
+        records.extend(
+            PreparedRecord(
+                index=base + offset,
+                prompt=str(row[config.prompt_column]),
+                target=serialise_target(build_target(row, config.column_mapping)),
+            )
+            for offset, row in enumerate(iter_rows(frame))
         )
-        for index, row in enumerate(iter_rows(frame))
-    ]
 
     report = check_corpus(
         prompts=[record.prompt for record in records],

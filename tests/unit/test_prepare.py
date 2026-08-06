@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from pstparser.config import load_experiment
+from pstparser.config import CorpusSource, load_experiment
 from pstparser.data import (
     CorpusError,
     PreparationResult,
@@ -113,6 +113,63 @@ def test_selection_follows_the_requested_order(prepared: PreparationResult) -> N
     assert [record.index for record in selected] == [3, 0]
 
 
+def second_source(config_dir: Path, tmp_path: Path, prompts: list[str]) -> Path:
+    """Write a further annotated worksheet, laid out like the corpus."""
+    from openpyxl import Workbook
+
+    config = load_experiment(config_dir / "valid.yaml", root=config_dir)
+    headers = [config.data.prompt_column, *config.data.column_mapping.values()]
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "extra"
+    worksheet.append(headers)
+    for prompt in prompts:
+        worksheet.append([prompt, prompt, *([None] * 8)])
+
+    destination = tmp_path / "extra.xlsx"
+    workbook.save(destination)
+    return destination
+
+
+def test_sources_are_concatenated_and_numbered_across(config_dir: Path, tmp_path: Path) -> None:
+    extra = second_source(config_dir, tmp_path, ["Rename the variable.", "Delete the file."])
+    config = load_experiment(
+        config_dir / "valid.yaml",
+        overrides=[
+            f"data.processed_dir={(tmp_path / 'processed').as_posix()}",
+            f"data.split.output_dir={(tmp_path / 'splits').as_posix()}",
+        ],
+        root=config_dir,
+    )
+    sources = [*config.data.sources, CorpusSource(path=extra, sheet="extra")]
+
+    result = prepare_corpus(config.data.model_copy(update={"sources": sources}))
+
+    assert len(result.records) == 9
+    assert [record.index for record in result.records] == list(range(9))
+    assert result.records[7].prompt == "Rename the variable."
+    assert result.records[8].prompt == "Delete the file."
+
+
+def test_a_source_can_carry_no_corrections(config_dir: Path, tmp_path: Path) -> None:
+    extra = second_source(config_dir, tmp_path, [f"Handle case {n}." for n in range(8)])
+    config = load_experiment(
+        config_dir / "valid.yaml",
+        overrides=[
+            f"data.processed_dir={(tmp_path / 'processed').as_posix()}",
+            f"data.split.output_dir={(tmp_path / 'splits').as_posix()}",
+        ],
+        root=config_dir,
+    )
+    only_extra = [CorpusSource(path=extra, sheet="extra")]
+
+    result = prepare_corpus(config.data.model_copy(update={"sources": only_extra}))
+
+    assert result.fixes == []
+    assert result.quality.passed
+
+
 def test_incomplete_column_mapping_is_rejected(config_dir: Path, tmp_path: Path) -> None:
     config = load_experiment(config_dir / "valid.yaml", root=config_dir)
     mapping = dict(config.data.column_mapping)
@@ -160,12 +217,13 @@ def test_system_prompt_is_unchanged() -> None:
 def test_shipped_corpus_produces_stable_targets() -> None:
     config = load_experiment("configs/experiments/baseline.yaml")
     frame = read_corpus(
-        config.data.source_path,
-        config.data.sheet_name,
+        config.data.sources[0].path,
+        config.data.sources[0].sheet,
         required_columns=[config.data.prompt_column, *config.data.column_mapping.values()],
     )
-    assert config.data.fixes_path is not None
-    frame = apply_fixes(frame, load_fixes(config.data.fixes_path))
+    fixes = config.data.sources[0].fixes
+    assert fixes is not None
+    frame = apply_fixes(frame, load_fixes(fixes))
 
     targets = [
         serialise_target(build_target(row, config.data.column_mapping)) for row in iter_rows(frame)
