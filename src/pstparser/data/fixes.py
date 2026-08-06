@@ -20,7 +20,7 @@ import pandas as pd
 import yaml
 
 from pstparser.data.cleaning import SEGMENT_SEPARATOR
-from pstparser.data.excel import CorpusError
+from pstparser.data.errors import CorpusError
 
 
 @dataclass(frozen=True)

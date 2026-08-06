@@ -1,0 +1,44 @@
+{
+  "description": "Provenance of the prompts in reasoning.yaml. They were generated, then reviewed and annotated by hand; this file records where they came from, because the directory holding the raw generation is not versioned.",
+  "generated_at": "2026-08-06T16:35:00+00:00",
+  "provider": {
+    "base_url": "https://integrate.api.nvidia.com/v1",
+    "model": "meta/llama-3.1-70b-instruct",
+    "note": "The source work used Llama-3-70B-Instruct through the same service. That model is no longer offered there; this is the nearest successor still served, and the substitution is recorded rather than passed over."
+  },
+  "seeds": {
+    "path": "data/seeds/paradigms.yaml",
+    "digest": "6c5e24de38bd526d4b22e61fb378506321ea6dc5a4c914e45a5e61f242d60b53",
+    "per_paradigm": 10
+  },
+  "run": {
+    "global_seed": 42,
+    "temperature": 1.0,
+    "requested": 150,
+    "accepted": 150,
+    "rejected": 6,
+    "per_paradigm": {
+      "zero_shot_cot": 50,
+      "few_shot_cot": 50,
+      "tree_of_thoughts": 50
+    }
+  },
+  "review": {
+    "kept": 148,
+    "discarded": 2,
+    "reasons": {
+      "8": "the generation opened with the generator's own preamble, which no prompt contains",
+      "76": "the generation closed with a note comparing itself to the examples it had been shown"
+    },
+    "note": "An earlier run was discarded whole. Half of its few-shot prompts carried no worked demonstration at all: the generator had copied the closing query of the seeds rather than the block of examples above it. The instruction now asks for the structure of the examples and not only their intent, and these prompts come from the run that followed."
+  },
+  "annotation": {
+    "annotator": "single",
+    "guideline": "extractive: every segment is a passage of its own prompt, copied exactly, and each passage belongs to one node",
+    "records": 148,
+    "prompt_coverage": {
+      "minimum": 0.995,
+      "median": 1.0
+    }
+  }
+}

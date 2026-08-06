@@ -8,6 +8,13 @@ data:
       sheet: prompt_dataset_v2
       fixes: data/raw/annotation_fixes.yaml
 
+    # Prompts written for the three reasoning paradigms and annotated here. The
+    # delivered corpus attests that branch three times in nine hundred and
+    # seventy-five records, which is not enough for three of the nine leaves to
+    # be learned or measured at all.
+    - path: data/annotated/reasoning.yaml
+      format: yaml
+
   prompt_column: PROMPT
 
   # Dotted leaf path in the target schema -> spreadsheet column supplying it.

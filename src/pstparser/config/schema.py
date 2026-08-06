@@ -17,6 +17,7 @@ from pstparser.pst.alignment import DEFAULT_LEVELS, MatchLevel
 
 Precision = Literal["auto", "fp16", "bf16"]
 ModelBackend = Literal["unsloth", "hf"]
+SourceFormat = Literal["excel", "yaml"]
 
 
 class _Base(BaseModel):
@@ -71,20 +72,44 @@ class SplitConfig(_Base):
 
 
 class CorpusSource(_Base):
-    """One annotated worksheet contributing records to the corpus.
+    """One file contributing annotated records to the corpus.
+
+    The format is declared rather than read off the suffix: a source would
+    otherwise behave according to how its file happens to be named, and the
+    format would be stated twice — once by the extension and once by the
+    presence of a worksheet — with nothing keeping the two in agreement.
 
     Attributes:
-        path: Spreadsheet holding the manual annotations.
-        sheet: Worksheet to read within it.
-        fixes: File holding the corrections applied to this worksheet as it is
-            read. The spreadsheet itself is never modified, so this is where
-            every departure from it is recorded. When omitted the worksheet is
-            used exactly as delivered.
+        path: File holding the manual annotations.
+        format: How to read it. ``excel`` is a worksheet laid out in columns,
+            ``yaml`` a text file naming each leaf by its path in the taxonomy.
+        sheet: Worksheet to read. Belongs to a spreadsheet source only.
+        fixes: File holding the corrections applied to this source as it is
+            read, leaving the file itself untouched. Belongs to a spreadsheet
+            source only: annotations written as text are corrected in place, and
+            their history is the diff. When omitted the source is used exactly
+            as delivered.
     """
 
     path: Path
-    sheet: str
+    format: SourceFormat = "excel"
+    sheet: str | None = None
     fixes: Path | None = None
+
+    @model_validator(mode="after")
+    def _shape_must_match_the_format(self) -> CorpusSource:
+        if self.format == "excel" and self.sheet is None:
+            raise ValueError(f"a spreadsheet source must name a worksheet: {self.path}")
+        if self.format == "yaml" and self.sheet is not None:
+            raise ValueError(f"a yaml source has no worksheet: {self.path}")
+        if self.format == "yaml" and self.fixes is not None:
+            raise ValueError(
+                f"a yaml source takes no corrections: {self.path}. Corrections exist "
+                f"because the delivered spreadsheet cannot be edited; annotations "
+                f"written as text are corrected where they are, and the diff is "
+                f"already the record of what changed"
+            )
+        return self
 
 
 class DataConfig(_Base):
