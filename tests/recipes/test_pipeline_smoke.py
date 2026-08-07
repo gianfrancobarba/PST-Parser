@@ -14,10 +14,17 @@ from pathlib import Path
 import pytest
 
 from pstparser.config import ExperimentConfig, load_experiment
-from pstparser.data import load_alignments, load_predictions, load_split, prepare_corpus
+from pstparser.data import (
+    PreparedRecord,
+    load_alignments,
+    load_predictions,
+    load_split,
+    prepare_corpus,
+)
 from pstparser.evaluation import evaluate, run_alignment, write_report
 from pstparser.inference import GenerationOutcome, run_generation
-from pstparser.training import TrainingOutcome, run_training
+from pstparser.models import load_base
+from pstparser.training import TrainingOutcome, build_dataset, build_trainer, run_training
 
 pytestmark = pytest.mark.slow
 
@@ -93,6 +100,34 @@ def test_evaluation_runs_during_training(trained: TrainingOutcome) -> None:
     assert any("eval_loss" in entry for entry in trained.log_history)
 
 
+def test_the_loss_is_computed_on_the_answer_alone(config: ExperimentConfig, tmp_path: Path) -> None:
+    """The mask must reach the labels, not merely be asked for.
+
+    Nothing else in the suite looks at what the loss is averaged over, and the
+    flag that asks for the masking is the kind that a trainer can accept and not
+    honour. Building the trainer is enough: it prepares the dataset in its
+    constructor, so no optimisation step is needed to see the result.
+    """
+    records = [
+        PreparedRecord(index=0, prompt="Fix the bug.", target='{"prompt": {}}'),
+        PreparedRecord(index=1, prompt="Summarise this.", target='{"prompt": {"a": []}}'),
+    ]
+    dataset = build_dataset(records, "Segment the prompt.")
+    model, tokenizer = load_base(config.model)
+
+    trainer = build_trainer(config, model, tokenizer, dataset, dataset, tmp_path)
+    example = trainer.train_dataset[0]
+    labels = trainer.data_collator([example])["labels"][0]
+
+    # The prompt is masked out, the answer is not, and neither side is empty:
+    # a mask covering everything would also satisfy a laxer assertion.
+    assert "completion_mask" in example
+    prompt_length = example["completion_mask"].index(1)
+    assert prompt_length > 0
+    assert (labels[:prompt_length] == -100).all()
+    assert (labels[prompt_length:] != -100).any()
+
+
 def test_training_manifest_records_provenance(trained: TrainingOutcome) -> None:
     manifest = json.loads(trained.manifest_path.read_text(encoding="utf-8"))
 
@@ -138,6 +173,30 @@ def test_generation_manifest_points_at_the_adapter(
     assert manifest["generated"] == len(generated.predictions)
     assert manifest["adapter"] == str(trained.adapter_dir)
     assert manifest["adapter_digest"]
+
+
+def test_the_untuned_model_answers_the_same_questions(
+    config: ExperimentConfig,
+    workspace: Path,
+) -> None:
+    """Without an adapter the base model answers, and the run says so.
+
+    It is the comparison that says how much the fine-tuning added, and until
+    now there was no way to run it: the adapter was a required argument.
+    """
+    outcome = run_generation(config, run_dir=workspace / "untuned", limit=1)
+    manifest = json.loads(outcome.manifest_path.read_text(encoding="utf-8"))
+
+    assert len(outcome.predictions) == 1
+    assert manifest["adapter"] is None
+    assert manifest["adapter_digest"] is None
+
+
+def test_generating_without_an_adapter_needs_somewhere_to_write(
+    config: ExperimentConfig,
+) -> None:
+    with pytest.raises(ValueError, match="requires a run directory"):
+        run_generation(config, limit=1)
 
 
 def test_generation_honours_the_limit(

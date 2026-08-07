@@ -14,6 +14,13 @@ training:
   per_device_eval_batch_size: 1
   gradient_accumulation_steps: 1
   optim: adamw_torch
+  # As the shipped recipe trains: the smoke test is worth little if it exercises
+  # a different loss from the one the real run computes. Restoring the best
+  # checkpoint is here for the same reason, and because the trainer validates
+  # that combination when it is built — a mistake in it would otherwise surface
+  # only on the accelerator.
+  completion_only_loss: true
+  load_best_model_at_end: true
 
 inference:
   max_new_tokens: 32

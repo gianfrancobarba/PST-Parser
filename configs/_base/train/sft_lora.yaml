@@ -14,7 +14,6 @@ lora:
     - up_proj
     - down_proj
   use_gradient_checkpointing: unsloth
-  random_state: 3407
 
 training:
   output_dir: outputs
@@ -25,10 +24,21 @@ training:
   optim: adamw_8bit
   max_steps: 300
   warmup_steps: 10
-  seed: 3407
   eval_strategy: steps
   eval_steps: 50
   logging_steps: 10
-  completion_only_loss: false
-  load_best_model_at_end: false
-  precision: auto
+  # The shared system message is most of every training sequence. Teaching the
+  # model to reproduce it teaches nothing about segmentation, so the loss is
+  # computed on the answer alone. Losses are therefore not comparable with any
+  # earlier run: the population the cross-entropy averages over has changed.
+  completion_only_loss: true
+
+  # Reporting the last checkpoint measures where training stopped, not where it
+  # generalised best. On the reference run the validation loss reached its
+  # minimum two thirds of the way through and rose afterwards, and the adapter
+  # that was kept was the last one.
+  load_best_model_at_end: true
+
+  # Stated rather than derived from whichever device happens to run it, so that
+  # the number in the manifest is a decision and not an observation.
+  precision: bf16
