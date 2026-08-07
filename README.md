@@ -76,6 +76,11 @@ uv run pstparser generate --config configs/experiments/baseline.yaml --adapter o
 ```
 
 ```bash
+# Senza adapter risponde il modello base, non addestrato, sullo stesso test set
+uv run pstparser generate --config configs/experiments/baseline.yaml --run-dir results/zero_shot
+```
+
+```bash
 # Calcola le metriche. Non richiede GPU né modello.
 uv run pstparser score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
 ```
@@ -180,6 +185,10 @@ Le metriche di contenuto sono calcolate sulle predizioni che risultano ben forma
 | Ricostruzione esatta | quota di prompt che si riottengono concatenando le foglie in ordine | uno |
 | Frasi collocate | quota di frasi generate ritrovate nel prompt | uno |
 
+Nessuno di questi numeri dice però quanto il fine-tuning abbia aggiunto: per quello serve un termine
+di paragone. `generate` senza `--adapter` fa rispondere il modello base allo stesso test set e con
+lo stesso system prompt, ed è il confronto più economico disponibile — non richiede training.
+
 ### Ricostruzione e posizioni
 
 Il modello genera solo il testo delle foglie. Un secondo stadio, deterministico e senza modello,
@@ -208,10 +217,11 @@ valutare la qualità del contenuto a parità di formato.
 
 ## Espansione del corpus
 
-Il corpus proviene da conversazioni reali fra sviluppatori e assistente, dove le richieste dirette
-dominano: i rami della tassonomia che descrivono il ragionamento sono quasi privi di esempi. Il
-comando `synth` genera prompt aggiuntivi per quei paradigmi, partendo da trenta seed scritti a mano
-in `data/seeds/paradigms.yaml`.
+Il foglio consegnato proviene da conversazioni reali fra sviluppatori e assistente, dove le
+richieste dirette dominano: i rami della tassonomia che descrivono il ragionamento vi comparivano
+tre volte su 975 record, quindi tre foglie su nove non erano né imparabili né misurabili. Il comando
+`synth` genera prompt aggiuntivi per quei paradigmi, partendo da trenta seed scritti a mano in
+`data/seeds/paradigms.yaml`.
 
 ```bash
 uv run pstparser synth --config configs/experiments/baseline.yaml
@@ -360,14 +370,16 @@ sono peggio di uno.
 
 ## Limiti noti
 
-- **Il corpus disponibile non è quello usato nel lavoro originale.** Il notebook di partenza legge
-  un file da circa 1208 righe che non è stato consegnato; questo repository contiene la versione da
+- **Il foglio consegnato non è quello usato nel lavoro originale.** Il notebook di partenza legge un
+  file da circa 1208 righe che non è stato consegnato; questo repository ne contiene la versione da
   975 righe. I risultati numerici non sono quindi direttamente confrontabili con quelli pubblicati.
   Se il file originale venisse recuperato, basta aggiungerlo a `data.sources` in
   `configs/_base/data/`.
-- **Tre nodi foglia su nove non sono supervisionati.** Il ramo `reasoning` conta tre esempi
-  annotati in tutto: `reasoning_examples` e `paths` non hanno alcun esempio positivo, e le metriche
-  per questi nodi non sono informative.
+- **Il supporto del ramo `reasoning` è modesto e curato.** Le sue tre foglie contano 113, 86 e 33
+  record su 1123, e provengono quasi per intero dai prompt annotati qui: il foglio consegnato ne
+  attestava tre in tutto. I punteggi su quei nodi vanno letti con il loro support accanto, e i
+  prompt che li esercitano sono stati generati e scelti perché li esercitassero — non sono un
+  campione di come quei paradigmi compaiono in conversazioni reali.
 
 ## Note sul porting
 

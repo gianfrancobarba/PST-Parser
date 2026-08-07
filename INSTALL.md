@@ -83,11 +83,11 @@ uv run pstparser validate-config --config configs/experiments/baseline.yaml
 uv run pstparser prepare-data --config configs/experiments/baseline.yaml
 ```
 
-La preparazione deve riportare **975 record**, 17 correzioni all'annotazione applicate, una
-partizione di **783 / 87 / 87** dopo aver scartato 18 record duplicati, e **zero segnalazioni di
-integrità**. Il controllo è bloccante: se un segmento non si ritrova nel prompt da cui è stato
-estratto, o se un prompt resta scoperto oltre la soglia, la preparazione si ferma invece di
-consegnare quei record al training.
+La preparazione deve riportare **1123 record** — 975 dal foglio consegnato e 148 dai prompt
+annotati qui — 17 correzioni all'annotazione applicate, una partizione di **905 / 100 / 100** dopo
+aver scartato 18 record duplicati, e **zero segnalazioni di integrità**. Il controllo è bloccante:
+se un segmento non si ritrova nel prompt da cui è stato estratto, o se un prompt resta scoperto
+oltre la soglia, la preparazione si ferma invece di consegnare quei record al training.
 
 Per la suite di test:
 

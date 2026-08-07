@@ -9,9 +9,10 @@ data:
       fixes: data/raw/annotation_fixes.yaml
 
     # Prompts written for the three reasoning paradigms and annotated here. The
-    # delivered corpus attests that branch three times in nine hundred and
-    # seventy-five records, which is not enough for three of the nine leaves to
-    # be learned or measured at all.
+    # delivered sheet attests that branch three times in nine hundred and
+    # seventy-five records, which left three of the nine leaves neither
+    # learnable nor measurable. These are what they are learned and measured on,
+    # and were written for that purpose rather than sampled.
     - path: data/annotated/reasoning.yaml
       format: yaml
 
