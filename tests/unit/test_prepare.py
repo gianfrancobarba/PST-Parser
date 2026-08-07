@@ -31,7 +31,7 @@ from pstparser.pst import serialise_target
 SHIPPED_TARGETS_DIGEST = "513e1e40745325afae6130156d5649d2e2cab371ca24034486f76fd64dad5154"
 
 #: Digest of the system message the model is conditioned on.
-SYSTEM_PROMPT_DIGEST = "bc2282e04b35c1055a36edc30050286e3ead4bfec159385c09f0462763fd79d7"
+SYSTEM_PROMPT_DIGEST = "787bf89d4b6462391d928c70a2af556c1dbe82e826c70ba17fde6584cb7f3544"
 
 SHIPPED_RECORD_COUNT = 975
 

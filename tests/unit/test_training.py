@@ -1,33 +1,15 @@
-"""Dataset construction and conversation rendering, without loading a model."""
+"""Dataset construction, without loading a model."""
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 
+from pstparser.conversation import build_prompt
 from pstparser.data import PreparedRecord
 from pstparser.models import resolve_precision, trainable_parameters
-from pstparser.training import build_dataset, make_formatting_func
+from pstparser.training import build_dataset
 
 SYSTEM_PROMPT = "Segment the prompt."
-
-
-class StubTokenizer:
-    """Minimal stand-in rendering a conversation as one line per turn."""
-
-    def apply_chat_template(
-        self,
-        conversation: list[dict[str, str]],
-        tokenize: bool = True,
-        add_generation_prompt: bool = False,
-    ) -> str:
-        """Render a conversation, recording how it was called."""
-        self.last_call: dict[str, Any] = {
-            "tokenize": tokenize,
-            "add_generation_prompt": add_generation_prompt,
-        }
-        return "\n".join(f"{turn['role']}: {turn['content']}" for turn in conversation)
 
 
 @pytest.fixture
@@ -38,70 +20,53 @@ def records() -> list[PreparedRecord]:
     ]
 
 
-def test_dataset_has_one_conversation_per_record(records: list[PreparedRecord]) -> None:
+def test_dataset_has_one_record_per_prompt(records: list[PreparedRecord]) -> None:
     dataset = build_dataset(records, SYSTEM_PROMPT)
 
     assert len(dataset) == 2
-    assert dataset.column_names == ["messages"]
+    # The question and the answer are separate columns: it is that separation
+    # the trainer needs to compute the loss on the answer alone.
+    assert sorted(dataset.column_names) == ["completion", "prompt"]
 
 
-def test_conversation_carries_three_turns(records: list[PreparedRecord]) -> None:
+def test_the_prompt_carries_the_conditioning_turns(records: list[PreparedRecord]) -> None:
     dataset = build_dataset(records, SYSTEM_PROMPT)
 
-    messages = dataset[0]["messages"]
-    assert [turn["role"] for turn in messages] == ["system", "user", "assistant"]
-    assert messages[0]["content"] == SYSTEM_PROMPT
-    assert messages[1]["content"] == "Fix the bug."
-    assert messages[2]["content"] == '{"prompt": {}}'
+    turns = dataset[0]["prompt"]
+    assert [turn["role"] for turn in turns] == ["system", "user"]
+    assert turns[0]["content"] == SYSTEM_PROMPT
+
+
+def test_the_completion_is_the_target_alone(records: list[PreparedRecord]) -> None:
+    dataset = build_dataset(records, SYSTEM_PROMPT)
+
+    assert dataset[0]["completion"] == [{"role": "assistant", "content": '{"prompt": {}}'}]
+
+
+def test_the_prompt_arrives_inside_the_delimiters(records: list[PreparedRecord]) -> None:
+    # The system message tells the model to read only what is between them, so
+    # without them the instruction points at markers that never arrive.
+    dataset = build_dataset(records, SYSTEM_PROMPT)
+
+    assert dataset[0]["prompt"][1]["content"] == "<input_prompt>Fix the bug.</input_prompt>"
+
+
+def test_training_and_generation_ask_the_same_thing(records: list[PreparedRecord]) -> None:
+    # The two used to build the turns separately and happened to agree. Nothing
+    # made them agree, and a gap between them is invisible in every artefact.
+    dataset = build_dataset(records, SYSTEM_PROMPT)
+
+    assert dataset[0]["prompt"] == build_prompt(SYSTEM_PROMPT, records[0].prompt)
 
 
 def test_record_order_is_preserved(records: list[PreparedRecord]) -> None:
     dataset = build_dataset(list(reversed(records)), SYSTEM_PROMPT)
 
-    assert dataset[0]["messages"][1]["content"] == "Summarise this."
+    assert dataset[0]["prompt"][1]["content"] == "<input_prompt>Summarise this.</input_prompt>"
 
 
 def test_empty_corpus_yields_an_empty_dataset() -> None:
     assert len(build_dataset([], SYSTEM_PROMPT)) == 0
-
-
-def test_formatting_accepts_a_single_example() -> None:
-    tokenizer = StubTokenizer()
-    formatter = make_formatting_func(tokenizer)
-
-    rendered = formatter({"messages": [{"role": "user", "content": "hello"}]})
-
-    assert rendered == ["user: hello"]
-
-
-def test_formatting_accepts_a_batch() -> None:
-    tokenizer = StubTokenizer()
-    formatter = make_formatting_func(tokenizer)
-
-    rendered = formatter(
-        {
-            "messages": [
-                [{"role": "user", "content": "one"}],
-                [{"role": "user", "content": "two"}],
-            ]
-        }
-    )
-
-    assert rendered == ["user: one", "user: two"]
-
-
-def test_formatting_keeps_the_assistant_turn() -> None:
-    tokenizer = StubTokenizer()
-    formatter = make_formatting_func(tokenizer)
-    dataset = build_dataset(
-        [PreparedRecord(index=0, prompt="p", target="t")],
-        SYSTEM_PROMPT,
-    )
-
-    rendered = formatter(dataset[0])
-
-    assert rendered[0].endswith("assistant: t")
-    assert tokenizer.last_call == {"tokenize": False, "add_generation_prompt": False}
 
 
 @pytest.mark.parametrize("precision", ["auto", "fp16", "bf16"])

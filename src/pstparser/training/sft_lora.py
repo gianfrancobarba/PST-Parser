@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from pstparser.config import ExperimentConfig
+from pstparser.conversation import build_completion, build_prompt
 from pstparser.data import PreparedRecord, load_records, load_split, select
 from pstparser.data.prepare import RECORDS_FILE
 from pstparser.models.loader import (
@@ -83,7 +84,7 @@ def run_training(config: ExperimentConfig, run_dir: str | Path | None = None) ->
     eval_dataset = build_dataset(select(records, split.val), system_prompt)
 
     model, tokenizer = load_base(config.model)
-    model = attach_adapter(model, config.model, config.lora)
+    model = attach_adapter(model, config.model, config.lora, config.seed)
     trainable, total = trainable_parameters(model)
 
     trainer = build_trainer(
@@ -140,59 +141,31 @@ def run_training(config: ExperimentConfig, run_dir: str | Path | None = None) ->
 
 
 def build_dataset(records: list[PreparedRecord], system_prompt: str) -> Any:
-    """Turn records into a dataset of three-turn conversations.
+    """Turn records into a dataset of prompts paired with their completion.
 
-    Each conversation carries the shared system message, the raw prompt as the
-    user turn, and the serialised target as the assistant turn.
+    The conversation is split in two columns rather than handed over as one
+    sequence of turns, because that split is what lets the trainer tell the
+    question from the answer and compute the loss on the answer alone. The
+    turns themselves come from :mod:`pstparser.conversation`, which is also what
+    generation asks: the two must not be able to drift apart.
 
     Args:
         records: The records to convert.
         system_prompt: System message prepended to every conversation.
 
     Returns:
-        A dataset with a single ``messages`` column.
+        A dataset with a ``prompt`` and a ``completion`` column.
     """
     from datasets import Dataset
 
     conversations = [
         {
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": record.prompt},
-                {"role": "assistant", "content": record.target},
-            ]
+            "prompt": build_prompt(system_prompt, record.prompt),
+            "completion": build_completion(record.target),
         }
         for record in records
     ]
     return Dataset.from_list(conversations)
-
-
-def make_formatting_func(tokenizer: Any) -> Any:
-    """Build the function that renders conversations into training text.
-
-    The trainer probes the function with a single example before mapping it over
-    batches, so both shapes are accepted.
-
-    Args:
-        tokenizer: Tokenizer carrying the conversation template.
-
-    Returns:
-        A callable turning a batch of examples into a list of strings.
-    """
-
-    def format_conversations(examples: dict[str, Any]) -> list[str]:
-        messages = examples["messages"]
-        conversations = [messages] if isinstance(messages[0], dict) else messages
-        return [
-            tokenizer.apply_chat_template(
-                conversation,
-                tokenize=False,
-                add_generation_prompt=False,
-            )
-            for conversation in conversations
-        ]
-
-    return format_conversations
 
 
 def build_trainer(
@@ -223,7 +196,6 @@ def build_trainer(
 
     arguments: dict[str, Any] = {
         "output_dir": str(run_dir),
-        "dataset_text_field": "text",
         "max_length": config.model.max_seq_length,
         "per_device_train_batch_size": training.per_device_train_batch_size,
         "per_device_eval_batch_size": training.per_device_eval_batch_size,
@@ -232,7 +204,9 @@ def build_trainer(
         "optim": training.optim,
         "max_steps": training.max_steps,
         "warmup_steps": training.warmup_steps,
-        "seed": training.seed,
+        # One seed governs the run. It also reaches the adapter initialisation
+        # and, through seed_everything, every library the pipeline touches.
+        "seed": config.seed,
         "eval_strategy": training.eval_strategy,
         "eval_steps": training.eval_steps,
         "logging_steps": training.logging_steps,
@@ -254,13 +228,16 @@ def build_trainer(
             }
         )
 
+    # No formatting function: the trainer renders the two columns itself, and a
+    # formatter would collapse them into one string, leaving it nothing to mask
+    # on. It refuses the combination outright rather than training on the whole
+    # sequence without saying so.
     return SFTTrainer(
         model=model,
         args=SFTConfig(**arguments),
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         processing_class=tokenizer,
-        formatting_func=make_formatting_func(tokenizer),
     )
 
 

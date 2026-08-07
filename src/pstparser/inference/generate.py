@@ -16,10 +16,11 @@ from typing import Any, Literal
 import torch
 
 from pstparser.config import ExperimentConfig, InferenceConfig
+from pstparser.conversation import build_prompt
 from pstparser.data import PreparedRecord, load_records, load_split, select
 from pstparser.data.predictions import PredictionRecord, write_predictions
 from pstparser.data.prepare import RECORDS_FILE
-from pstparser.models.loader import BackendError, load_adapter
+from pstparser.models.loader import BackendError, load_adapter, load_untuned
 from pstparser.repro.manifest import build_manifest, digest_directory, write_manifest
 from pstparser.repro.seeding import seed_everything
 
@@ -48,19 +49,25 @@ class GenerationOutcome:
 
 def run_generation(
     config: ExperimentConfig,
-    adapter_dir: str | Path,
+    adapter_dir: str | Path | None = None,
     run_dir: str | Path | None = None,
     limit: int | None = None,
     side: SplitSide = "test",
 ) -> GenerationOutcome:
     """Generate a prediction for every record of one side of the partition.
 
+    The adapter is optional. Without one the base model answers the same test
+    set under the same system message, which is what says how much the
+    fine-tuning added: a score has no meaning on its own if nothing untrained
+    was ever asked the same question.
+
     Args:
         config: The resolved experiment configuration.
-        adapter_dir: Directory holding the trained adapter.
+        adapter_dir: Directory holding the trained adapter. When omitted the
+            base model answers untuned.
         run_dir: Directory for the artefacts. Defaults to the parent of
             ``adapter_dir``, so that predictions sit beside the model that
-            produced them.
+            produced them. Required when there is no adapter.
         limit: Stop after this many records, for a quick check.
         side: Which side of the partition to generate for. The test set is the
             default because it is what results are quoted from; the validation
@@ -70,12 +77,18 @@ def run_generation(
         The predictions and the paths they were written to.
 
     Raises:
+        ValueError: If neither an adapter nor a run directory is given, leaving
+            nowhere to write.
         FileNotFoundError: If the prepared corpus, the split or the adapter is
             missing.
     """
     seeds = seed_everything(config.seed)
-    adapter_dir = Path(adapter_dir)
-    run_dir = Path(run_dir) if run_dir is not None else adapter_dir.parent
+    adapter_dir = Path(adapter_dir) if adapter_dir is not None else None
+    if run_dir is None:
+        if adapter_dir is None:
+            raise ValueError("generating without an adapter requires a run directory")
+        run_dir = adapter_dir.parent
+    run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
 
     records_path = Path(config.data.processed_dir) / RECORDS_FILE
@@ -87,7 +100,10 @@ def run_generation(
     if limit is not None:
         evaluation_records = evaluation_records[:limit]
 
-    model, tokenizer = load_adapter(config.model, adapter_dir)
+    if adapter_dir is None:
+        model, tokenizer = load_untuned(config.model)
+    else:
+        model, tokenizer = load_adapter(config.model, adapter_dir)
     predictions = list(
         generate_predictions(
             model=model,
@@ -113,8 +129,12 @@ def run_generation(
                 "system_prompt": config.system_prompt_path,
             },
             extra={
-                "adapter": str(adapter_dir),
-                "adapter_digest": digest_directory(adapter_dir),
+                # Null rather than absent: a run with no adapter is a claim
+                # about the base model, and the file has to say so.
+                "adapter": str(adapter_dir) if adapter_dir is not None else None,
+                "adapter_digest": (
+                    digest_directory(adapter_dir) if adapter_dir is not None else None
+                ),
                 "split": side,
                 "generated": len(predictions),
             },
@@ -191,12 +211,8 @@ def generate_one(
     Returns:
         The decoded answer, without special tokens.
     """
-    conversation = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": prompt},
-    ]
     inputs = tokenizer.apply_chat_template(
-        conversation,
+        build_prompt(system_prompt, prompt),
         tokenize=True,
         add_generation_prompt=True,
         return_tensors="pt",
