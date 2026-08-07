@@ -49,25 +49,30 @@ limite. La via corretta è **dimezzare il batch e raddoppiare l'accumulo**:
 La dimensione effettiva del batch resta 8, quindi la traiettoria di ottimizzazione è la stessa:
 cambia solo il picco di memoria per le attivazioni.
 
-Sul corpus disponibile le sequenze di training, comprensive del system prompt da 542 token, hanno
-questa distribuzione:
+Le lunghezze qui sotto sono misurate sui **1123 record** che `prepare-data` produce, con il
+tokenizer di `unsloth/Meta-Llama-3.1-8B-Instruct` e il system prompt versionato, che pesa **533
+token**. Sono due budget distinti e vanno guardati separatamente: quanto il modello legge, e quanto
+gli si concede di scrivere.
 
-| | token |
-|---|---:|
-| mediana | 836 |
-| 75° percentile | 1372 |
-| 90° percentile | 2162 |
-| 95° percentile | 2646 |
-| 99° percentile | 3415 |
-| massimo | 5314 |
+| | prompt | risposta | sequenza |
+|---|---:|---:|---:|
+| mediana | 662 | 175 | 838 |
+| 90° percentile | 1193 | 803 | 2004 |
+| 95° percentile | 1431 | 1065 | 2512 |
+| 99° percentile | 1778 | 1466 | 3244 |
+| massimo | 2798 | 2487 | 5285 |
 
-Solo **4 sequenze su 975 (0.4%)** superano i 4096 token e vengono troncate. La memoria occupata
-dalle attivazioni dipende dalla lunghezza effettiva del batch, non da `max_seq_length`: dato che
-metà degli esempi sta sotto gli 836 token, la maggior parte dei passi è ben al di sotto del caso
-peggiore.
+Da qui discendono i due numeri configurati. `model.max_seq_length: 8192` non tronca nulla — bastano
+6144 — e lascia il prompt più lungo (2798) e l'intero budget di generazione (3072) coesistere senza
+contendersi lo spazio. `inference.max_new_tokens: 3072` copre la risposta più lunga del corpus con
+un margine del 23%.
 
-Se anche a batch 1 la memoria non basta, ridurre `model.max_seq_length` a 3072 tronca l'1.7% degli
-esempi invece dello 0.4%.
+La memoria occupata dalle attivazioni dipende dalla lunghezza effettiva del batch, non da
+`max_seq_length`: metà degli esempi sta sotto gli 838 token, quindi la maggior parte dei passi è
+ben al di sotto del caso peggiore, e allargare la finestra non costa VRAM di per sé.
+
+Se anche a batch 1 la memoria non basta, la finestra si può ridurre accettando del troncamento:
+a 4096 si tronca lo 0,36% degli esempi, a 3072 l'1,34%, a 2048 il 9,62%.
 
 Il modello base viene scaricato al primo utilizzo (circa 6 GB a 4 bit) e conservato nella cache di
 Hugging Face. In Docker la cache è un volume nominato, quindi sopravvive alla ricostruzione delle

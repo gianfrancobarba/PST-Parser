@@ -1,7 +1,12 @@
 # Deterministic decoding so that repeated evaluations of the same checkpoint
 # yield identical predictions.
 inference:
-  max_new_tokens: 4096
+  # Sized on the answer, not on the context window. The annotation is
+  # extractive, so the answer is of the order of the prompt: the longest one in
+  # the corpus is 2487 tokens. Setting this to the width of the window, as it
+  # was, left the two competing for the same space and truncated the objects
+  # with the longest data field before they could be closed.
+  max_new_tokens: 3072
   do_sample: false
   temperature: 0.0
   top_p: 1.0

@@ -3,7 +3,12 @@ model:
   backend: unsloth
   name: unsloth/Meta-Llama-3.1-8B-Instruct
   revision: null
-  max_seq_length: 4096
+
+  # Wide enough that nothing is cut on either side. The longest training
+  # sequence is 5285 tokens, and the longest prompt at 2798 leaves the whole
+  # generation budget reachable rather than competing with it. Activations are
+  # sized by the batch, not by this bound, so the headroom costs nothing.
+  max_seq_length: 8192
   load_in_4bit: true
   dtype: null
   chat_template: llama-3.1
