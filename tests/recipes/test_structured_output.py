@@ -12,13 +12,21 @@ import json
 import pytest
 
 from pstparser.config import InferenceConfig
-from pstparser.inference.generate import build_schema_constraint, generate_one
+from pstparser.data import PreparedRecord
+from pstparser.inference.generate import (
+    build_schema_constraint,
+    generate_one,
+    generate_predictions,
+)
 
 pytestmark = pytest.mark.slow
 
 pytest.importorskip("outlines", reason="the 'structured' extra is not installed")
 
 TINY_MODEL = "hf-internal-testing/tiny-random-LlamaForCausalLM"
+
+#: How a target begins, before the whitespace the grammar also permits.
+OPENING = '{"prompt":{"main_instruction":['
 
 
 @pytest.fixture(scope="module")
@@ -59,8 +67,46 @@ def test_constrained_output_follows_the_schema(model_and_tokenizer, constraint) 
 
     # The budget is too small for the model to close the object, so only the
     # prefix can be checked. It must already follow the declared key order.
+    # Where exactly the text is cut depends on how many tokens the budget buys,
+    # so the check stops short of the closing quotation mark.
     assert output.startswith('{"prompt"')
-    assert '"main_instruction"' in output
+    assert "main_instruction" in output
+
+
+def test_every_prediction_is_constrained(model_and_tokenizer) -> None:
+    """The constraint must restart for each record, not only for the first.
+
+    The processor walks the schema as the model writes, so it ends a prediction
+    in the state where the object has been closed. Left there, it permits
+    nothing but the end of the text, and every record after the first comes back
+    empty. One prediction cannot show this, which is why the check needs two and
+    why it goes through the loop rather than through a single call.
+    """
+    model, tokenizer = model_and_tokenizer
+    records = [
+        PreparedRecord(index=0, prompt="Summarise the report.", target="{}"),
+        PreparedRecord(index=1, prompt="Rename the variable.", target="{}"),
+    ]
+    config = InferenceConfig(max_new_tokens=64, do_sample=False, structured_output=True)
+
+    predictions = list(
+        generate_predictions(
+            model=model,
+            tokenizer=tokenizer,
+            records=records,
+            system_prompt="Segment the prompt.",
+            config=config,
+        )
+    )
+
+    assert len(predictions) == 2
+    for prediction in predictions:
+        written = "".join(prediction.prediction.split())
+        # Each one wrote something, and what it wrote is how a target begins.
+        # The budget decides how far it got and the grammar leaves whitespace
+        # free, so the comparison ignores spacing and accepts any prefix.
+        assert written
+        assert OPENING.startswith(written) or written.startswith(OPENING)
 
 
 def test_unconstrained_output_is_unrestricted(model_and_tokenizer) -> None:

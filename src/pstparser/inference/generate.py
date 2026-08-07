@@ -171,6 +171,8 @@ def generate_predictions(
     """
     processors = build_schema_constraint(model, tokenizer) if config.structured_output else None
     for record in records:
+        if processors is not None:
+            reset_constraint(processors)
         yield PredictionRecord(
             index=record.index,
             prompt=record.prompt,
@@ -251,11 +253,39 @@ def model_device(model: Any) -> torch.device:
     return torch.device("cpu")
 
 
+def reset_constraint(processors: Any) -> None:
+    """Return the constraint to its initial state, before the next prediction.
+
+    The processor walks the schema as the model writes, so it finishes a
+    prediction in the state where the object has been closed. Handed the next
+    record in that state, it either permits nothing but the end of the text or
+    refuses the first token outright, and every prediction after the first comes
+    back empty. Restarting the walk is not the same as recompiling the grammar:
+    the compiled index is what costs, and it is kept.
+
+    Args:
+        processors: The constraint built by :func:`build_schema_constraint`.
+
+    Raises:
+        BackendError: If a processor cannot be restarted, which would leave
+            every prediction after the first silently empty.
+    """
+    for processor in processors:
+        restart = getattr(processor, "reset", None)
+        if not callable(restart):
+            raise BackendError(
+                f"{type(processor).__name__} cannot be restarted between predictions; "
+                "constrained decoding would answer the first record and no other"
+            )
+        restart()
+
+
 def build_schema_constraint(model: Any, tokenizer: Any) -> Any:
     """Build the constraint that restricts decoding to the target schema.
 
     The grammar is compiled once and reused across the whole evaluation set,
-    since compilation dominates the cost of constrained decoding.
+    since compilation dominates the cost of constrained decoding. The walk over
+    it is per prediction, and :func:`reset_constraint` is what restarts it.
 
     Args:
         model: The model whose vocabulary the constraint is built against.
