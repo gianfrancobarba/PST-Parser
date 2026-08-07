@@ -203,11 +203,15 @@ def train(
 @app.command("generate")
 def generate(
     config: ConfigOption,
-    adapter: Annotated[
-        Path,
-        typer.Option("--adapter", "-a", help="Directory holding the trained adapter."),
-    ],
     set_: SetOption = None,
+    adapter: Annotated[
+        Path | None,
+        typer.Option(
+            "--adapter",
+            "-a",
+            help="Directory holding the trained adapter. Omit to answer with the untuned model.",
+        ),
+    ] = None,
     run_dir: Annotated[
         Path | None,
         typer.Option("--run-dir", help="Directory for the predictions."),
@@ -243,6 +247,9 @@ def generate(
     except BackendError as exc:
         error_console.print(f"[bold red]Backend error:[/] {exc}")
         raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        error_console.print(f"[bold red]Nowhere to write:[/] {exc}")
+        raise typer.Exit(code=1) from exc
     except FileNotFoundError as exc:
         error_console.print(f"[bold red]Missing input:[/] {exc}")
         raise typer.Exit(code=1) from exc
@@ -250,6 +257,7 @@ def generate(
     table = Table(title="Generation complete", show_header=False, box=None)
     table.add_column(style="cyan")
     table.add_column()
+    table.add_row("model", str(adapter) if adapter is not None else "base, untuned")
     table.add_row("predictions", str(len(outcome.predictions)))
     table.add_row("predictions file", str(outcome.predictions_path))
     table.add_row("manifest", str(outcome.manifest_path))
