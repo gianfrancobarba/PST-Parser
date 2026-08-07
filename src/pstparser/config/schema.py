@@ -191,7 +191,10 @@ class LoraConfig(_Base):
         target_modules: Names of the linear projections to adapt.
         use_gradient_checkpointing: Checkpointing strategy passed to the
             backend. Accepts a boolean or a backend-specific identifier.
-        random_state: Seed for adapter weight initialisation.
+
+    Adapter initialisation is seeded from :attr:`ExperimentConfig.seed`, not
+    from a value of its own: a run has one seed, and a second one here could
+    only disagree with it.
     """
 
     r: int = Field(default=16, gt=0)
@@ -210,7 +213,6 @@ class LoraConfig(_Base):
         ]
     )
     use_gradient_checkpointing: bool | str = "unsloth"
-    random_state: int = 3407
 
     @field_validator("target_modules")
     @classmethod
@@ -233,7 +235,6 @@ class TrainingConfig(_Base):
         optim: Optimiser identifier understood by the trainer.
         max_steps: Total number of optimisation steps.
         warmup_steps: Steps spent linearly increasing the learning rate.
-        seed: Seed governing data ordering and stochastic layers.
         eval_strategy: When to run evaluation during training.
         eval_steps: Interval between evaluations when ``eval_strategy`` is
             ``steps``.
@@ -258,7 +259,6 @@ class TrainingConfig(_Base):
     optim: str = "adamw_8bit"
     max_steps: int = Field(default=300, gt=0)
     warmup_steps: int = Field(default=10, ge=0)
-    seed: int = 3407
     eval_strategy: Literal["no", "steps", "epoch"] = "steps"
     eval_steps: int = Field(default=50, gt=0)
     logging_steps: int = Field(default=10, gt=0)

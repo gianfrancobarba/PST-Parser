@@ -43,13 +43,18 @@ def load_base(config: ModelConfig) -> tuple[Model, Tokenizer]:
     return _load_hf(config)
 
 
-def attach_adapter(model: Model, model_config: ModelConfig, lora_config: LoraConfig) -> Model:
+def attach_adapter(
+    model: Model, model_config: ModelConfig, lora_config: LoraConfig, seed: int
+) -> Model:
     """Wrap a base model with trainable low-rank adapters.
 
     Args:
         model: The loaded base model.
         model_config: Determines which backend performs the wrapping.
         lora_config: Adapter parameters.
+        seed: The experiment seed, governing the initial adapter weights. It is
+            passed in rather than read from the adapter parameters so that one
+            value governs every source of randomness in a run.
 
     Returns:
         The adapted model.
@@ -67,7 +72,7 @@ def attach_adapter(model: Model, model_config: ModelConfig, lora_config: LoraCon
             lora_dropout=lora_config.dropout,
             bias=lora_config.bias,
             use_gradient_checkpointing=lora_config.use_gradient_checkpointing,
-            random_state=lora_config.random_state,
+            random_state=seed,
         )
 
     try:
@@ -87,6 +92,31 @@ def attach_adapter(model: Model, model_config: ModelConfig, lora_config: LoraCon
             task_type="CAUSAL_LM",
         ),
     )
+
+
+def load_untuned(config: ModelConfig) -> tuple[Model, Tokenizer]:
+    """Load the base model for inference, with no adapter on top.
+
+    This is what answers the same test set without having been trained on it.
+    Its scores are the floor the fine-tuned ones have to be read against: on
+    their own they say how well the task is done, not how much the training did.
+
+    Args:
+        config: Base model selection and loading options.
+
+    Returns:
+        The base model, switched to inference mode, and its tokenizer.
+
+    Raises:
+        BackendError: If the selected backend is not installed.
+    """
+    model, tokenizer = load_base(config)
+    if config.backend == "unsloth":
+        FastLanguageModel = _import_unsloth()
+        FastLanguageModel.for_inference(model)
+    else:
+        model.eval()
+    return model, tokenizer
 
 
 def load_adapter(config: ModelConfig, adapter_dir: str | Path) -> tuple[Model, Tokenizer]:
