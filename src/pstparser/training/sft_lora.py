@@ -16,14 +16,21 @@ from pstparser.config import ExperimentConfig
 from pstparser.conversation import build_completion, build_prompt
 from pstparser.data import PreparedRecord, load_records, load_split, select
 from pstparser.data.prepare import RECORDS_FILE
+from pstparser.data.splits import split_input_paths
 from pstparser.models.loader import (
     attach_adapter,
     load_base,
     resolve_precision,
+    runtime_provenance,
     save_adapter,
     trainable_parameters,
 )
-from pstparser.repro.manifest import build_manifest, digest_directory, write_manifest
+from pstparser.repro.manifest import (
+    build_manifest,
+    digest_directory,
+    ensure_stage_outputs,
+    write_manifest,
+)
 from pstparser.repro.seeding import seed_everything
 
 ADAPTER_DIR = "adapter"
@@ -73,11 +80,13 @@ def run_training(config: ExperimentConfig, run_dir: str | Path | None = None) ->
     """
     seeds = seed_everything(config.seed)
     run_dir = Path(run_dir) if run_dir is not None else _new_run_dir(config)
-    run_dir.mkdir(parents=True, exist_ok=True)
+    ensure_stage_outputs(run_dir, "train", (ADAPTER_DIR, METRICS_FILE))
+    if any(run_dir.iterdir()):
+        raise FileExistsError(f"training requires a fresh run directory: {run_dir}")
 
     records_path = Path(config.data.processed_dir) / RECORDS_FILE
     records = load_records(records_path)
-    split = load_split(config.data.split.output_dir)
+    split = load_split(config.data.split.output_dir, records_path=records_path)
     system_prompt = Path(config.system_prompt_path).read_text(encoding="utf-8")
 
     train_dataset = build_dataset(select(records, split.train), system_prompt)
@@ -112,6 +121,7 @@ def run_training(config: ExperimentConfig, run_dir: str | Path | None = None) ->
                     for position, source in enumerate(config.data.sources)
                 },
                 "records": records_path,
+                **split_input_paths(config.data.split.output_dir),
                 "system_prompt": config.system_prompt_path,
             },
             extra={
@@ -122,6 +132,7 @@ def run_training(config: ExperimentConfig, run_dir: str | Path | None = None) ->
                 },
                 "parameters": {"trainable": trainable, "total": total},
                 "adapter_digest": digest_directory(adapter_dir),
+                "model_runtime": runtime_provenance(model, tokenizer, config.model),
             },
         ),
         run_dir,

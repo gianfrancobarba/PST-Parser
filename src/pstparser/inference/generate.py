@@ -11,6 +11,7 @@ import json
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from time import perf_counter
 from typing import Any, Literal
 
 import torch
@@ -18,10 +19,16 @@ import torch
 from pstparser.config import ExperimentConfig, InferenceConfig
 from pstparser.conversation import build_prompt
 from pstparser.data import PreparedRecord, load_records, load_split, select
-from pstparser.data.predictions import PredictionRecord, write_predictions
+from pstparser.data.predictions import PredictionRecord, load_predictions, write_predictions
 from pstparser.data.prepare import RECORDS_FILE
-from pstparser.models.loader import BackendError, load_adapter, load_untuned
-from pstparser.repro.manifest import build_manifest, digest_directory, write_manifest
+from pstparser.data.splits import split_input_paths
+from pstparser.models.loader import BackendError, load_adapter, load_untuned, runtime_provenance
+from pstparser.repro.manifest import (
+    build_manifest,
+    digest_directory,
+    ensure_stage_outputs,
+    write_manifest,
+)
 from pstparser.repro.seeding import seed_everything
 
 PREDICTIONS_FILE = "predictions.jsonl"
@@ -89,11 +96,11 @@ def run_generation(
             raise ValueError("generating without an adapter requires a run directory")
         run_dir = adapter_dir.parent
     run_dir = Path(run_dir)
-    run_dir.mkdir(parents=True, exist_ok=True)
+    ensure_stage_outputs(run_dir, "generate", [PREDICTIONS_FILE])
 
     records_path = Path(config.data.processed_dir) / RECORDS_FILE
     records = load_records(records_path)
-    split = load_split(config.data.split.output_dir)
+    split = load_split(config.data.split.output_dir, records_path=records_path)
     system_prompt = Path(config.system_prompt_path).read_text(encoding="utf-8")
 
     evaluation_records = select(records, getattr(split, side))
@@ -104,17 +111,17 @@ def run_generation(
         model, tokenizer = load_untuned(config.model)
     else:
         model, tokenizer = load_adapter(config.model, adapter_dir)
-    predictions = list(
-        generate_predictions(
-            model=model,
-            tokenizer=tokenizer,
-            records=evaluation_records,
-            system_prompt=system_prompt,
-            config=config.inference,
-        )
+    stream = generate_predictions(
+        model=model,
+        tokenizer=tokenizer,
+        records=evaluation_records,
+        system_prompt=system_prompt,
+        config=config.inference,
+        max_seq_length=config.model.max_seq_length,
     )
 
-    predictions_path = write_predictions(predictions, run_dir / PREDICTIONS_FILE)
+    predictions_path = write_predictions(stream, run_dir / PREDICTIONS_FILE)
+    predictions = load_predictions(predictions_path)
     manifest_path = write_manifest(
         build_manifest(
             config=config,
@@ -127,6 +134,7 @@ def run_generation(
                 },
                 "records": records_path,
                 "system_prompt": config.system_prompt_path,
+                **split_input_paths(config.data.split.output_dir),
             },
             extra={
                 # Null rather than absent: a run with no adapter is a claim
@@ -137,6 +145,7 @@ def run_generation(
                 ),
                 "split": side,
                 "generated": len(predictions),
+                "model_runtime": runtime_provenance(model, tokenizer, config.model),
             },
         ),
         run_dir,
@@ -156,6 +165,7 @@ def generate_predictions(
     records: Sequence[PreparedRecord],
     system_prompt: str,
     config: InferenceConfig,
+    max_seq_length: int | None = None,
 ) -> Iterable[PredictionRecord]:
     """Run the model over a sequence of records.
 
@@ -165,6 +175,7 @@ def generate_predictions(
         records: The records to submit.
         system_prompt: System message prepended to every conversation.
         config: Decoding parameters.
+        max_seq_length: Optional experiment context ceiling, including the input.
 
     Yields:
         One prediction per record, in input order.
@@ -173,18 +184,22 @@ def generate_predictions(
     for record in records:
         if processors is not None:
             reset_constraint(processors)
+        result = generate_messages(
+            model,
+            tokenizer,
+            build_prompt(system_prompt, record.prompt),
+            config,
+            logits_processors=processors,
+            max_seq_length=max_seq_length,
+        )
         yield PredictionRecord(
             index=record.index,
             prompt=record.prompt,
             target=record.target,
-            prediction=generate_one(
-                model=model,
-                tokenizer=tokenizer,
-                system_prompt=system_prompt,
-                prompt=record.prompt,
-                config=config,
-                logits_processors=processors,
-            ),
+            prediction=result.text,
+            input_tokens=result.input_tokens,
+            output_tokens=result.output_tokens,
+            finish_reason=result.finish_reason,
         )
 
 
@@ -213,12 +228,52 @@ def generate_one(
     Returns:
         The decoded answer, without special tokens.
     """
-    inputs = tokenizer.apply_chat_template(
+    return generate_messages(
+        model,
+        tokenizer,
         build_prompt(system_prompt, prompt),
+        config,
+        logits_processors=logits_processors,
+    ).text
+
+
+@dataclass(frozen=True)
+class GeneratedText:
+    """Raw completion and observed termination, without repairing its content."""
+
+    text: str
+    input_tokens: int
+    output_tokens: int
+    finish_reason: str
+    elapsed_seconds: float
+
+
+def generate_messages(
+    model: Any,
+    tokenizer: Any,
+    messages: list[dict[str, str]],
+    config: InferenceConfig,
+    *,
+    logits_processors: Any = None,
+    max_seq_length: int | None = None,
+) -> GeneratedText:
+    """Generate from explicit messages after checking the entire token budget.
+
+    No input truncation is requested. The context ceiling is the minimum of
+    the explicit experiment limit and finite model/tokenizer limits. Unknown
+    ceilings fail closed. EOS takes precedence over the length limit when
+    the last permitted token is EOS.
+    """
+    inputs = tokenizer.apply_chat_template(
+        messages,
         tokenize=True,
         add_generation_prompt=True,
         return_tensors="pt",
+        truncation=False,
     ).to(model_device(model))
+
+    input_tokens = int(inputs.shape[-1])
+    validate_token_budget(model, tokenizer, input_tokens, config.max_new_tokens, max_seq_length)
 
     keywords: dict[str, Any] = {
         "max_new_tokens": config.max_new_tokens,
@@ -231,11 +286,56 @@ def generate_one(
     if logits_processors is not None:
         keywords["logits_processor"] = logits_processors
 
+    started = perf_counter()
     with torch.no_grad():
         outputs = model.generate(input_ids=inputs, **keywords)
 
     generated = outputs[0][inputs.shape[-1] :]
-    return str(tokenizer.decode(generated, skip_special_tokens=True))
+    eos = getattr(getattr(model, "generation_config", None), "eos_token_id", None)
+    if eos is None:
+        eos = getattr(tokenizer, "eos_token_id", None)
+    eos_ids = eos if isinstance(eos, (list, tuple)) else [eos]
+    count = len(generated)
+    reason = (
+        "eos"
+        if count and int(generated[-1]) in eos_ids
+        else "length"
+        if count >= config.max_new_tokens
+        else "stopped"
+    )
+    return GeneratedText(
+        text=str(tokenizer.decode(generated, skip_special_tokens=True)),
+        input_tokens=input_tokens,
+        output_tokens=count,
+        finish_reason=reason,
+        elapsed_seconds=perf_counter() - started,
+    )
+
+
+def validate_token_budget(
+    model: Any,
+    tokenizer: Any,
+    input_tokens: int,
+    max_new_tokens: int,
+    max_seq_length: int | None = None,
+) -> None:
+    """Check an input/output budget before any completion in its paired study."""
+    limits = [
+        value
+        for value in (
+            max_seq_length,
+            getattr(getattr(model, "config", None), "max_position_embeddings", None),
+            getattr(tokenizer, "model_max_length", None),
+        )
+        if isinstance(value, int) and 0 < value < 1_000_000_000
+    ]
+    if not limits:
+        raise ValueError("unknown context limit: provide max_seq_length")
+    if input_tokens + max_new_tokens > min(limits):
+        raise ValueError(
+            f"token budget exceeded: input {input_tokens} + output "
+            f"{max_new_tokens} > context {min(limits)}; no truncation performed"
+        )
 
 
 def model_device(model: Any) -> torch.device:

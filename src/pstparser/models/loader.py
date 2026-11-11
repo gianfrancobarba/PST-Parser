@@ -21,6 +21,30 @@ Model = Any
 Tokenizer = Any
 
 
+def runtime_provenance(model: Model, tokenizer: Tokenizer, config: ModelConfig) -> dict[str, Any]:
+    """Record actual revision/template metadata without inventing unresolved hashes."""
+    from pstparser.repro.manifest import digest_text
+
+    model_revision = getattr(getattr(model, "config", None), "_commit_hash", None)
+    tokenizer_revision = getattr(tokenizer, "init_kwargs", {}).get("_commit_hash")
+    template = getattr(tokenizer, "chat_template", None)
+    return {
+        "requested_model": config.name,
+        "requested_revision": config.revision,
+        "resolved_model_revision": model_revision,
+        "resolved_tokenizer_revision": tokenizer_revision,
+        "chat_template_digest": digest_text(str(template)) if template is not None else None,
+        "backend": config.backend,
+        "load_in_4bit": config.load_in_4bit,
+        "dtype": str(getattr(model, "dtype", None)),
+        "revision_verified": bool(
+            model_revision
+            and model_revision == tokenizer_revision
+            and (config.revision is None or config.revision == model_revision)
+        ),
+    }
+
+
 class BackendError(RuntimeError):
     """Raised when a backend is unavailable or cannot honour the configuration."""
 
@@ -277,7 +301,8 @@ def _load_hf(config: ModelConfig) -> tuple[Model, Tokenizer]:
         keywords["device_map"] = "auto"
 
     model = AutoModelForCausalLM.from_pretrained(config.name, **keywords)
-    tokenizer = AutoTokenizer.from_pretrained(config.name, revision=config.revision)
+    resolved_revision = getattr(model.config, "_commit_hash", None) or config.revision
+    tokenizer = AutoTokenizer.from_pretrained(config.name, revision=resolved_revision)
 
     if getattr(tokenizer, "chat_template", None) is None:
         raise BackendError(

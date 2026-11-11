@@ -8,6 +8,7 @@ pulling in a deep learning stack.
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,15 +30,25 @@ class PredictionRecord:
     prompt: str
     target: str
     prediction: str
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    finish_reason: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a JSON-serialisable view of the record."""
-        return {
+        payload = {
             "index": self.index,
             "prompt": self.prompt,
             "target": self.target,
             "prediction": self.prediction,
         }
+        if self.input_tokens is not None:
+            payload["input_tokens"] = self.input_tokens
+        if self.output_tokens is not None:
+            payload["output_tokens"] = self.output_tokens
+        if self.finish_reason is not None:
+            payload["finish_reason"] = self.finish_reason
+        return payload
 
 
 def write_predictions(predictions: Iterable[PredictionRecord], destination: str | Path) -> Path:
@@ -52,10 +63,12 @@ def write_predictions(predictions: Iterable[PredictionRecord], destination: str 
     """
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with destination.open("w", encoding="utf-8", newline="\n") as handle:
+    with destination.open("x", encoding="utf-8", newline="\n") as handle:
         for prediction in predictions:
             handle.write(json.dumps(prediction.as_dict(), ensure_ascii=False))
             handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
     return destination
 
 
@@ -86,6 +99,9 @@ def load_predictions(source: str | Path) -> list[PredictionRecord]:
                 prompt=str(payload["prompt"]),
                 target=str(payload["target"]),
                 prediction=str(payload["prediction"]),
+                input_tokens=payload.get("input_tokens"),
+                output_tokens=payload.get("output_tokens"),
+                finish_reason=payload.get("finish_reason"),
             )
         )
     return predictions

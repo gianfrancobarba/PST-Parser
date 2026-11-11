@@ -16,6 +16,14 @@ from rich.table import Table
 from pstparser import __version__
 from pstparser.config import ConfigError, ExperimentConfig, load_env_file, load_experiment
 from pstparser.data import CorpusError, prepare_corpus
+from pstparser.data.splits import split_input_paths
+from pstparser.repro.manifest import (
+    build_manifest,
+    ensure_stage_outputs,
+    new_stage_directory,
+    write_manifest,
+)
+from pstparser.repro.seeding import SeedRecord
 
 app = typer.Typer(
     name="pstparser",
@@ -117,9 +125,29 @@ def prepare_data(config: ConfigOption, set_: SetOption = None) -> None:
 
     try:
         result = prepare_corpus(experiment.data, experiment.evaluation.alignment_levels)
-    except CorpusError as exc:
+    except (CorpusError, FileExistsError) as exc:
         error_console.print(f"[bold red]Corpus error:[/] {exc}")
         raise typer.Exit(code=1) from exc
+
+    write_manifest(
+        build_manifest(
+            experiment,
+            SeedRecord(global_seed=experiment.seed),
+            "prepare",
+            inputs={
+                **{f"corpus/{i}": s.path for i, s in enumerate(experiment.data.sources)},
+                **{
+                    f"fixes/{i}": s.fixes
+                    for i, s in enumerate(experiment.data.sources)
+                    if s.fixes is not None
+                },
+                "records": result.records_path,
+                **split_input_paths(result.split_dir),
+            },
+            extra={"record_count": len(result.records), "quality": result.quality.as_dict()},
+        ),
+        experiment.data.processed_dir,
+    )
 
     table = Table(title="Prepared corpus", show_header=False, box=None)
     table.add_column(style="cyan")
@@ -175,6 +203,12 @@ def train(
         raise typer.Exit(code=1) from exc
     except FileNotFoundError as exc:
         error_console.print(f"[bold red]Missing input:[/] {exc}\nRun 'prepare-data' first.")
+        raise typer.Exit(code=1) from exc
+    except FileExistsError as exc:
+        error_console.print(f"[bold red]Output already exists:[/] {exc}")
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        error_console.print(f"[bold red]Invalid input:[/] {exc}")
         raise typer.Exit(code=1) from exc
 
     share = outcome.trainable / outcome.total if outcome.total else 0.0
@@ -247,8 +281,11 @@ def generate(
     except BackendError as exc:
         error_console.print(f"[bold red]Backend error:[/] {exc}")
         raise typer.Exit(code=1) from exc
+    except FileExistsError as exc:
+        error_console.print(f"[bold red]Output already exists:[/] {exc}")
+        raise typer.Exit(code=1) from exc
     except ValueError as exc:
-        error_console.print(f"[bold red]Nowhere to write:[/] {exc}")
+        error_console.print(f"[bold red]Invalid input:[/] {exc}")
         raise typer.Exit(code=1) from exc
     except FileNotFoundError as exc:
         error_console.print(f"[bold red]Missing input:[/] {exc}")
@@ -301,11 +338,30 @@ def score(
         config=experiment.evaluation,
         indices=[record.index for record in records],
     )
-    results_path, details_path = write_report(
-        report,
-        run_dir if run_dir is not None else predictions.parent,
-        top_confusions=experiment.evaluation.confusion_top_k,
-    )
+    destination = _stage_destination(run_dir, experiment, "score")
+    try:
+        ensure_stage_outputs(destination, "score", ("results.json", "eval_details.jsonl"))
+        results_path, details_path = write_report(
+            report,
+            destination,
+            top_confusions=experiment.evaluation.confusion_top_k,
+        )
+        write_manifest(
+            build_manifest(
+                experiment,
+                SeedRecord(global_seed=experiment.seed),
+                "score",
+                inputs={"predictions": predictions},
+                extra={
+                    "metrics_version": "pstparser-metrics-v2",
+                    "evaluated": len(records),
+                },
+            ),
+            destination,
+        )
+    except FileExistsError as exc:
+        error_console.print(f"[bold red]Output already exists:[/] {exc}")
+        raise typer.Exit(code=1) from exc
 
     summary = Table(title="Evaluation", show_header=False, box=None)
     summary.add_column(style="cyan")
@@ -317,8 +373,12 @@ def score(
     summary.add_row("hallucination", _format(report.mean_hallucination_rate, "{:.2%}"))
     summary.add_row("tree edit distance", _format(report.mean_tree_edit_distance, "{:.2f}"))
     summary.add_row(
-        "exact reconstruction",
+        "aligned subset reconstruction (whitespace ignored)",
         _format(report.reconstruction.exact_reconstruction_rate, "{:.2%}"),
+    )
+    summary.add_row(
+        "strict full reconstruction",
+        _format(report.reconstruction.strict_full_reconstruction_rate, "{:.2%}"),
     )
     summary.add_row("phrases located", _format(report.reconstruction.alignment_rate, "{:.2%}"))
     console.print(summary)
@@ -379,11 +439,27 @@ def align(
         error_console.print(f"[bold red]No predictions found in[/] {predictions}")
         raise typer.Exit(code=1)
 
-    outcome = run_alignment(
-        records,
-        run_dir if run_dir is not None else predictions.parent,
-        levels=experiment.evaluation.alignment_levels,
-    )
+    destination = _stage_destination(run_dir, experiment, "align")
+    try:
+        ensure_stage_outputs(destination, "align", ("alignments.jsonl",))
+        outcome = run_alignment(
+            records,
+            destination,
+            levels=experiment.evaluation.alignment_levels,
+        )
+        write_manifest(
+            build_manifest(
+                experiment,
+                SeedRecord(global_seed=experiment.seed),
+                "align",
+                inputs={"predictions": predictions},
+                extra={"metrics_version": "pstparser-metrics-v2", "aligned": len(records)},
+            ),
+            destination,
+        )
+    except FileExistsError as exc:
+        error_console.print(f"[bold red]Output already exists:[/] {exc}")
+        raise typer.Exit(code=1) from exc
 
     predicted = outcome.prediction_scores
     expected = outcome.target_scores
@@ -404,12 +480,12 @@ def align(
         _format(expected.ambiguity_rate, "{:.2%}"),
     )
     table.add_row(
-        "reconstructed",
+        "aligned subset (whitespace ignored)",
         _format(predicted.exact_reconstruction_rate, "{:.2%}"),
         _format(expected.exact_reconstruction_rate, "{:.2%}"),
     )
     table.add_row(
-        "reconstructed, of those read",
+        "aligned subset, of those read",
         _format(predicted.parsed_reconstruction_rate, "{:.2%}"),
         _format(expected.parsed_reconstruction_rate, "{:.2%}"),
     )
@@ -433,6 +509,9 @@ def synth(config: ConfigOption, set_: SetOption = None) -> None:
     except FileNotFoundError as exc:
         error_console.print(f"[bold red]Missing input:[/] {exc}")
         raise typer.Exit(code=1) from exc
+    except FileExistsError as exc:
+        error_console.print(f"[bold red]Output already exists:[/] {exc}")
+        raise typer.Exit(code=1) from exc
 
     table = Table(title="Synthesis complete", show_header=False, box=None)
     table.add_column(style="cyan")
@@ -448,6 +527,17 @@ def synth(config: ConfigOption, set_: SetOption = None) -> None:
         "\nThe file carries the prompts only. Fill in the leaves before adding it to "
         "'data.sources' and running 'prepare-data'."
     )
+
+
+def _stage_destination(run_dir: Path | None, experiment: ExperimentConfig, stage: str) -> Path:
+    """Use the requested directory, or a fresh one under the run root.
+
+    The fallback never sits beside the predictions: those may be historical
+    artefacts under results/, which a recalculation must leave untouched.
+    """
+    if run_dir is not None:
+        return run_dir
+    return new_stage_directory(experiment.training.output_dir, stage)
 
 
 def _format(value: float | None, template: str) -> str:

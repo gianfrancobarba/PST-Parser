@@ -8,6 +8,7 @@ import random
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 
 from pstparser.config import load_experiment
@@ -147,3 +148,71 @@ def test_manifest_round_trips_through_disk(config_dir: Path, tmp_path: Path) -> 
     path = write_manifest(manifest, tmp_path / "run")
 
     assert json.loads(path.read_text(encoding="utf-8"))["experiment"] == "fixture"
+
+
+def test_stage_manifests_coexist_but_cannot_be_replaced(tmp_path: Path) -> None:
+    train = write_manifest({"stage": "train", "marker": 1}, tmp_path)
+    generation = write_manifest({"stage": "generate"}, tmp_path)
+    assert train.name == "train_manifest.json"
+    assert generation.name == "generate_manifest.json"
+    with pytest.raises(FileExistsError):
+        write_manifest({"stage": "train", "marker": 2}, tmp_path)
+    assert json.loads(train.read_text())["marker"] == 1
+
+
+def test_preflight_protects_outputs_before_a_manifest_exists(tmp_path: Path) -> None:
+    from pstparser.repro.manifest import ensure_stage_outputs
+
+    original = tmp_path / "results.json"
+    original.write_text("historical", encoding="utf-8")
+    with pytest.raises(FileExistsError):
+        ensure_stage_outputs(tmp_path, "score", ("results.json",))
+    assert original.read_text() == "historical"
+
+
+def test_source_snapshot_detects_local_changes_without_collecting_secrets(tmp_path: Path) -> None:
+    from pstparser.repro.manifest import source_snapshot
+
+    package = tmp_path / "src" / "pstparser"
+    package.mkdir(parents=True)
+    module = package / "example.py"
+    module.write_text("a = 1", encoding="utf-8")
+    (tmp_path / "uv.lock").write_text("lock", encoding="utf-8")
+    (tmp_path / ".env").write_text("PRIVATE=secret", encoding="utf-8")
+    before = source_snapshot(tmp_path)
+    module.write_text("a = 2", encoding="utf-8")
+    after = source_snapshot(tmp_path)
+    assert before["digest"] != after["digest"]
+    assert "secret" not in json.dumps(after)
+    assert after["files"]["uv.lock"] is not None
+    assert after["files"]["pyproject.toml"] is None
+
+
+def test_score_and_align_preserve_historical_directory(config_dir: Path, tmp_path: Path) -> None:
+    from pstparser.cli.main import align, score
+    from pstparser.pst.taxonomy import LEAF_PATHS, assemble
+
+    tree = json.dumps(assemble({leaf: [] for leaf in LEAF_PATHS}))
+    predictions = tmp_path / "predictions.jsonl"
+    predictions.write_text(
+        json.dumps({"index": 1, "prompt": "hello", "target": tree, "prediction": tree}) + "\n",
+        encoding="utf-8",
+    )
+    history = tmp_path / "results.json"
+    history.write_text("historical", encoding="utf-8")
+    runs = tmp_path / "runs"
+    overrides = [f"training.output_dir={runs.as_posix()}"]
+    score(config_dir / "valid.yaml", predictions, set_=overrides)
+    align(config_dir / "valid.yaml", predictions, set_=overrides)
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "predictions.jsonl",
+        "results.json",
+        "runs",
+    ]
+    manifests = list(runs.glob("*/*_manifest.json"))
+    assert {p.name for p in manifests} == {"score_manifest.json", "align_manifest.json"}
+    for path in manifests:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        assert payload["inputs"]["predictions"] == digest_file(predictions)
+        assert payload["metrics_version"] == "pstparser-metrics-v2"
+    assert history.read_text() == "historical"
