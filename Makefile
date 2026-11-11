@@ -3,8 +3,11 @@ UV ?= uv
 COMPOSE ?= docker compose -f docker/compose.yaml
 
 CONFIG ?= configs/experiments/baseline.yaml
-ADAPTER ?=
-PREDICTIONS ?= results/predictions.jsonl
+# Every run writes into its own fresh directory; historical results/ are read only.
+RUN ?= outputs/new-run
+DATA_OVERRIDES = --set data.processed_dir=$(RUN)/processed --set data.split.output_dir=$(RUN)/splits
+ADAPTER ?= $(RUN)/training/adapter
+PREDICTIONS ?= $(RUN)/generation/predictions.jsonl
 
 .DEFAULT_GOAL := help
 .PHONY: help install lint format typecheck test test-slow check \
@@ -34,7 +37,7 @@ typecheck: ## Verify type annotations
 	$(UV) run mypy
 
 test: ## Run the fast test suite
-	$(UV) run pytest
+	$(UV) run pytest -m "not slow and not gpu"
 
 test-slow: ## Run the end-to-end recipe tests
 	$(UV) run pytest -m slow
@@ -47,20 +50,19 @@ validate-config: ## Compose and validate CONFIG without running anything
 	$(UV) run pstparser validate-config --config $(CONFIG)
 
 prepare-data: ## Convert the annotated corpus into records and partition it
-	$(UV) run pstparser prepare-data --config $(CONFIG)
+	$(UV) run pstparser prepare-data --config $(CONFIG) $(DATA_OVERRIDES)
 
 train: ## Fine-tune adapters on the prepared corpus
-	$(UV) run pstparser train --config $(CONFIG)
+	$(UV) run pstparser train --config $(CONFIG) $(DATA_OVERRIDES) --run-dir $(RUN)/training
 
-generate: ## Produce predictions; pass ADAPTER=<dir>
-	@test -n "$(ADAPTER)" || { echo "set ADAPTER=<directory holding the adapter>"; exit 1; }
-	$(UV) run pstparser generate --config $(CONFIG) --adapter $(ADAPTER)
+generate: ## Produce predictions with ADAPTER (default: the adapter trained in RUN)
+	$(UV) run pstparser generate --config $(CONFIG) $(DATA_OVERRIDES) --adapter $(ADAPTER) --run-dir $(RUN)/generation
 
 score: ## Compute metrics from PREDICTIONS; needs no accelerator
-	$(UV) run pstparser score --config $(CONFIG) --predictions $(PREDICTIONS)
+	$(UV) run pstparser score --config $(CONFIG) --predictions $(PREDICTIONS) --run-dir $(RUN)/scoring
 
 align: ## Locate the phrases of PREDICTIONS in their prompts; needs no accelerator
-	$(UV) run pstparser align --config $(CONFIG) --predictions $(PREDICTIONS)
+	$(UV) run pstparser align --config $(CONFIG) --predictions $(PREDICTIONS) --run-dir $(RUN)/alignment
 
 synth: ## Generate prompts for the reasoning paradigms and export them for annotation
 	$(UV) run pstparser synth --config $(CONFIG)
@@ -78,7 +80,7 @@ docker-score: ## Compute metrics inside the scoring container
 		--config $(CONFIG) --predictions $(PREDICTIONS)
 
 docker-train: ## Fine-tune inside the training container
-	$(COMPOSE) --profile train run --rm train train --config $(CONFIG)
+	$(COMPOSE) --profile train run --rm train train --config $(CONFIG) $(DATA_OVERRIDES) --run-dir $(RUN)/training
 
 # --- Housekeeping ----------------------------------------------------------
 

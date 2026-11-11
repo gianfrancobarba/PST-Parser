@@ -1,7 +1,12 @@
 # Two profiles, matching the two images.
 #
-#   docker compose --profile train run --rm train prepare-data -c configs/experiments/baseline.yaml
-#   docker compose --profile eval  run --rm score --predictions results/predictions.jsonl -c configs/experiments/baseline.yaml
+#   docker compose --profile train run --rm train prepare-data -c configs/experiments/baseline.yaml \
+#       --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits
+#   docker compose --profile eval  run --rm score score -c configs/experiments/baseline.yaml \
+#       --predictions outputs/new-run/generation/predictions.jsonl --run-dir outputs/new-run/scoring
+#
+# Each run writes into a fresh outputs/<run>/ directory, as the Makefile's RUN
+# variable does; the historical artefacts under results/ are only read.
 #
 # The training service needs the NVIDIA Container Toolkit on the host. The
 # scoring service needs nothing beyond Docker.
