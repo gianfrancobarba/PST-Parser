@@ -151,3 +151,22 @@ def test_report_is_written_alongside_its_details(tmp_path: Path) -> None:
     assert results["valid"] == 1
     assert len(details) == 2
     assert details[1]["valid"] is False
+
+
+def test_strict_report_does_not_hide_extra_leaf() -> None:
+    reference = target(main_instruction=["hello"])
+    prediction = target(main_instruction=["hello", "invented"])
+    report = evaluate([prediction], [reference], ["hello"], CONFIG)
+    payload = report.as_dict()["reconstruction"]
+    assert payload["metric_version"] == "2"
+    assert payload["exact_reconstruction_rate"] == 1.0  # legacy alias
+    assert payload["strict_full_reconstruction_rate"] == 0.0
+    assert report.details[0].all_leaves_accounted_for is False
+
+
+def test_report_refuses_overwrite(tmp_path: Path) -> None:
+    reference = target(main_instruction=["hello"])
+    report = evaluate([reference], [reference], ["hello"], CONFIG)
+    write_report(report, tmp_path)
+    with pytest.raises(FileExistsError):
+        write_report(report, tmp_path)

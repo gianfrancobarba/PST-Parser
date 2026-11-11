@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+from dataclasses import replace
 
 import pytest
 from hypothesis import given, settings
@@ -245,6 +246,42 @@ def test_a_missing_segment_breaks_the_reconstruction() -> None:
 
     assert aligned.located == 1
     assert not aligned.reconstructs()
+
+
+@pytest.mark.parametrize("extra", ["invented", "hello", "", "   "])
+def test_strong_reconstruction_rejects_extra_leaves(extra: str) -> None:
+    aligned = align_tree("hello", tree(main_instruction=["hello", extra]))
+    assert aligned.aligned_subset_reconstruction_normalized()
+    assert not aligned.all_leaves_accounted_for()
+    assert not aligned.strict_full_reconstruction()
+
+
+def test_accounting_does_not_claim_source_coverage_or_exact_whitespace() -> None:
+    for prompt, phrases in [("one two", ["one"]), ("one\n  two", ["one two"])]:
+        aligned = align_tree(prompt, tree(main_instruction=phrases))
+        assert aligned.all_leaves_accounted_for()
+        assert not aligned.strict_full_reconstruction()
+
+
+def test_strict_reconstruction_preserves_code_indentation_and_unicode() -> None:
+    prompt = "# città\r\ndef f():\r\n    return 'è'\r\n"
+    aligned = align_tree(prompt, tree(main_instruction=[prompt]))
+    assert aligned.all_leaves_accounted_for()
+    assert aligned.strict_full_reconstruction()
+
+
+def test_strong_reconstruction_checks_placement_integrity() -> None:
+    aligned = align_tree("ab", tree(main_instruction=["a", "b"]))
+    assert aligned.strict_full_reconstruction()
+    for corrupt in (
+        replace(aligned.leaves[1], position=0),
+        replace(aligned.leaves[1], start=0),
+        replace(aligned.leaves[1], end=3),
+        replace(aligned.leaves[1], phrase="invented"),
+    ):
+        invalid = replace(aligned, leaves=(aligned.leaves[0], corrupt))
+        assert not invalid.all_leaves_accounted_for()
+        assert not invalid.strict_full_reconstruction()
 
 
 # --------------------------------------------------------------------------- #

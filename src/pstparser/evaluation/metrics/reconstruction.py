@@ -41,6 +41,10 @@ class ReconstructionScores:
     ambiguous: int
     blank: int
     per_example: list[bool | None] = field(default_factory=list)
+    accounted_for: int = 0
+    strict_reconstructed: int = 0
+    per_example_accounted_for: list[bool | None] = field(default_factory=list)
+    per_example_strict: list[bool | None] = field(default_factory=list)
 
     @property
     def exact_reconstruction_rate(self) -> float | None:
@@ -74,9 +78,25 @@ class ReconstructionScores:
         """
         return self.ambiguous / self.phrases if self.phrases else None
 
-    def as_dict(self) -> dict[str, Any]:
-        """Return a JSON-serialisable view of the rates and their counts."""
-        return {
+    @property
+    def all_leaves_accounted_for_rate(self) -> float | None:
+        """Share with every extracted string placed, over all predictions."""
+        return self.accounted_for / self.total if self.total else None
+
+    @property
+    def strict_full_reconstruction_rate(self) -> float | None:
+        """Share with complete exact reconstruction, over all predictions."""
+        return self.strict_reconstructed / self.total if self.total else None
+
+    def as_dict(self, *, version: str = "1") -> dict[str, Any]:
+        """Serialise unchanged legacy v1 or explicitly named stronger v2 metrics.
+
+        V2 still includes legacy aliases so consumers can migrate deliberately.
+        Neither version is a schema-validity test: score that separately.
+        """
+        if version not in {"1", "2"}:
+            raise ValueError(f"Unsupported reconstruction metric version: {version}")
+        result: dict[str, Any] = {
             "total": self.total,
             "parsed": self.parsed,
             "reconstructed": self.reconstructed,
@@ -89,6 +109,20 @@ class ReconstructionScores:
             "alignment_rate": self.alignment_rate,
             "ambiguity_rate": self.ambiguity_rate,
         }
+        if version == "2":
+            result.update(
+                {
+                    "metric_version": "2",
+                    "legacy_metric_version": "1",
+                    "aligned_subset_reconstruction_normalized": self.reconstructed,
+                    "aligned_subset_reconstruction_normalized_rate": self.exact_reconstruction_rate,
+                    "all_leaves_accounted_for": self.accounted_for,
+                    "all_leaves_accounted_for_rate": self.all_leaves_accounted_for_rate,
+                    "strict_full_reconstruction": self.strict_reconstructed,
+                    "strict_full_reconstruction_rate": self.strict_full_reconstruction_rate,
+                }
+            )
+        return result
 
 
 def align_predictions(
@@ -141,10 +175,14 @@ def score_alignments(alignments: Sequence[Alignment | None]) -> ReconstructionSc
     ambiguous = 0
     blank = 0
     per_example: list[bool | None] = []
+    per_example_accounted_for: list[bool | None] = []
+    per_example_strict: list[bool | None] = []
 
     for alignment in alignments:
         if alignment is None:
             per_example.append(None)
+            per_example_accounted_for.append(None)
+            per_example_strict.append(None)
             continue
 
         parsed += 1
@@ -157,6 +195,8 @@ def score_alignments(alignments: Sequence[Alignment | None]) -> ReconstructionSc
         recovered = alignment.reconstructs()
         reconstructed += recovered
         per_example.append(recovered)
+        per_example_accounted_for.append(alignment.all_leaves_accounted_for())
+        per_example_strict.append(alignment.strict_full_reconstruction())
 
     return ReconstructionScores(
         total=len(alignments),
@@ -167,6 +207,10 @@ def score_alignments(alignments: Sequence[Alignment | None]) -> ReconstructionSc
         ambiguous=ambiguous,
         blank=blank,
         per_example=per_example,
+        accounted_for=sum(value is True for value in per_example_accounted_for),
+        strict_reconstructed=sum(value is True for value in per_example_strict),
+        per_example_accounted_for=per_example_accounted_for,
+        per_example_strict=per_example_strict,
     )
 
 

@@ -320,6 +320,66 @@ class Alignment:
             return recovered == self.prompt
         return strip_whitespace(recovered) == strip_whitespace(self.prompt)
 
+    def aligned_subset_reconstruction_normalized(self) -> bool:
+        """Return the legacy whitespace-insensitive, located-subset comparison.
+
+        This deliberately ignores unlocated leaves; it is not evidence of
+        complete extraction. Kept unchanged for comparison with historical runs.
+        """
+        return self.reconstructs()
+
+    def all_leaves_accounted_for(self) -> bool:
+        """Check that every extracted string has one valid, disjoint placement.
+
+        Empty strings are rejected rather than silently discarded. Whitespace
+        strings require a real placement too (the legacy aligner skips them).
+        Normalised matches may be accounted for without being textually exact.
+        Source coverage is a separate requirement of strict reconstruction.
+        """
+        expected = list(iter_leaves(self.tree))
+        if expected != [(leaf.path, leaf.phrase) for leaf in self.leaves]:
+            return False
+        if len({leaf.path for leaf in self.leaves}) != len(self.leaves):
+            return False
+        ordered = self.ordered()
+        if len(ordered) != len(self.leaves):
+            return False
+        previous_end = 0
+        for rank, leaf in enumerate(ordered):
+            if (
+                leaf.position != rank
+                or not leaf.phrase
+                or leaf.start is None
+                or leaf.end is None
+                or not 0 <= leaf.start < leaf.end <= len(self.prompt)
+                or leaf.start < previous_end
+                or leaf.level not in DEFAULT_LEVELS
+            ):
+                return False
+            if project_phrase(leaf.phrase, leaf.level) != project_phrase(
+                self.prompt[leaf.start : leaf.end], leaf.level
+            ):
+                return False
+            previous_end = leaf.end
+        return True
+
+    def strict_full_reconstruction(self) -> bool:
+        """Require all leaves, complete source coverage and exact original text.
+
+        Compare Python Unicode strings without newline or Unicode normalisation.
+        This is text equality, not a claim about the encoding of an input file.
+        """
+        if not self.all_leaves_accounted_for():
+            return False
+        cursor = 0
+        for leaf in self.ordered():
+            if leaf.start != cursor or leaf.end is None:
+                return False
+            if leaf.phrase != self.prompt[leaf.start : leaf.end]:
+                return False
+            cursor = leaf.end
+        return cursor == len(self.prompt) and self.reconstruction() == self.prompt
+
     def as_tree(self) -> Any:
         """Rebuild the tree with positional leaves.
 
@@ -342,6 +402,10 @@ class Alignment:
             "ambiguous": self.ambiguous,
             "contested": self.contested,
             "reconstructs": self.reconstructs(),
+            "metric_version": "2",
+            "aligned_subset_reconstruction_normalized": self.reconstructs(),
+            "all_leaves_accounted_for": self.all_leaves_accounted_for(),
+            "strict_full_reconstruction": self.strict_full_reconstruction(),
             "leaves": [leaf.as_dict() for leaf in self.leaves],
         }
 

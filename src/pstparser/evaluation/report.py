@@ -60,6 +60,8 @@ class ExampleScore:
     hallucination_rate: float | None = None
     coverage_score: float | None = None
     reconstructed: bool | None = None
+    all_leaves_accounted_for: bool | None = None
+    strict_full_reconstruction: bool | None = None
     alignment_rate: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
@@ -71,6 +73,8 @@ class ExampleScore:
             "hallucination_rate": self.hallucination_rate,
             "coverage_score": self.coverage_score,
             "reconstructed": self.reconstructed,
+            "all_leaves_accounted_for": self.all_leaves_accounted_for,
+            "strict_full_reconstruction": self.strict_full_reconstruction,
             "alignment_rate": self.alignment_rate,
         }
 
@@ -111,12 +115,13 @@ class EvaluationReport:
     mean_coverage_score: float | None
     details: list[ExampleScore]
 
-    def as_dict(self, top_confusions: int = 5) -> dict[str, Any]:
+    def as_dict(self, top_confusions: int = 5, metric_version: str = "2") -> dict[str, Any]:
         """Return a JSON-serialisable view of the report.
 
         Args:
             top_confusions: Number of misassignments listed alongside the
                 matrix.
+            metric_version: Reconstruction serialization version, legacy 1 or explicit 2.
 
         Returns:
             A mapping suitable for serialisation.
@@ -127,7 +132,7 @@ class EvaluationReport:
             "json_validity_rate": self.json_validity_rate,
             "parse_rate": self.parse_rate,
             "field_f1": {field: score.as_dict() for field, score in sorted(self.field_f1.items())},
-            "reconstruction": self.reconstruction.as_dict(),
+            "reconstruction": self.reconstruction.as_dict(version=metric_version),
             "mean_tree_edit_distance": self.mean_tree_edit_distance,
             "mean_hallucination_rate": self.mean_hallucination_rate,
             "mean_coverage_score": self.mean_coverage_score,
@@ -204,6 +209,12 @@ def evaluate(
                 hallucination_rate=score.hallucination_rate,
                 coverage_score=score.coverage_score,
                 reconstructed=None if alignment is None else alignment.reconstructs(),
+                all_leaves_accounted_for=(
+                    None if alignment is None else alignment.all_leaves_accounted_for()
+                ),
+                strict_full_reconstruction=(
+                    None if alignment is None else alignment.strict_full_reconstruction()
+                ),
                 alignment_rate=(
                     None
                     if alignment is None or not alignment.scored
@@ -246,15 +257,16 @@ def write_report(
     """
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
+    for name in (RESULTS_FILE, DETAILS_FILE):
+        if (directory / name).exists():
+            raise FileExistsError(f"report output already exists: {directory / name}")
 
     results_path = directory / RESULTS_FILE
-    results_path.write_text(
-        json.dumps(report.as_dict(top_confusions), indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    with results_path.open("x", encoding="utf-8") as handle:
+        handle.write(json.dumps(report.as_dict(top_confusions), indent=2, ensure_ascii=False))
 
     details_path = directory / DETAILS_FILE
-    with details_path.open("w", encoding="utf-8", newline="\n") as handle:
+    with details_path.open("x", encoding="utf-8", newline="\n") as handle:
         for detail in report.details:
             handle.write(json.dumps(detail.as_dict(), ensure_ascii=False))
             handle.write("\n")
