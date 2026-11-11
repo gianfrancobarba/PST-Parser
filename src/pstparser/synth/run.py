@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from pstparser.config import ExperimentConfig
-from pstparser.repro.manifest import build_manifest, write_manifest
+from pstparser.repro.manifest import build_manifest, ensure_stage_outputs, write_manifest
 from pstparser.repro.seeding import seed_everything
 from pstparser.synth.generate import (
     SynthesisResult,
@@ -39,6 +39,7 @@ def run_synthesis(config: ExperimentConfig, provider: Provider | None = None) ->
     """
     seeds = seed_everything(config.seed)
     synth = config.synth
+    ensure_stage_outputs(synth.output_dir, "synth", (ANNOTATION_FILE, SUMMARY_FILE))
 
     seed_prompts = load_seeds(synth.seeds_path)
     if provider is None:

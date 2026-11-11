@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import platform
+import re
 import subprocess
 import sys
 from collections.abc import Iterable, Mapping
@@ -18,6 +19,7 @@ from datetime import UTC, datetime
 from importlib import metadata
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from pstparser import __version__
 from pstparser.config import ExperimentConfig
@@ -87,6 +89,8 @@ def build_manifest(
         "experiment": config.name,
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "package_version": __version__,
+        "manifest_version": 2,
+        "source": source_snapshot(),
         "git": git_state().as_dict(),
         "config": {
             "resolved": config.model_dump(mode="json"),
@@ -112,12 +116,58 @@ def write_manifest(manifest: Mapping[str, Any], directory: str | Path) -> Path:
     """
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    destination = directory / MANIFEST_FILE
-    destination.write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
+    destination = directory / manifest_filename(str(manifest["stage"]))
+    with destination.open("x", encoding="utf-8") as handle:
+        handle.write(json.dumps(manifest, indent=2, ensure_ascii=False, default=str))
     return destination
+
+
+def manifest_filename(stage: str) -> str:
+    """Return a safe filename for a stage-specific manifest."""
+    if not re.fullmatch(r"[a-z][a-z0-9_-]*", stage):
+        raise ValueError(f"invalid manifest stage: {stage!r}")
+    return f"{stage}_manifest.json"
+
+
+def ensure_stage_outputs(directory: str | Path, stage: str, filenames: Iterable[str] = ()) -> Path:
+    """Refuse a rerun before any existing stage artefact can be overwritten."""
+    directory = Path(directory)
+    occupied = [
+        directory / name
+        for name in (manifest_filename(stage), *filenames)
+        if (directory / name).exists()
+    ]
+    if occupied:
+        raise FileExistsError(f"stage outputs already exist; choose a new directory: {occupied[0]}")
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def new_stage_directory(parent: str | Path, stage: str) -> Path:
+    """Choose a fresh output directory without touching historical artefacts."""
+    manifest_filename(stage)
+    stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+    return Path(parent) / f"{stage}-{stamp}-{uuid4().hex[:8]}"
+
+
+def source_snapshot(root: str | Path | None = None) -> dict[str, Any]:
+    """Fingerprint executable package files and dependency inputs, never secrets.
+
+    Package files are resolved from this module when installed; project inputs
+    are located in the supplied root or current working directory. Missing lock
+    metadata is explicit, rather than replaced with a version-control claim.
+    """
+    root = Path(root) if root is not None else Path.cwd()
+    package = root / "src" / "pstparser"
+    if not package.is_dir():
+        package = Path(__file__).resolve().parents[1]
+    files = {
+        f"pstparser/{path.relative_to(package).as_posix()}": digest_file(path)
+        for path in sorted(package.rglob("*.py"))
+    }
+    for name in ("uv.lock", "pyproject.toml"):
+        files[name] = digest_file(root / name)
+    return {"files": files, "digest": digest_text(json.dumps(files, sort_keys=True))}
 
 
 def digest_file(path: str | Path) -> str | None:

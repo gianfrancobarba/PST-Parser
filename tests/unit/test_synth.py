@@ -402,10 +402,14 @@ def test_run_writes_sheet_summary_and_manifest(tmp_path: Path) -> None:
     summary = json.loads((tmp_path / "synthetic" / "synthesis_summary.json").read_text("utf-8"))
     assert summary["accepted"] == 3
 
-    manifest = json.loads((tmp_path / "synthetic" / "run_manifest.json").read_text("utf-8"))
+    manifest = json.loads((tmp_path / "synthetic" / "synth_manifest.json").read_text("utf-8"))
     assert manifest["stage"] == "synth"
     assert manifest["inputs"]["seeds"]
     assert manifest["synthesis"]["accepted"] == 3
+    before = result.sheet_path.read_bytes()
+    with pytest.raises(FileExistsError):
+        run_synthesis(config, provider=ScriptedProvider([]))
+    assert result.sheet_path.read_bytes() == before
 
 
 def test_run_builds_the_provider_the_configuration_describes(
