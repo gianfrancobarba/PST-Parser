@@ -27,11 +27,23 @@ discontinuità venga segnata dipende dal formato in cui il corpus è annotato: i
 con il token `<sep>`, perché una cella regge una stringa sola; in un file di testo scrivendo un
 segmento per voce di lista, perché una sequenza non ha bisogno di un token che dica dove si divide.
 
+## Stato del progetto e della valutazione
+
+La pipeline PST e i moduli downstream sono distinti: `src/pstparser/empirical/` contiene
+contratti, rendering e analisi per il confronto T/H, ma i test sintetici non sono risultati
+scientifici di generazione del codice. Il protocollo di valutazione empirica, tenuto nella
+documentazione locale di progettazione non versionata, definisce dataset, oracoli e condizioni
+da congelare prima della raccolta reale; la stessa documentazione collega audit, letteratura e piano.
+Il protocollo è una proposta: **l'approvazione del docente è ancora da acquisire**.
+
+Gli artefatti in `results/` sono storici: non attestano che le configurazioni attuali siano state
+addestrate e valutate. I ricalcoli vanno scritti in nuove directory, senza sostituire quelle prove.
+
 ## Requisiti
 
 - Python 3.11 o 3.12
 - [`uv`](https://docs.astral.sh/uv/) per la gestione dell'ambiente
-- Per il training: GPU NVIDIA con almeno 8 GB di VRAM e driver compatibili con CUDA 12.8
+- Per il training: GPU NVIDIA e stack CUDA compatibile; 8 GB richiedono uno smoke di memoria e tempi e non garantiscono la fattibilità della configurazione base
 - Un token Hugging Face con permesso di lettura, se il modello base è ad accesso condizionato
 
 La sola valutazione non richiede GPU.
@@ -55,6 +67,10 @@ di sistema in [REQUIREMENTS.md](REQUIREMENTS.md).
 
 ## Uso
 
+Gli esempi usano `outputs/new-run/`: scegliere un nome nuovo. La preparazione rifiuta record
+o split già presenti; train e generate devono ricevere gli stessi override dei percorsi.
+Gli esempi di training sono alternativi, non da eseguire tutti nella medesima directory.
+
 ```bash
 # Verifica che una configurazione sia ben formata, senza eseguire nulla
 uv run pstparser validate-config --config configs/experiments/baseline.yaml
@@ -62,22 +78,22 @@ uv run pstparser validate-config --config configs/experiments/baseline.yaml
 
 ```bash
 # Converte il corpus annotato in record e ne congela la partizione
-uv run pstparser prepare-data --config configs/experiments/baseline.yaml
+uv run pstparser prepare-data --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits
 ```
 
 ```bash
 # Addestra gli adapter sul corpus preparato
-uv run pstparser train --config configs/experiments/baseline.yaml
+uv run pstparser train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --run-dir outputs/new-run/training
 ```
 
 ```bash
 # Genera le predizioni per lo split di valutazione
-uv run pstparser generate --config configs/experiments/baseline.yaml --adapter outputs/<run>/adapter
+uv run pstparser generate --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --adapter outputs/new-run/training/adapter --run-dir outputs/new-run/generation
 ```
 
 ```bash
 # Senza adapter risponde il modello base, non addestrato, sullo stesso test set
-uv run pstparser generate --config configs/experiments/baseline.yaml --run-dir results/zero_shot
+uv run pstparser generate --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --run-dir outputs/new-run/zero_shot
 ```
 
 ```bash
@@ -98,27 +114,30 @@ I valori sono interpretati come YAML, dove `no`, `yes`, `on` e `off` sono boolea
 di quelle parole come testo va virgolettata: `--set 'training.eval_strategy="no"'`. Un tipo
 sbagliato viene comunque rifiutato dalla validazione prima che il run inizi.
 
-Su una GPU con 8 GB di VRAM, dimezzare il batch e raddoppiare l'accumulo lascia invariata la
-dimensione effettiva, e quindi la traiettoria di ottimizzazione:
+Su una GPU con 8 GB di VRAM, dimezzare il batch e raddoppiare l'accumulo conserva il numero
+nominale di esempi per aggiornamento, ma **non garantisce la stessa traiettoria di ottimizzazione**:
+padding, riduzioni numeriche, ordine dei batch e implementazione possono incidere.
 
 ```bash
-uv run pstparser train --config configs/experiments/baseline.yaml --set training.per_device_train_batch_size=1 --set training.gradient_accumulation_steps=8
+uv run pstparser train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --set training.per_device_train_batch_size=1 --set training.gradient_accumulation_steps=8 --run-dir outputs/new-run/training
 ```
 
 Per una prova rapida senza GPU, sostituendo il modello con uno giocattolo:
 
 ```bash
-uv run pstparser train --config configs/experiments/baseline.yaml --set model.backend=hf --set model.name=hf-internal-testing/tiny-random-LlamaForCausalLM --set model.load_in_4bit=false --set model.max_seq_length=512 --set training.max_steps=2 --set training.warmup_steps=0 --set training.optim=adamw_torch --set inference.max_new_tokens=32
+uv run pstparser train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --set model.backend=hf --set model.name=hf-internal-testing/tiny-random-LlamaForCausalLM --set model.load_in_4bit=false --set model.max_seq_length=512 --set training.max_steps=2 --set training.warmup_steps=0 --set training.optim=adamw_torch --set inference.max_new_tokens=32 --run-dir outputs/new-run/training
 ```
 
 ## Esecuzione in container
 
 Due immagini, costruite dallo stesso `Dockerfile` con target diversi.
 
-| Target | Base | Contenuto | Dimensione |
-|---|---|---|---|
-| `train` | Python 3.11 slim | Stack completo di fine-tuning, richiede GPU | 12.8 GB |
-| `eval` | Python 3.11 slim | Solo ciò che serve al calcolo delle metriche | 913 MB |
+| Target | Base | Contenuto |
+|---|---|---|
+| `train` | Python 3.11 slim | Stack completo di fine-tuning, richiede GPU |
+| `eval` | Python 3.11 slim | Solo ciò che serve al calcolo delle metriche |
+
+Le dimensioni delle immagini dipendono dalla build e dalle dipendenze effettive.
 
 ```bash
 docker build -f docker/Dockerfile --target eval -t pstparser:eval .
@@ -142,7 +161,7 @@ docker run --rm -v "$PWD/results:/work" pstparser:eval score --config configs/ex
 Il training richiede l'NVIDIA Container Toolkit:
 
 ```bash
-docker compose -f docker/compose.yaml --profile train run --rm train train --config configs/experiments/baseline.yaml
+docker compose -f docker/compose.yaml --profile train run --rm train train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits
 ```
 
 I pesi del modello base risiedono in un volume nominato, quindi non entrano mai nell'immagine e
@@ -156,21 +175,27 @@ Ogni esecuzione di `train` scrive una directory sotto `outputs/`:
 | File | Contenuto |
 |---|---|
 | `adapter/` | Pesi LoRA e tokenizer |
-| `run_manifest.json` | Commit git, configurazione risolta e suo digest, digest di corpus, record, system prompt, chat template e adapter, seed applicati, versioni delle librerie, descrizione dell'acceleratore |
+| `train_manifest.json` | Manifest v2 dello stadio: configurazione, hash degli input registrati e snapshot del codice, seed, versioni e metadati disponibili del training |
 | `training_metrics.jsonl` | Metriche emesse dal trainer, una per riga |
 
-Il manifest è ciò che rende un risultato tracciabile: consente di risalire con esattezza a quale
-codice, quali dati e quale ambiente lo hanno prodotto.
+I nuovi manifest sono distinti per stadio: `prepare_manifest.json`, `train_manifest.json`,
+`generate_manifest.json`, `score_manifest.json` e `align_manifest.json`. La preparazione salva
+il proprio manifest nella directory dei dati preparati. `run_manifest.json` rimane un nome
+presente negli artefatti storici, non quello delle nuove run. Gli hash e la configurazione
+migliorano la tracciabilità, ma non garantiscono riproducibilità bit per bit né provano da soli
+che tutti gli artefatti esterni siano recuperabili. Un digest nullo indica un input non disponibile.
 
 `generate`, `score` e `align` producono a loro volta `predictions.jsonl`, `results.json`,
-`eval_details.jsonl` e `alignments.jsonl`.
+`eval_details.jsonl` e `alignments.jsonl`. Senza `--run-dir`, `score` e `align` creano una nuova
+sottodirectory `score-...` o `align-...` sotto `training.output_dir` (`outputs/` di default), mai
+accanto alle predizioni: così un ricalcolo non scrive dentro `results/`. Le collisioni con
+artefatti dello stesso stadio sono rifiutate: scegliere una directory nuova, non cancellare o sovrascrivere le run storiche.
 
 ## Valutazione
 
-La generazione è separata dal calcolo delle metriche. `generate` è l'unico stadio che richiede un
-acceleratore e persiste le predizioni; `score` legge quel file e non carica alcun modello, quindi
-gira ovunque in pochi secondi. Le predizioni di riferimento sono versionate in `results/`, per cui
-ogni numero è ricalcolabile senza GPU.
+La generazione è separata dal calcolo delle metriche. `generate` carica il modello e persiste
+le predizioni; `score` legge quel file senza caricare modelli. Tempo e memoria dipendono dai dati.
+Le predizioni storiche in `results/` consentono ricalcoli CPU, distinguendo la versione delle metriche.
 
 Le metriche di contenuto sono calcolate sulle predizioni che risultano ben formate:
 
@@ -182,7 +207,9 @@ Le metriche di contenuto sono calcolate sulle predizioni che risultano ben forma
 | Distanza di edit fra alberi | quante modifiche separano la struttura predetta da quella attesa | basso |
 | Tasso di allucinazione | quota di token predetti assenti dal prompt | zero |
 | Copertura | quota di token del prompt collocati in un nodo | uno |
-| Ricostruzione esatta | quota di prompt che si riottengono concatenando le foglie in ordine | uno |
+| Ricostruzione legacy normalizzata | ricostruzione del sottoinsieme allineato con normalizzazione; non prova fedeltà completa | alto |
+| Tutte le foglie contabilizzate (v2) | quota di predizioni senza foglie estratte rimaste non collocate | uno |
+| Ricostruzione completa strict (v2) | tutte le foglie contabilizzate e ricostruzione testuale esatta | uno |
 | Frasi collocate | quota di frasi generate ritrovate nel prompt | uno |
 
 Nessuno di questi numeri dice però quanto il fine-tuning abbia aggiunto: per quello serve un termine
@@ -195,7 +222,12 @@ Il modello genera solo il testo delle foglie. Un secondo stadio, deterministico 
 ricolloca ogni frase nel prompt da cui è stata estratta e ne ricava la posizione: ogni frase
 rivendica un intervallo di caratteri, due intervalli non possono sovrapporsi, e la posizione è il
 rango dell'intervallo. Da lì discende l'artefatto con foglie `{"position": ..., "phrase": ...}` e la
-verifica diretta che il prompt si riottenga concatenando le foglie in ordine.
+verifica di ricostruzione. Il vecchio campo `exact_reconstruction_rate` conserva la semantica
+legacy: normalizza whitespace e può ignorare foglie non collocate. I nuovi report v2 aggiungono
+`aligned_subset_reconstruction_normalized_rate`, `all_leaves_accounted_for_rate` e
+`strict_full_reconstruction_rate`. Confrontare metriche con stessa versione; non rinominare
+i risultati storici come strict. Nessuna di queste misure sostituisce la validazione dello schema
+o il controllo umano delle categorie. I dettagli sono nella nota locale di implementazione R01–R02.
 
 La copertura è solo un sostituto di quella proprietà: dice quali parole sono state collocate, mai in
 che ordine. Un output che rimescolasse completamente le frasi otterrebbe comunque copertura piena.
@@ -206,12 +238,13 @@ silenzioso di significato.
 
 ### Decoding vincolato
 
-Impostando `inference.structured_output: true` (richiede l'extra `structured`) la generazione è
-vincolata allo schema derivato dalla tassonomia, e la validità JSON diventa garantita per
-costruzione anziché misurata.
+Impostando `inference.structured_output: true` (richiede l'extra `structured`) si richiede un
+decoding vincolato allo schema. Compatibilità del backend, completamento entro il budget e
+assenza di errori vanno verificati: **non è una garanzia incondizionata di JSON valido**.
+Misurare comunque validità, troncamenti e fallimenti e distinguerli dalla qualità del contenuto.
 
-Va usato con una avvertenza metodologica: in quella modalità la validità JSON smette di dire
-alcunché sul fine-tuning, perché è imposta dall'esterno. Il valore sta nel confronto fra le due
+In quella modalità la validità osservata è influenzata dal vincolo esterno e non misura da sola
+quanto il modello abbia imparato il formato. Il valore sta nel confronto fra le due
 esecuzioni — libera per misurare quanto il modello ha interiorizzato il formato, vincolata per
 valutare la qualità del contenuto a parità di formato.
 
@@ -241,6 +274,35 @@ se fosse un errore di annotazione.
 Il file annotato non va fuso nel corpus di partenza: si aggiunge a `data.sources`, che li concatena
 mantenendoli file distinti. Il materiale consegnato resta separato da quello annotato dopo, e
 `prepare-data` riporta quanti record ha portato ciascuna sorgente.
+
+## Audit del corpus e valutazione downstream
+
+Due strumenti restano fuori dal comando `pstparser` e si invocano come moduli, senza entry point
+dedicati.
+
+```bash
+# Diagnostica in sola lettura: testo non coperto, corrispondenze tolleranti, possibili famiglie di duplicati
+uv run python -m pstparser.data.audit --config configs/experiments/baseline.yaml --output outputs/new-run/corpus-audit.json
+```
+
+L'audit non corregge annotazioni né partizioni: i candidati (similarità di Jaccard sopra
+`--similarity-threshold`, 0.9 di default) vanno rivisti a mano. Il file di output deve essere nuovo
+e la sua directory deve già esistere.
+
+```bash
+uv run python -m pstparser.empirical render CANONICAL.jsonl VARIANTS.jsonl
+uv run python -m pstparser.empirical generate VARIANTS.jsonl CONFIG.json GENERATION_DIR
+uv run python -m pstparser.empirical check GENERATIONS.jsonl ORACLES.jsonl CHECK_DIR IMAGE@sha256:... ANALYSIS_ID
+uv run python -m pstparser.empirical analyze DESIGN.json OUTCOMES.jsonl REPORT.json
+```
+
+`render` produce le varianti appaiate T/H-gold da annotazioni canoniche revisionate. `generate`
+richiede una configurazione esplicita con revisione del modello immutabile e un record di revisione,
+verifica il budget di token di tutte le varianti prima di generare e scrive un journal riprendibile
+(`generations.jsonl`). `check` calibra gli oracoli funzionali forniti e li esegue in un container
+Docker locale senza rete, con immagine fissata per digest. `analyze` esegue l'analisi appaiata sul
+disegno dichiarato. Nessun comando sceglie un benchmark o produce giudizi di sicurezza: finché il
+protocollo non è approvato, i loro output sono prove tecniche, non risultati.
 
 ## Notebook Colab
 
@@ -279,6 +341,7 @@ src/pstparser/
   training/      ricetta di fine-tuning
   inference/     generazione delle predizioni
   evaluation/    metriche e report
+  empirical/     contratti downstream, renderer, oracoli e analisi appaiata
   repro/         seeding e manifest di run
 results/         predizioni e metriche di riferimento
 tests/           suite di test
