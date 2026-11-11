@@ -13,11 +13,12 @@ from pstparser.data.errors import CorpusError
 from pstparser.data.excel import iter_rows, read_corpus
 from pstparser.data.fixes import AnnotationFix, apply_fixes, load_fixes
 from pstparser.data.quality import QualityReport, check_corpus
-from pstparser.data.splits import Split, group_key, make_split, save_split
+from pstparser.data.splits import Split, group_key, make_split, save_split, split_input_paths
 from pstparser.data.targets import RawRecord, build_leaves
 from pstparser.pst.alignment import DEFAULT_LEVELS, MatchLevel
 from pstparser.pst.target import serialise_target
 from pstparser.pst.taxonomy import LEAF_PATHS, assemble
+from pstparser.repro.manifest import ensure_stage_outputs
 
 RECORDS_FILE = "records.jsonl"
 QUALITY_REPORT_FILE = "quality_report.json"
@@ -155,10 +156,16 @@ def prepare_corpus(
         test=[kept[position].index for position in split.test],
     )
 
+    for path in split_input_paths(config.split.output_dir).values():
+        if path.exists():
+            raise FileExistsError(
+                f"split already exists; use fresh preparation directories: {path}"
+            )
+    ensure_stage_outputs(config.processed_dir, "prepare", (RECORDS_FILE, QUALITY_REPORT_FILE))
     records_path = write_records(records, Path(config.processed_dir) / RECORDS_FILE)
     report_path = Path(config.processed_dir) / QUALITY_REPORT_FILE
     report_path.write_text(json.dumps(report.as_dict(), indent=2), encoding="utf-8")
-    save_split(split, config.split.output_dir)
+    save_split(split, config.split.output_dir, records_path=records_path)
 
     return PreparationResult(
         records=records,

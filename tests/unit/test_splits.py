@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -109,3 +110,51 @@ def test_a_missing_partition_file_is_reported(tmp_path: Path) -> None:
 def test_loading_an_absent_partition_is_rejected(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError, match="split file not found"):
         load_split(tmp_path)
+
+
+def test_bound_split_refuses_reordered_corpus_and_changed_membership(tmp_path: Path) -> None:
+    records = tmp_path / "records.jsonl"
+    original = "\n".join(json.dumps({"index": i, "prompt": str(i)}) for i in range(3))
+    records.write_text(original, encoding="utf-8")
+    directory = tmp_path / "splits"
+    split = Split(train=[0], val=[1], test=[2])
+    save_split(split, directory, records_path=records)
+    assert load_split(directory, records_path=records) == split
+    records.write_text("\n".join(reversed(original.splitlines())), encoding="utf-8")
+    with pytest.raises(ValueError, match="corpus digest mismatch"):
+        load_split(directory, records_path=records)
+    records.write_text(original, encoding="utf-8")
+    (directory / "train.json").write_text("[3]", encoding="utf-8")
+    with pytest.raises(ValueError, match="split digest mismatch"):
+        load_split(directory, records_path=records)
+
+
+@pytest.mark.parametrize(
+    "split",
+    [Split([0, 0], [1], [2]), Split([0], [0], [2]), Split([True], [1], [2])],
+)
+def test_invalid_split_identifiers_are_rejected(tmp_path: Path, split: Split) -> None:
+    with pytest.raises(ValueError):
+        save_split(split, tmp_path)
+
+
+def test_missing_record_identifier_is_rejected_before_writing(tmp_path: Path) -> None:
+    records = tmp_path / "records.jsonl"
+    records.write_text('{"index": 0}\n{"index": 1}\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="absent from records"):
+        save_split(Split([0], [1], [2]), tmp_path / "splits", records_path=records)
+    assert not (tmp_path / "splits" / "train.json").exists()
+
+
+def test_legacy_split_requires_binding_for_training(tmp_path: Path) -> None:
+    save_split(Split([0], [1], [2]), tmp_path / "splits")
+    with pytest.raises(ValueError, match="unbound legacy split"):
+        load_split(tmp_path / "splits", records_path=tmp_path / "records.jsonl")
+
+
+def test_saving_a_split_never_overwrites_it(tmp_path: Path) -> None:
+    split = Split([0], [1], [2])
+    save_split(split, tmp_path)
+    with pytest.raises(FileExistsError):
+        save_split(Split([2], [1], [0]), tmp_path)
+    assert load_split(tmp_path) == split

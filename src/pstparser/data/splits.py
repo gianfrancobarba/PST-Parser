@@ -25,6 +25,7 @@ from pathlib import Path
 TRAIN_FILE = "train.json"
 VAL_FILE = "val.json"
 TEST_FILE = "test.json"
+SPLIT_MANIFEST_FILE = "split_manifest.json"
 
 
 @dataclass(frozen=True)
@@ -127,17 +128,26 @@ def make_split(
     return split
 
 
-def save_split(split: Split, directory: str | Path) -> tuple[Path, Path, Path]:
+def save_split(
+    split: Split, directory: str | Path, *, records_path: str | Path | None = None
+) -> tuple[Path, Path, Path]:
     """Write a partition to disk.
 
     Args:
         split: The partition to persist.
         directory: Destination directory, created if absent.
+        records_path: Optional corpus file to bind by exact SHA-256 digest.
 
     Returns:
         The paths of the training, validation and test files.
     """
+    validate_split(split)
+    if records_path is not None:
+        validate_split(split, _record_ids(Path(records_path)))
     directory = Path(directory)
+    for path in split_input_paths(directory).values():
+        if path.exists():
+            raise FileExistsError(f"split already exists; choose a new directory: {path}")
     directory.mkdir(parents=True, exist_ok=True)
 
     paths = []
@@ -147,16 +157,27 @@ def save_split(split: Split, directory: str | Path) -> tuple[Path, Path, Path]:
         (TEST_FILE, split.test),
     ):
         path = directory / name
-        path.write_text(json.dumps(indices), encoding="utf-8")
+        with path.open("x", encoding="utf-8") as handle:
+            handle.write(json.dumps(indices))
         paths.append(path)
+    if records_path is not None:
+        manifest = {
+            "version": 1,
+            "records_sha256": _digest(Path(records_path)),
+            "split_sha256": {path.name: _digest(path) for path in paths},
+            "assigned_indices": sorted(split.train + split.val + split.test),
+        }
+        with (directory / SPLIT_MANIFEST_FILE).open("x", encoding="utf-8") as handle:
+            json.dump(manifest, handle, indent=2)
     return paths[0], paths[1], paths[2]
 
 
-def load_split(directory: str | Path) -> Split:
+def load_split(directory: str | Path, *, records_path: str | Path | None = None) -> Split:
     """Read a partition previously written by :func:`save_split`.
 
     Args:
         directory: Directory holding the partition files.
+        records_path: When provided, require and verify the corpus binding.
 
     Returns:
         The partition.
@@ -172,4 +193,62 @@ def load_split(directory: str | Path) -> Split:
             raise FileNotFoundError(f"split file not found: {path}")
         sides.append(json.loads(path.read_text(encoding="utf-8")))
 
-    return Split(train=sides[0], val=sides[1], test=sides[2])
+    split = Split(train=sides[0], val=sides[1], test=sides[2])
+    validate_split(split)
+    if records_path is not None:
+        metadata_path = directory / SPLIT_MANIFEST_FILE
+        if not metadata_path.is_file():
+            raise ValueError("unbound legacy split: prepare data into fresh directories first")
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        if metadata.get("version") != 1:
+            raise ValueError("unsupported split manifest version")
+        if metadata.get("records_sha256") != _digest(Path(records_path)):
+            raise ValueError("split corpus digest mismatch: records changed or were reordered")
+        for name in (TRAIN_FILE, VAL_FILE, TEST_FILE):
+            if metadata.get("split_sha256", {}).get(name) != _digest(directory / name):
+                raise ValueError(f"split digest mismatch: {name}")
+        assigned = sorted(split.train + split.val + split.test)
+        if assigned != metadata.get("assigned_indices"):
+            raise ValueError("split membership differs from its manifest")
+        validate_split(split, _record_ids(Path(records_path)))
+    return split
+
+
+def validate_split(split: Split, record_ids: set[int] | None = None) -> None:
+    """Reject duplicate, overlapping, malformed or unknown record identifiers."""
+    seen: set[int] = set()
+    for side in (split.train, split.val, split.test):
+        if not isinstance(side, list) or not side:
+            raise ValueError("every split must be a non-empty list")
+        for index in side:
+            if type(index) is not int or index < 0:
+                raise ValueError("split identifiers must be non-negative integers")
+            if index in seen:
+                raise ValueError(f"duplicate or overlapping split identifier: {index}")
+            if record_ids is not None and index not in record_ids:
+                raise ValueError(f"split identifier absent from records: {index}")
+            seen.add(index)
+
+
+def split_input_paths(directory: str | Path) -> dict[str, Path]:
+    """List the partition artefacts included in stage provenance."""
+    return {
+        f"split/{name}": Path(directory) / name
+        for name in (TRAIN_FILE, VAL_FILE, TEST_FILE, SPLIT_MANIFEST_FILE)
+    }
+
+
+def _digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _record_ids(path: Path) -> set[int]:
+    ids: set[int] = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        index = json.loads(line)["index"]
+        if type(index) is not int or index < 0 or index in ids:
+            raise ValueError("records contain duplicate or malformed identifiers")
+        ids.add(index)
+    return ids

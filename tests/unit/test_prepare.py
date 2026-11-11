@@ -55,6 +55,14 @@ def test_every_row_becomes_a_record(prepared: PreparationResult) -> None:
     assert [record.index for record in prepared.records] == list(range(7))
 
 
+def test_prepared_split_is_bound_to_exact_records(prepared: PreparationResult) -> None:
+    assert load_split(prepared.split_dir, records_path=prepared.records_path) == prepared.split
+    with prepared.records_path.open("a", encoding="utf-8") as handle:
+        handle.write("\n")
+    with pytest.raises(ValueError, match="corpus digest mismatch"):
+        load_split(prepared.split_dir, records_path=prepared.records_path)
+
+
 def test_records_carry_the_raw_prompt(prepared: PreparationResult) -> None:
     assert prepared.records[1].prompt == "Fix this bug."
 
