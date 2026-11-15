@@ -246,6 +246,29 @@ class GeneratedText:
     output_tokens: int
     finish_reason: str
     elapsed_seconds: float
+    generation_config: dict[str, Any]
+
+
+def decoding_parameters(config: InferenceConfig) -> dict[str, Any]:
+    """Return every decoding value handed to the model, and nothing implicit.
+
+    The dictionary is the whole content of the ``GenerationConfig`` built for a
+    call. Greedy decoding carries no sampling value; sampling carries all three,
+    with ``top_k`` 0 (filter disabled) when none is configured, because the
+    library default is 50.
+    """
+    values: dict[str, Any] = {
+        "do_sample": config.do_sample,
+        "num_beams": 1,
+        "repetition_penalty": config.repetition_penalty,
+        "max_new_tokens": config.max_new_tokens,
+        "use_cache": True,
+    }
+    if config.do_sample:
+        values["temperature"] = config.temperature
+        values["top_p"] = config.top_p
+        values["top_k"] = config.top_k if config.top_k is not None else 0
+    return values
 
 
 def generate_messages(
@@ -263,7 +286,15 @@ def generate_messages(
     the explicit experiment limit and finite model/tokenizer limits. Unknown
     ceilings fail closed. EOS takes precedence over the length limit when
     the last permitted token is EOS.
+
+    Decoding uses a ``GenerationConfig`` built from :func:`decoding_parameters`
+    alone, with ``use_model_defaults=False``: without that switch transformers
+    replaces every field left at the library default with the value published
+    in the model's own ``generation_config`` (a repetition penalty, a sampling
+    temperature). Only the special token ids still come from the model.
     """
+    from transformers import GenerationConfig
+
     inputs = tokenizer.apply_chat_template(
         messages,
         tokenize=True,
@@ -275,14 +306,11 @@ def generate_messages(
     input_tokens = int(inputs.shape[-1])
     validate_token_budget(model, tokenizer, input_tokens, config.max_new_tokens, max_seq_length)
 
+    decoding = decoding_parameters(config)
     keywords: dict[str, Any] = {
-        "max_new_tokens": config.max_new_tokens,
-        "use_cache": True,
-        "do_sample": config.do_sample,
+        "generation_config": GenerationConfig(**decoding),
+        "use_model_defaults": False,
     }
-    if config.do_sample:
-        keywords["temperature"] = config.temperature
-        keywords["top_p"] = config.top_p
     if logits_processors is not None:
         keywords["logits_processor"] = logits_processors
 
@@ -309,6 +337,7 @@ def generate_messages(
         output_tokens=count,
         finish_reason=reason,
         elapsed_seconds=perf_counter() - started,
+        generation_config=decoding,
     )
 
 
