@@ -12,6 +12,7 @@ import typer
 from pstparser.empirical.analysis import AnalysisDesign, TaskSpec, analyze_paired, read_outcomes
 from pstparser.empirical.contracts import CanonicalPrompt, PromptVariant, SpanAnnotation
 from pstparser.empirical.journal import request_plan, run_journal
+from pstparser.empirical.messages import chat_messages, validate_user_template
 from pstparser.empirical.rendering import render_prompt_variants
 
 app = typer.Typer(
@@ -59,9 +60,18 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     """Generate/resume only an explicitly configured, revision-pinned experiment."""
     # Imports remain local: rendering and analysis do not load torch/models.
     from pstparser.config import InferenceConfig, ModelConfig
-    from pstparser.inference.generate import generate_messages, validate_token_budget
-    from pstparser.models.loader import load_untuned, runtime_provenance
-    from pstparser.repro.manifest import digest_file, digest_text
+    from pstparser.inference.generate import (
+        decoding_parameters,
+        generate_messages,
+        validate_token_budget,
+    )
+    from pstparser.models.loader import (
+        load_untuned,
+        resolve_snapshot,
+        runtime_provenance,
+        verify_chat_template,
+    )
+    from pstparser.repro.manifest import digest_file, digest_text, environment
     from pstparser.repro.seeding import seed_everything
 
     config = json.loads(configuration.read_text(encoding="utf-8"))
@@ -76,8 +86,34 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         "purpose",
         "review_record",
     }
+    # A configuration without format_version is version 1 and keeps its closed
+    # key set; the keys added since are admitted only by declaring version 2.
+    versioned = "format_version" in config
+    if versioned:
+        if config["format_version"] != 2:
+            raise ValueError("format_version must be 2 when present")
+        allowed |= {"format_version", "user_template", "conditions"}
     if set(config) != allowed:
         raise ValueError(f"configuration requires exactly: {sorted(allowed)}")
+    user_template: str | None = None
+    if versioned:
+        user_template = config["user_template"]
+        if user_template is not None:
+            if not isinstance(user_template, str):
+                raise ValueError("user_template must be a string or null")
+            validate_user_template(user_template)
+        declared = config["conditions"]
+        if (
+            not isinstance(declared, list)
+            or len(declared) < 2
+            or len(set(declared)) != len(declared)
+            or not all(isinstance(name, str) and name for name in declared)
+        ):
+            raise ValueError("conditions must list at least two distinct condition names")
+        if not {"backend", "chat_template"} <= set(config["model"]):
+            raise ValueError("model.backend and model.chat_template must be explicit")
+        if config["model"]["backend"] == "hf" and config["model"]["chat_template"] != "native":
+            raise ValueError("the hf backend keeps the model's own template: use 'native'")
     if config["purpose"] not in {"pilot", "final"}:
         raise ValueError("purpose must be pilot or final")
     for name in ("protocol_version", "dataset_revision", "system_prompt", "review_record"):
@@ -95,15 +131,33 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     if not inference.do_sample and len(config["replicate_ids"]) != 1:
         raise ValueError("greedy repetitions are not independent samples")
     rendered = [PromptVariant(**row) for row in _rows(variants)]
+    if versioned and {variant.condition for variant in rendered} != set(config["conditions"]):
+        raise ValueError("the variants do not hold exactly the configured conditions")
     requests = request_plan(rendered, config["replicate_ids"], config["seed"])
     seed_everything(config["seed"])
+    final = config["purpose"] == "final"
+    # Only the transformers backend loads the repository it is asked for; the
+    # optimised one substitutes its own, so its revision cannot be verified.
+    snapshot = (
+        resolve_snapshot(model_config.name, model_config.revision or "", hash_weights=final)
+        if model_config.backend == "hf"
+        else None
+    )
+    if final and (snapshot is None or snapshot.sha != model_config.revision):
+        raise ValueError("final runs require the model snapshot of the requested revision")
     model, tokenizer = load_untuned(model_config)
+    runtime = runtime_provenance(model, tokenizer, model_config, snapshot)
+    if final and not runtime["revision_verified"]:
+        raise ValueError("final runs require a verified model revision")
+    if final and runtime["chat_template_matches_official"] is not True:
+        raise ValueError("final runs require the published conversation template")
     # Check BOTH variants for ALL tasks before generating the first condition.
+    template_checked: set[str] = set()
     for variant in rendered:
-        messages = [
-            {"role": "system", "content": config["system_prompt"]},
-            {"role": "user", "content": variant.text},
-        ]
+        messages = chat_messages(config["system_prompt"], user_template, variant.text)
+        if snapshot is not None and variant.condition not in template_checked:
+            verify_chat_template(tokenizer, snapshot, messages)
+            template_checked.add(variant.condition)
         tokens = tokenizer.apply_chat_template(
             messages,
             tokenize=True,
@@ -122,22 +176,24 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         "review_record_sha256": digest_file(review),
         "variant_file_sha256": digest_file(variants),
         "system_prompt_sha256": digest_text(config["system_prompt"]),
-        "runtime": runtime_provenance(model, tokenizer, model_config),
+        "user_template_sha256": digest_text(user_template) if user_template is not None else None,
+        "decoding": decoding_parameters(inference),
+        "runtime": runtime,
+        "environment": environment(),
     }
 
     def complete(request: Any) -> dict[str, Any]:
         seed_everything(request["seed"])
+        messages = chat_messages(config["system_prompt"], user_template, request["text"])
         result = generate_messages(
             model,
             tokenizer,
-            [
-                {"role": "system", "content": config["system_prompt"]},
-                {"role": "user", "content": request["text"]},
-            ],
+            messages,
             inference,
             max_seq_length=model_config.max_seq_length,
         )
         return {
+            "user_message_sha256": digest_text(messages[1]["content"]),
             "raw_output": result.text,
             "input_tokens": result.input_tokens,
             "output_tokens": result.output_tokens,
