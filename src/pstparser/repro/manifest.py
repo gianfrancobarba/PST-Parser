@@ -31,6 +31,8 @@ MANIFEST_FILE = "run_manifest.json"
 _TRACKED_PACKAGES = (
     "torch",
     "transformers",
+    "tokenizers",
+    "huggingface_hub",
     "trl",
     "peft",
     "accelerate",
@@ -276,7 +278,29 @@ def accelerator() -> dict[str, Any]:
         "cuda": torch.version.cuda,
         "devices": [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())],
         "capability": list(torch.cuda.get_device_capability(0)),
+        "cudnn": torch.backends.cudnn.version(),
+        "memory_bytes": [
+            torch.cuda.get_device_properties(i).total_memory
+            for i in range(torch.cuda.device_count())
+        ],
+        "driver": _gpu_driver(),
     }
+
+
+def _gpu_driver() -> str | None:
+    """Report the NVIDIA driver version, or ``None`` when it cannot be queried."""
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    lines = result.stdout.split()
+    return lines[0] if result.returncode == 0 and lines else None
 
 
 def _git(*args: str) -> str | None:
