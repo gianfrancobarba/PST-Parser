@@ -243,6 +243,281 @@ def calibrate_bigcodebench(
         raise ValueError(f"unexplained reference failures: {report['unexplained']}")
 
 
+def _write_document(path: Path, document: dict[str, Any]) -> None:
+    """Write a frozen JSON document to a new file, with LF line endings."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(document, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
+
+
+def _read_document(path: Path) -> dict[str, Any]:
+    document = json.loads(path.read_bytes().decode("utf-8"))
+    if not isinstance(document, dict):
+        raise ValueError(f"{path}: expected a JSON object")
+    return document
+
+
+@app.command()
+def sample(
+    sources: Path,
+    exclude: Annotated[Path, typer.Option(help="Frozen exclusions of the calibration.")],
+    seed: Annotated[int, typer.Option(help="Sampling seed, fixed before seeing any data.")],
+    permutation_out: Annotated[Path, typer.Option(help="New file for the frozen permutation.")],
+    out: Annotated[Path, typer.Option(help="New file for the final sample.")],
+    n: Annotated[int, typer.Option(help="Size of the final sample, a prefix.")] = 800,
+    strata: Annotated[str, typer.Option(help="Named stratification rule.")] = (
+        "bigcodebench-exceptions-doctest-v1"
+    ),
+    hard_parquet: Annotated[Path | None, typer.Option(help="Parquet of the Hard subset.")] = None,
+    hard_revision: Annotated[str | None, typer.Option(help="Revision of the Hard subset.")] = None,
+    split: Annotated[str, typer.Option(help="BigCodeBench split.")] = "v0.1.4",
+) -> None:
+    """Freeze the stratified permutation of the eligible tasks and its final prefix."""
+    from pstparser.empirical import sampling
+    from pstparser.empirical.benchmarks import load_bigcodebench_hard_ids, read_sources
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    if strata not in sampling.STRATA:
+        raise ValueError(f"unknown strata rule {strata!r}; choose one of {sorted(sampling.STRATA)}")
+    if (hard_parquet is None) != (hard_revision is None):
+        raise ValueError("give both --hard-parquet and --hard-revision, or neither")
+    records = read_sources(sources)
+    if not records:
+        raise ValueError("empty sources")
+    if records[0].benchmark == "bigcodebench" and hard_parquet is None:
+        raise ValueError("BigCodeBench needs its Hard subset: the pilot is drawn outside it")
+    dataset_sha256 = records[0].dataset_file_sha256
+    calibration = _read_document(exclude)
+    # Exclusions must come from a complete, conclusive calibration of this very file.
+    if (
+        calibration.get("format_version") != 1
+        or calibration.get("scope") != "all"
+        or calibration.get("unexplained") != []
+    ):
+        raise ValueError("the exclusions are not a complete, conclusive calibration")
+    if calibration["dataset_file_sha256"] != dataset_sha256:
+        raise ValueError("the exclusions were calibrated on another dataset file")
+    if calibration["tasks"] != len(records):
+        raise ValueError("the exclusions do not cover every source")
+    excluded = {row["task_id"]: row["reason"] for row in calibration["excluded"]}
+    hard: frozenset[str] = frozenset()
+    if hard_parquet is not None and hard_revision is not None:
+        hard = load_bigcodebench_hard_ids(hard_parquet, hard_revision, split)
+        if not hard <= {record.task_id for record in records}:
+            raise ValueError("a Hard task is not among the sources")
+    permutation = sampling.stratified_permutation(
+        records,
+        dataset_sha256=dataset_sha256,
+        seed=seed,
+        strata=sampling.STRATA[strata],
+        exclude=excluded,
+    )
+    final = sampling.sample(permutation, n)
+    if permutation_out.exists():
+        raise FileExistsError(f"the permutation already exists: {permutation_out}")
+    ensure_stage_outputs(out.parent, "empirical-sample", [out.name])
+    _write_document(
+        permutation_out,
+        {
+            **sampling.permutation_document(
+                permutation,
+                benchmark=records[0].benchmark,
+                dataset_revision=records[0].dataset_revision,
+                strata_rule=strata,
+                hard_ids=hard,
+            ),
+            "sources_sha256": digest_file(sources),
+            "exclusions_sha256": digest_file(exclude),
+        },
+    )
+    _write_document(
+        out,
+        sampling.sample_document(
+            "final-sample",
+            final,
+            permutation,
+            hard,
+            benchmark=records[0].benchmark,
+            permutation_sha256=digest_file(permutation_out),
+        ),
+    )
+    write_manifest(
+        {
+            "stage": "empirical-sample",
+            "seed": seed,
+            "n": n,
+            "strata_rule": strata,
+            "sources_sha256": digest_file(sources),
+            "exclusions_sha256": digest_file(exclude),
+            "permutation_sha256": digest_file(permutation_out),
+            "sample_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(permutation.order)} eligible; final sample of {n} in {out}")
+
+
+@app.command("sample-pilot")
+def sample_pilot(
+    permutation: Path,
+    final: Path,
+    seed: Annotated[int, typer.Option(help="Seed of the pilot draw.")],
+    out: Annotated[Path, typer.Option(help="New file for the pilot pool.")],
+    full_out: Annotated[Path, typer.Option(help="New file for every eligible task but the pilot.")],
+    n: Annotated[int, typer.Option(help="Number of pilot tasks.")] = 30,
+) -> None:
+    """Draw the pilot pool outside the final sample and outside Hard.
+
+    The final sample must already be frozen: the pilot is what it left out.
+    """
+    from pstparser.empirical import sampling
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    frozen, hard = sampling.read_permutation_document(_read_document(permutation))
+    final_document = _read_document(final)
+    if final_document.get("permutation_sha256") != digest_file(permutation):
+        raise ValueError("the final sample was not drawn from this permutation file")
+    final_sample = sampling.read_sample_document(final_document, "final-sample")
+    pilot = sampling.pilot_pool(frozen, final_sample, n, seed=seed, hard_ids=hard)
+    full = sampling.full_minus(frozen, pilot)
+    if full_out.exists():
+        raise FileExistsError(f"the full set already exists: {full_out}")
+    ensure_stage_outputs(out.parent, "empirical-sample-pilot", [out.name])
+    provenance = {
+        "benchmark": final_document["benchmark"],
+        "permutation_sha256": digest_file(permutation),
+        "final_sha256": digest_file(final),
+    }
+    _write_document(
+        out,
+        sampling.sample_document(
+            "pilot-sample",
+            pilot,
+            frozen,
+            hard,
+            purpose="pilot",
+            hard_excluded=len(hard),
+            **provenance,
+        ),
+    )
+    _write_document(
+        full_out,
+        sampling.sample_document(
+            "full-minus-pilot", full, frozen, hard, pilot_sha256=digest_file(out), **provenance
+        ),
+    )
+    write_manifest(
+        {
+            "stage": "empirical-sample-pilot",
+            "seed": seed,
+            "n": n,
+            **provenance,
+            "pilot_sha256": digest_file(out),
+            "full_sha256": digest_file(full_out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"pilot pool of {n} in {out}; {len(full.task_ids)} tasks in {full_out}")
+
+
+@app.command("sample-families")
+def sample_families(
+    sources: Path,
+    families: Annotated[int, typer.Option(help="Number of whole families to draw.")],
+    seed: Annotated[int, typer.Option(help="Seed of the draw.")],
+    disjoint_from: Annotated[Path, typer.Option(help="Sources no drawn family may appear in.")],
+    out: Annotated[Path, typer.Option(help="New file for the drawn families.")],
+    family_size: Annotated[
+        int | None, typer.Option(help="Draw only among families of this size.")
+    ] = None,
+) -> None:
+    """Draw whole families as pilot material, disjoint by family from another set."""
+    from collections import Counter
+
+    from pstparser.empirical import sampling
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    records = read_sources(sources)
+    others = read_sources(disjoint_from)
+    if not records:
+        raise ValueError("empty sources")
+    dataset_sha256 = records[0].dataset_file_sha256
+    sizes = Counter(record.family_id for record in records)
+    drawn = sampling.family_sample(
+        records,
+        families=families,
+        seed=seed,
+        dataset_sha256=dataset_sha256,
+        family_size=family_size,
+    )
+    split = sampling.shared_families(drawn, others)
+    if split or {record.task_id for record in drawn} & {record.task_id for record in others}:
+        raise ValueError(f"families shared with the other set: {sorted(split)}")
+    ensure_stage_outputs(out.parent, "empirical-sample-families", [out.name])
+    _write_document(
+        out,
+        {
+            "format_version": 1,
+            "kind": "family-sample",
+            "benchmark": records[0].benchmark,
+            "dataset_revision": records[0].dataset_revision,
+            "dataset_file_sha256": dataset_sha256,
+            "text_field": records[0].text_field,
+            "method": sampling.ORDER_METHOD,
+            "purpose": "pilot-families",
+            "seed": seed,
+            "family_size": family_size,
+            "candidate_families": sum(
+                1 for size in sizes.values() if family_size is None or size == family_size
+            ),
+            "families": list(dict.fromkeys(record.family_id for record in drawn)),
+            "n": len(drawn),
+            "sources_sha256": digest_file(sources),
+            "disjoint_from_sha256": digest_file(disjoint_from),
+            "tasks": [
+                {
+                    "task_id": record.task_id,
+                    "family_id": record.family_id,
+                    "source_sha256": record.source_sha256,
+                }
+                for record in drawn
+            ],
+        },
+    )
+    write_manifest(
+        {
+            "stage": "empirical-sample-families",
+            "seed": seed,
+            "families": families,
+            "family_size": family_size,
+            "sources_sha256": digest_file(sources),
+            "disjoint_from_sha256": digest_file(disjoint_from),
+            "sample_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(drawn)} prompts in {families} families in {out}")
+
+
 @app.command()
 def generate(variants: Path, configuration: Path, directory: Path) -> None:
     """Generate/resume only an explicitly configured, revision-pinned experiment."""
