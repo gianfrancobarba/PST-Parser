@@ -8,11 +8,12 @@ RUN ?= outputs/new-run
 DATA_OVERRIDES = --set data.processed_dir=$(RUN)/processed --set data.split.output_dir=$(RUN)/splits
 ADAPTER ?= $(RUN)/training/adapter
 PREDICTIONS ?= $(RUN)/generation/predictions.jsonl
+ARCHIVE ?= $(RUN)/source.zip
 
 .DEFAULT_GOAL := help
 .PHONY: help install lint format typecheck test test-slow check \
         validate-config prepare-data train generate score align synth \
-        docker-build-eval docker-build-train docker-score docker-train clean
+        source-archive docker-build-eval docker-build-train docker-score docker-train clean
 
 help: ## Show the available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -66,6 +67,15 @@ align: ## Locate the phrases of PREDICTIONS in their prompts; needs no accelerat
 
 synth: ## Generate prompts for the reasoning paradigms and export them for annotation
 	$(UV) run pstparser synth --config $(CONFIG)
+
+# --- Provenance ------------------------------------------------------------
+
+source-archive: ## LF ZIP of the HEAD revision, with its SHA-256 and verified tree
+	@test ! -e $(ARCHIVE) || { echo "$(ARCHIVE) already exists; choose a fresh RUN or ARCHIVE"; exit 1; }
+	mkdir -p $(dir $(ARCHIVE))
+	git -c core.autocrlf=false archive --format=zip -o $(ARCHIVE) HEAD
+	sha256sum $(ARCHIVE) > $(ARCHIVE).sha256
+	$(UV) run python scripts/verify_archive.py $(ARCHIVE) --expected-tree $$(git rev-parse HEAD^{tree})
 
 # --- Containers ------------------------------------------------------------
 
