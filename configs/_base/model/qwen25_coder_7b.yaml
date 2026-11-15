@@ -1,0 +1,14 @@
+# Code generator of the downstream study: the published weights in bfloat16,
+# loaded through transformers from the snapshot of one pinned commit, with the
+# conversation template that ships in that snapshot ("native").
+model:
+  backend: hf
+  name: Qwen/Qwen2.5-Coder-7B-Instruct
+  revision: c03e6d358207e414f1eca0bb1891e29f1db0e242
+
+  # Explicit experiment limit, checked against every request before the first
+  # generation; nothing is ever truncated.
+  max_seq_length: 8192
+  load_in_4bit: false
+  dtype: bfloat16
+  chat_template: native

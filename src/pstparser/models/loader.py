@@ -9,6 +9,10 @@ run without it.
 
 from __future__ import annotations
 
+import fnmatch
+import json
+import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -21,13 +25,147 @@ Model = Any
 Tokenizer = Any
 
 
-def runtime_provenance(model: Model, tokenizer: Tokenizer, config: ModelConfig) -> dict[str, Any]:
-    """Record actual revision/template metadata without inventing unresolved hashes."""
+# Files of a model repository that decide what is loaded: configuration,
+# generation defaults, tokenizer vocabulary and template, weight index, weights.
+SNAPSHOT_PATTERNS = ("*.json", "*.txt", "*.jinja", "*.safetensors")
+_WEIGHT_PATTERN = "*.safetensors"
+_COMMIT = re.compile(r"[0-9a-f]{40}")
+
+
+class BackendError(RuntimeError):
+    """Raised when a backend is unavailable or cannot honour the configuration."""
+
+
+@dataclass(frozen=True)
+class SnapshotIdentity:
+    """A model repository materialised at one commit.
+
+    Attributes:
+        path: Local directory of the snapshot, ending in ``snapshots/<sha>``.
+        sha: Commit the directory holds, read from its name.
+        files: SHA-256 of every hashed file, keyed by its path in the repository.
+        weights_hashed: Whether ``files`` covers the weight shards as well.
+    """
+
+    path: Path
+    sha: str
+    files: dict[str, str]
+    weights_hashed: bool
+
+
+def resolve_snapshot(name: str, revision: str, *, hash_weights: bool = False) -> SnapshotIdentity:
+    """Download a repository at a revision and identify exactly what was fetched.
+
+    The commit is read from the snapshot directory the hub client resolves, so
+    a branch name, or a revision the hub maps elsewhere, is reported as the
+    commit actually on disk rather than as the value that was asked for.
+
+    Args:
+        name: Repository identifier on the Hugging Face Hub.
+        revision: Commit hash, branch or tag to resolve.
+        hash_weights: Also hash the weight shards. It reads every byte of the
+            model, which takes minutes, so it is left to the runs that need it.
+
+    Returns:
+        The snapshot directory, its commit and the digests of its files.
+
+    Raises:
+        BackendError: If the resolved directory is not a commit snapshot.
+    """
+    from huggingface_hub import snapshot_download
+
+    from pstparser.repro.manifest import digest_file
+
+    path = Path(
+        snapshot_download(repo_id=name, revision=revision, allow_patterns=list(SNAPSHOT_PATTERNS))
+    )
+    if path.parent.name != "snapshots" or _COMMIT.fullmatch(path.name) is None:
+        raise BackendError(f"{path} is not a commit snapshot of {name!r}")
+    files: dict[str, str] = {}
+    for file in sorted(path.rglob("*")):
+        if not file.is_file() or not any(fnmatch.fnmatch(file.name, p) for p in SNAPSHOT_PATTERNS):
+            continue
+        if fnmatch.fnmatch(file.name, _WEIGHT_PATTERN) and not hash_weights:
+            continue
+        relative = file.relative_to(path).as_posix()
+        digest = digest_file(file)
+        if digest is None:
+            raise BackendError(f"cannot hash snapshot file {relative}")
+        files[relative] = digest
+    return SnapshotIdentity(path=path, sha=path.name, files=files, weights_hashed=hash_weights)
+
+
+def official_chat_template(snapshot: SnapshotIdentity) -> str | None:
+    """Read the conversation template published in a snapshot, byte for byte."""
+    standalone = snapshot.path / "chat_template.jinja"
+    if standalone.is_file():
+        return standalone.read_bytes().decode("utf-8")
+    configuration = snapshot.path / "tokenizer_config.json"
+    if not configuration.is_file():
+        return None
+    template = json.loads(configuration.read_bytes().decode("utf-8")).get("chat_template")
+    return template if isinstance(template, str) else None
+
+
+def verify_chat_template(
+    tokenizer: Tokenizer, snapshot: SnapshotIdentity, messages: list[dict[str, str]]
+) -> None:
+    """Check that a request is tokenised as the published template prescribes.
+
+    The text rendered by the tokenizer in use must equal the text rendered from
+    the template stored in the snapshot, and the token ids sent to the model
+    must be the tokenisation of that text.
+
+    Raises:
+        ValueError: If the snapshot has no template, or either check fails.
+    """
+    official = official_chat_template(snapshot)
+    if official is None:
+        raise ValueError("the model snapshot publishes no conversation template")
+    rendered = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    expected = tokenizer.apply_chat_template(
+        messages, chat_template=official, tokenize=False, add_generation_prompt=True
+    )
+    if rendered != expected:
+        raise ValueError("the tokenizer does not render the published conversation template")
+    sent = tokenizer.apply_chat_template(
+        messages, tokenize=True, add_generation_prompt=True, truncation=False
+    )
+    direct = tokenizer(expected, add_special_tokens=False)["input_ids"]
+    if list(sent) != list(direct):
+        raise ValueError("template token ids differ from the tokenised published rendering")
+
+
+def _loaded_from(thing: Any, snapshot: SnapshotIdentity) -> bool:
+    origin = getattr(thing, "name_or_path", None)
+    return isinstance(origin, str) and bool(origin) and Path(origin) == snapshot.path
+
+
+def _as_dict(thing: Any) -> Any:
+    return thing.to_dict() if hasattr(thing, "to_dict") else thing
+
+
+def runtime_provenance(
+    model: Model,
+    tokenizer: Tokenizer,
+    config: ModelConfig,
+    snapshot: SnapshotIdentity | None = None,
+) -> dict[str, Any]:
+    """Record what was actually loaded, without inventing unresolved hashes.
+
+    ``revision_verified`` holds only when a snapshot was resolved, its commit
+    is the requested revision, and both the model and the tokenizer were loaded
+    from that snapshot directory. ``model_generation_config`` is the set of
+    defaults published with the model: it is recorded, never applied.
+    """
     from pstparser.repro.manifest import digest_text
 
     model_revision = getattr(getattr(model, "config", None), "_commit_hash", None)
     tokenizer_revision = getattr(tokenizer, "init_kwargs", {}).get("_commit_hash")
     template = getattr(tokenizer, "chat_template", None)
+    official = official_chat_template(snapshot) if snapshot is not None else None
+    published = getattr(model, "generation_config", None)
+    quantization = getattr(getattr(model, "config", None), "quantization_config", None)
     return {
         "requested_model": config.name,
         "requested_revision": config.revision,
@@ -37,16 +175,27 @@ def runtime_provenance(model: Model, tokenizer: Tokenizer, config: ModelConfig) 
         "backend": config.backend,
         "load_in_4bit": config.load_in_4bit,
         "dtype": str(getattr(model, "dtype", None)),
+        "snapshot_sha": snapshot.sha if snapshot is not None else None,
+        "files_sha256": dict(snapshot.files) if snapshot is not None else None,
+        "weights_hashed": snapshot.weights_hashed if snapshot is not None else None,
+        "model_generation_config": _as_dict(published) if published is not None else None,
+        "quantization": _as_dict(quantization) if quantization is not None else None,
+        "attn_implementation": getattr(
+            getattr(model, "config", None), "_attn_implementation", None
+        ),
+        "device": str(getattr(model, "device", None)),
+        "official_chat_template_digest": digest_text(official) if official is not None else None,
+        "chat_template_matches_official": (
+            template == official if snapshot is not None and official is not None else None
+        ),
         "revision_verified": bool(
-            model_revision
-            and model_revision == tokenizer_revision
-            and (config.revision is None or config.revision == model_revision)
+            snapshot is not None
+            and config.revision is not None
+            and snapshot.sha == config.revision
+            and _loaded_from(model, snapshot)
+            and _loaded_from(tokenizer, snapshot)
         ),
     }
-
-
-class BackendError(RuntimeError):
-    """Raised when a backend is unavailable or cannot honour the configuration."""
 
 
 def load_base(config: ModelConfig) -> tuple[Model, Tokenizer]:
@@ -293,16 +442,28 @@ def _load_hf(config: ModelConfig) -> tuple[Model, Tokenizer]:
     """Load through transformers, keeping the tokenizer's own conversation template."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    keywords: dict[str, Any] = {"revision": config.revision}
+    keywords: dict[str, Any] = {}
     if config.dtype is not None:
         keywords["dtype"] = getattr(torch, config.dtype)
     if config.load_in_4bit:
         keywords["quantization_config"] = _four_bit_config()
         keywords["device_map"] = "auto"
 
-    model = AutoModelForCausalLM.from_pretrained(config.name, **keywords)
-    resolved_revision = getattr(model.config, "_commit_hash", None) or config.revision
-    tokenizer = AutoTokenizer.from_pretrained(config.name, revision=resolved_revision)
+    if config.revision is None:
+        model = AutoModelForCausalLM.from_pretrained(config.name, revision=None, **keywords)
+        resolved_revision = getattr(model.config, "_commit_hash", None)
+        tokenizer = AutoTokenizer.from_pretrained(config.name, revision=resolved_revision)
+    else:
+        # A pinned revision is loaded from its snapshot directory, model and
+        # tokenizer alike, so that what runs is what resolve_snapshot identified.
+        source = str(resolve_snapshot(config.name, config.revision).path)
+        keywords["attn_implementation"] = "sdpa"
+        if not config.load_in_4bit and torch.cuda.is_available():
+            # The whole model on one device: "auto" may offload layers to the
+            # CPU, and no device map at all loads everything there.
+            keywords["device_map"] = {"": 0}
+        model = AutoModelForCausalLM.from_pretrained(source, **keywords)
+        tokenizer = AutoTokenizer.from_pretrained(source)
 
     if getattr(tokenizer, "chat_template", None) is None:
         raise BackendError(
