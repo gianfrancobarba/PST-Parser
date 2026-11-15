@@ -146,6 +146,103 @@ def import_benchmark(
     typer.echo(f"Imported {len(records)} sources into {out}")
 
 
+@app.command("calibrate-bigcodebench")
+def calibrate_bigcodebench(
+    parquet: Path,
+    revision: Annotated[str, typer.Option(help="Pinned revision of the full dataset.")],
+    hard_parquet: Annotated[Path, typer.Option(help="Parquet file of BigCodeBench-Hard.")],
+    hard_revision: Annotated[str, typer.Option(help="Pinned revision of the Hard dataset.")],
+    image: Annotated[str, typer.Option(help="Harness image, as name@sha256:<digest>.")],
+    nltk_dir: Annotated[Path, typer.Option(help="Local nltk data, mounted read-only.")],
+    directory: Annotated[Path, typer.Option(help="New directory for the calibration runs.")],
+    out: Annotated[Path, typer.Option(help="New file for the frozen exclusions.")],
+    split: Annotated[str, typer.Option(help="BigCodeBench split.")] = "v0.1.4",
+    parallel: Annotated[int, typer.Option(help="Fixed number of harness workers.")] = 8,
+    task_ids: Annotated[
+        str | None, typer.Option(help="Comma-separated subset, for a smoke run only.")
+    ] = None,
+) -> None:
+    """Apply exclusion rules E1 to E4 with the official harness, before any generation.
+
+    The exclusions file is written only when the calibration covers every task
+    and leaves no reference failure unexplained.
+    """
+    from pstparser.empirical import bigcodebench
+    from pstparser.empirical.benchmarks import load_bigcodebench_hard_ids
+    from pstparser.repro.manifest import (
+        digest_directory,
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    if out.exists():
+        raise FileExistsError(f"the exclusions file already exists: {out}")
+    ensure_stage_outputs(directory, "empirical-calibrate-bcb", ["calibration.json", "data", "runs"])
+    hard_ids = load_bigcodebench_hard_ids(hard_parquet, hard_revision, split)
+    dataset = directory / "data" / f"BigCodeBench-{split}.jsonl"
+    dataset_sha256 = bigcodebench.write_harness_dataset(parquet, revision, split, dataset)
+    nltk_sha256 = digest_directory(nltk_dir)
+    if nltk_sha256 is None:
+        raise ValueError(f"missing nltk data directory: {nltk_dir}")
+    config = bigcodebench.HarnessConfig(
+        image=image,
+        dataset_jsonl=dataset,
+        dataset_sha256=dataset_sha256,
+        nltk_dir=nltk_dir,
+        nltk_sha256=nltk_sha256,
+        parallel=parallel,
+    )
+    environment = {
+        "harness_version": bigcodebench.harness_version(image),
+        "docker": bigcodebench.docker_resources(),
+    }
+    report = bigcodebench.calibrate(
+        config,
+        hard_ids,
+        directory / "runs",
+        task_ids=task_ids.split(",") if task_ids else None,
+    )
+    payload = {
+        "format_version": 1,
+        "benchmark": "bigcodebench",
+        "dataset_revision": revision,
+        "split": split,
+        "dataset_file_sha256": digest_file(parquet),
+        "hard_revision": hard_revision,
+        "hard_file_sha256": digest_file(hard_parquet),
+        **report,
+        **environment,
+    }
+    text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+    with (directory / "calibration.json").open("x", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+    conclusive = report["scope"] == "all" and not report["unexplained"]
+    if conclusive:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with out.open("x", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+    write_manifest(
+        {
+            "stage": "empirical-calibrate-bcb",
+            "conclusive": conclusive,
+            "calibration_sha256": digest_file(directory / "calibration.json"),
+            "exclusions_sha256": digest_file(out) if conclusive else None,
+            "harness": config.as_dict(),
+            **environment,
+            "source": source_snapshot(),
+        },
+        directory,
+    )
+    typer.echo(
+        f"{report['excluded_count']} excluded, {report['eligible']} eligible, "
+        f"{report['eligible_hard']} eligible Hard"
+    )
+    if report["unexplained"]:
+        raise ValueError(f"unexplained reference failures: {report['unexplained']}")
+
+
 @app.command()
 def generate(variants: Path, configuration: Path, directory: Path) -> None:
     """Generate/resume only an explicitly configured, revision-pinned experiment."""
