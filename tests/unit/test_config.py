@@ -80,7 +80,7 @@ def test_defaults_apply_to_unspecified_sections(config_dir: Path) -> None:
     [
         ("training.max_steps=50", lambda c: c.training.max_steps),
         ("lora.r=8", lambda c: c.lora.r),
-        ("inference.do_sample=true", lambda c: c.inference.do_sample),
+        ("inference.max_new_tokens=64", lambda c: c.inference.max_new_tokens),
         ("model.name=other/model", lambda c: c.model.name),
     ],
 )

@@ -291,11 +291,19 @@ class TrainingConfig(_Base):
 class InferenceConfig(_Base):
     """Decoding parameters used when producing predictions.
 
+    Every value is passed to the model explicitly: nothing is inherited from
+    the ``generation_config`` published with a model.
+
     Attributes:
         max_new_tokens: Upper bound on generated tokens per example.
         do_sample: Whether to sample instead of decoding greedily.
-        temperature: Sampling temperature. Ignored when ``do_sample`` is false.
-        top_p: Nucleus sampling threshold. Ignored when ``do_sample`` is false.
+        temperature: Sampling temperature. Must be positive when sampling and
+            zero when decoding greedily, where it would have no effect.
+        top_p: Nucleus sampling threshold. Must be one when decoding greedily.
+        top_k: Number of most likely tokens kept when sampling. ``None``
+            disables the filter; it must be ``None`` when decoding greedily.
+        repetition_penalty: Penalty on tokens already in the sequence, prompt
+            included. One disables it.
         structured_output: When true, decoding is constrained to the target
             JSON schema.
         batch_size: Number of prompts submitted to the model at once.
@@ -305,8 +313,22 @@ class InferenceConfig(_Base):
     do_sample: bool = False
     temperature: float = Field(default=0.0, ge=0.0)
     top_p: float = Field(default=1.0, gt=0.0, le=1.0)
+    top_k: int | None = Field(default=None, gt=0)
+    repetition_penalty: float = Field(default=1.0, gt=0.0)
     structured_output: bool = False
     batch_size: int = Field(default=1, gt=0)
+
+    @model_validator(mode="after")
+    def _decoding_must_be_consistent(self) -> InferenceConfig:
+        if self.do_sample:
+            if self.temperature <= 0.0:
+                raise ValueError("do_sample requires a temperature greater than 0")
+        elif self.temperature != 0.0 or self.top_p != 1.0 or self.top_k is not None:
+            raise ValueError(
+                "greedy decoding ignores temperature, top_p and top_k: leave them at "
+                "0.0, 1.0 and null, or set do_sample"
+            )
+        return self
 
 
 class EvaluationConfig(_Base):
