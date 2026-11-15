@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 
@@ -53,6 +53,97 @@ def render(source: Path, destination: Path) -> None:
         raise ValueError("empty corpus")
     _write_rows(destination, variants)
     typer.echo(f"Rendered {len(variants)} variants into {destination}")
+
+
+@app.command("import-benchmark")
+def import_benchmark(
+    benchmark: str,
+    source: Path,
+    revision: Annotated[str, typer.Option(help="Pinned revision of the dataset repository.")],
+    out: Annotated[Path, typer.Option(help="New JSON Lines file for the canonical sources.")],
+    split: Annotated[str, typer.Option(help="BigCodeBench split.")] = "v0.1.4",
+    selection: Annotated[str, typer.Option(help="LLMSecEval selection.")] = "S2",
+    id_map: Annotated[
+        Path | None, typer.Option(help="LLMSecEval: new file mapping internal IDs to records.")
+    ] = None,
+) -> None:
+    """Import a pinned benchmark file into canonical sources, without oracle fields."""
+    from collections import Counter
+
+    from pstparser.empirical import benchmarks
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    if benchmark not in {benchmarks.BIGCODEBENCH, benchmarks.LLMSECEVAL}:
+        raise ValueError("benchmark must be bigcodebench or llmseceval")
+    if id_map is not None and benchmark != benchmarks.LLMSECEVAL:
+        raise ValueError("--id-map applies to llmseceval only")
+    # Everything is loaded and checked before the first file is created.
+    details: dict[str, Any]
+    mapping: list[dict[str, Any]] | None = None
+    if benchmark == benchmarks.BIGCODEBENCH:
+        records = benchmarks.load_bigcodebench(source, revision, split)
+        details = {"split": split}
+    else:
+        records = benchmarks.load_llmseceval(source, revision, selection=selection)
+        details = {
+            "selection": selection,
+            "families": len({record.family_id for record in records}),
+        }
+        if id_map is not None:
+            mapping = benchmarks.llmseceval_id_map(source, revision)
+    if not records:
+        raise ValueError("empty import")
+    ensure_stage_outputs(out.parent, "empirical-import", [out.name])
+    if id_map is not None and id_map.exists():
+        raise FileExistsError(f"the identifier map already exists: {id_map}")
+    benchmarks.write_sources(records, out)
+    if id_map is not None:
+        id_map.parent.mkdir(parents=True, exist_ok=True)
+        with id_map.open("x", encoding="utf-8", newline="\n") as handle:
+            json.dump(
+                {
+                    "benchmark": benchmark,
+                    "dataset_revision": revision,
+                    "dataset_file_sha256": records[0].dataset_file_sha256,
+                    "records": mapping,
+                },
+                handle,
+                indent=2,
+                ensure_ascii=False,
+            )
+            handle.write("\n")
+    applied = Counter(transform for record in records for transform in record.transforms)
+    write_manifest(
+        {
+            "stage": "empirical-import",
+            "benchmark": benchmark,
+            "dataset_revision": revision,
+            "dataset_file_sha256": records[0].dataset_file_sha256,
+            **details,
+            "text_field": records[0].text_field,
+            "records": len(records),
+            "transforms": [
+                {
+                    "kind": transform.kind,
+                    "old": transform.old,
+                    "new": transform.new,
+                    "count": transform.count,
+                    "records": count,
+                }
+                for transform, count in applied.items()
+            ],
+            "sources_sha256": digest_file(out),
+            "id_map_sha256": digest_file(id_map) if id_map is not None else None,
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"Imported {len(records)} sources into {out}")
 
 
 @app.command()

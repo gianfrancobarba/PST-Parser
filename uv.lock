@@ -1833,6 +1833,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+benchmarks = [
+    { name = "pyarrow" },
+]
 cpu = [
     { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-9-pstparser-cpu') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
     { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-9-pstparser-cpu') or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
@@ -1884,6 +1887,7 @@ requires-dist = [
     { name = "pandas-stubs", marker = "extra == 'dev'", specifier = ">=2.2" },
     { name = "peft", marker = "extra == 'train'", specifier = ">=0.13" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.0" },
+    { name = "pyarrow", marker = "extra == 'benchmarks'", specifier = ">=25" },
     { name = "pydantic", specifier = ">=2.9,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.0" },
@@ -1902,7 +1906,7 @@ requires-dist = [
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0.12" },
     { name = "unsloth", marker = "extra == 'unsloth'", specifier = "==2025.12.9" },
 ]
-provides-extras = ["cpu", "cu128", "train", "unsloth", "structured", "dev"]
+provides-extras = ["cpu", "cu128", "train", "unsloth", "structured", "benchmarks", "dev"]
 
 [[package]]
 name = "psutil"
