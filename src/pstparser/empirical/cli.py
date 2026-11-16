@@ -1749,3 +1749,103 @@ def freeze_verify(
     if mismatches:
         raise typer.Exit(code=1)
     typer.echo(f"{freeze_file}: verified")
+
+
+_RUN_HELP = "Run directory holding run-identity.json (results/downstream/<run_id>)."
+_OUT_HELP = "New directory for the files; it must not exist."
+
+
+@app.command()
+def tables(
+    kind: Annotated[
+        str,
+        typer.Argument(
+            help="samples, treatment, tokens, freeze, diagnostics, paired, security or parser."
+        ),
+    ],
+    run: Annotated[Path, typer.Option(help=_RUN_HELP)],
+    out: Annotated[Path, typer.Option(help=_OUT_HELP)],
+    sample: Annotated[list[Path] | None, typer.Option(help="Sample file (samples).")] = None,
+    exclusions: Annotated[Path | None, typer.Option(help="Frozen exclusions (samples).")] = None,
+    variants: Annotated[list[Path] | None, typer.Option(help="Variants JSONL (treatment).")] = None,
+    journal: Annotated[
+        Path | None, typer.Option(help="generations.jsonl (tokens, diagnostics).")
+    ] = None,
+    details: Annotated[
+        Path | None, typer.Option(help="details.jsonl of one check run (diagnostics).")
+    ] = None,
+    freeze_file: Annotated[
+        Path | None, typer.Option("--freeze", help="protocol-freeze.json (freeze).")
+    ] = None,
+    report: Annotated[list[Path] | None, typer.Option(help="report.json (paired).")] = None,
+    confirmatory: Annotated[
+        list[str] | None,
+        typer.Option(help="H1=<analysis_id>, and H3=<analysis_id> if H3 is in the family."),
+    ] = None,
+    outcomes: Annotated[
+        list[Path] | None, typer.Option(help="Security outcomes.jsonl (security).")
+    ] = None,
+    score: Annotated[Path | None, typer.Option(help="Parser score results.json (parser).")] = None,
+) -> None:
+    """Write one kind of thesis table as CSV and LaTeX, with run and input hashes."""
+    from pstparser.empirical.thesis import Outputs, build_tables, parse_confirmatory, write
+
+    outputs = Outputs(run)
+    build_tables(
+        outputs,
+        kind,
+        samples=sample or (),
+        exclusions=exclusions,
+        variants=variants or (),
+        journal=journal,
+        details=details,
+        freeze=freeze_file,
+        reports=report or (),
+        confirmatory=parse_confirmatory(confirmatory or ()) or None,
+        outcomes=outcomes or (),
+        score=score,
+    )
+    written = write(outputs, out)
+    typer.echo(f"{len(written)} files in {out}")
+
+
+@app.command()
+def figures(
+    kind: Annotated[str, typer.Argument(help="forest, effects, leaves or tokens.")],
+    run: Annotated[Path, typer.Option(help=_RUN_HELP)],
+    out: Annotated[Path, typer.Option(help=_OUT_HELP)],
+    report: Annotated[
+        list[Path] | None, typer.Option(help="report.json (forest: one or more).")
+    ] = None,
+    variants: Annotated[list[Path] | None, typer.Option(help="Variants JSONL (leaves).")] = None,
+    journal: Annotated[Path | None, typer.Option(help="generations.jsonl (tokens).")] = None,
+) -> None:
+    """Draw one kind of thesis figure as PDF and PNG (needs the analysis extra)."""
+    from pstparser.empirical.thesis import Outputs, build_figures, write
+
+    outputs = Outputs(run)
+    build_figures(outputs, kind, reports=report or (), variants=variants or (), journal=journal)
+    written = write(outputs, out)
+    typer.echo(f"{len(written)} files in {out}")
+
+
+@app.command("thesis-tables")
+def thesis_tables(
+    run: Annotated[Path, typer.Option(help=_RUN_HELP)],
+    out: Annotated[Path, typer.Option(help=_OUT_HELP)],
+    protocol: Annotated[
+        Path, typer.Option(help="Protocol directory with samples/ and oracles/.")
+    ] = Path("protocol"),
+    confirmatory: Annotated[
+        list[str] | None,
+        typer.Option(help="H1=<analysis_id>, and H3=<analysis_id> if H3 is in the family."),
+    ] = None,
+) -> None:
+    """Every table and figure the files of a run allow; the skipped kinds go in the manifest."""
+    from pstparser.empirical.thesis import build_thesis, parse_confirmatory, write
+
+    outputs = build_thesis(run, protocol, parse_confirmatory(confirmatory or ()) or None)
+    written = write(outputs, out)
+    for kind, reason in outputs.skipped.items():
+        typer.echo(f"skipped {kind}: {reason}", err=True)
+    typer.echo(f"{len(written)} files in {out}")

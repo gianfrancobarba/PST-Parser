@@ -9,11 +9,14 @@ DATA_OVERRIDES = --set data.processed_dir=$(RUN)/processed --set data.split.outp
 ADAPTER ?= $(RUN)/training/adapter
 PREDICTIONS ?= $(RUN)/generation/predictions.jsonl
 ARCHIVE ?= $(RUN)/source.zip
+# A downstream run (results/downstream/<run_id>) and a new directory for its thesis tables.
+DS_RUN ?=
+TABLES ?=
 
 .DEFAULT_GOAL := help
 .PHONY: help install lint format typecheck test test-slow check \
         validate-config prepare-data train generate score align synth \
-        source-archive docker-build-eval docker-build-train docker-score docker-train clean
+        source-archive thesis-tables docker-build-eval docker-build-train docker-score docker-train clean
 
 help: ## Show the available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -76,6 +79,12 @@ source-archive: ## LF ZIP of the HEAD revision, with its SHA-256 and verified tr
 	git -c core.autocrlf=false archive --format=zip -o $(ARCHIVE) HEAD
 	sha256sum $(ARCHIVE) > $(ARCHIVE).sha256
 	$(UV) run python scripts/verify_archive.py $(ARCHIVE) --expected-tree $$(git rev-parse HEAD^{tree})
+
+# --- Thesis ----------------------------------------------------------------
+
+thesis-tables: ## Every table and figure of DS_RUN, written into the new directory TABLES
+	@test -n "$(DS_RUN)" -a -n "$(TABLES)" || { echo "set DS_RUN=results/downstream/<run_id> and TABLES=<new directory>"; exit 1; }
+	$(UV) run --extra analysis python -m pstparser.empirical thesis-tables --run $(DS_RUN) --out $(TABLES)
 
 # --- Containers ------------------------------------------------------------
 

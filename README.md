@@ -30,14 +30,43 @@ segmento per voce di lista, perché una sequenza non ha bisogno di un token che 
 ## Stato del progetto e della valutazione
 
 La pipeline PST e i moduli downstream sono distinti: `src/pstparser/empirical/` contiene
-contratti, rendering e analisi per il confronto T/H, ma i test sintetici non sono risultati
-scientifici di generazione del codice. Il protocollo di valutazione empirica, tenuto nella
-documentazione locale di progettazione non versionata, definisce dataset, oracoli e condizioni
-da congelare prima della raccolta reale; la stessa documentazione collega audit, letteratura e piano.
-Il protocollo è una proposta: **l'approvazione del docente è ancora da acquisire**.
+contratti, rendering, generazione, oracoli e analisi per il confronto fra le condizioni, ma i test
+sintetici non sono risultati scientifici di generazione del codice. Il protocollo di valutazione
+empirica è tenuto nella documentazione locale di progettazione, non versionata.
+
+**Decisioni del relatore.** Le quattro decisioni su cui poggia il disegno:
+
+- D1: prima il PST verificato a mano (H-gold), anche su un sottoinsieme di prompt; poi il PST
+  prodotto dal parser (H-auto);
+- D2: BigCodeBench-Instruct per la correttezza;
+- D3: CodeQL per la sicurezza, con la sua inaffidabilità dichiarata come minaccia alla validità;
+- D4: il secondo revisore, per le annotazioni e per i giudizi di sicurezza, è opzionale.
+
+**A che punto è la valutazione.** I campioni e le esclusioni sono congelati in `protocol/`: le
+esclusioni di BigCodeBench, i task idonei e quelli Hard sono in `protocol/oracles/bcb-exclusions.json`
+(`excluded_count`, `eligible`, `eligible_hard`), il campione finale in `protocol/samples/bcb-final.json`
+(`n`) e il pool pilota in `protocol/samples/pilot-bcb.json` e `pilot-llmseceval.json`. Il freeze del
+protocollo (`protocol/protocol-freeze.json`) non è ancora stato eseguito: finché manca, ogni output
+downstream è una prova tecnica, non un risultato.
+
+**La run del parser `parser-2026-11-12-r3`** è quella che H-auto userà. I suoi artefatti
+(`run-identity.json`, `run_manifest.json`, `results.json`) sono su Google Drive e non sono
+versionati: identità e numeri della run vanno citati da quei file, una volta archiviati, e non sono
+riprodotti qui. Due avvertenze di provenienza valgono già:
+
+- **Unsloth.** Il backend ottimizzato carica un proprio repository pre-quantizzato al posto della
+  revisione richiesta, quindi la revisione del modello di quella run non è verificata
+  (`revision_verified: false`). La generazione downstream usa il backend `hf`, che verifica la
+  revisione e rifiuta le run finali senza verifica.
+- **CRLF.** L'archivio sorgente di quella run è stato creato da un checkout Windows con
+  `core.autocrlf=true`: gli hash di alcuni file di testo nel manifest sono quelli delle copie CRLF,
+  non dei blob git. Il modello ha comunque ricevuto testo LF, perché i file sono letti con
+  `read_text`. Gli archivi nuovi si creano con `make source-archive`, che usa
+  `git -c core.autocrlf=false archive` e verifica l'albero.
 
 Gli artefatti in `results/` sono storici: non attestano che le configurazioni attuali siano state
 addestrate e valutate. I ricalcoli vanno scritti in nuove directory, senza sostituire quelle prove.
+Le run downstream vanno in `results/downstream/<run_id>/`.
 
 ## Requisiti
 
@@ -301,8 +330,28 @@ richiede una configurazione esplicita con revisione del modello immutabile e un 
 verifica il budget di token di tutte le varianti prima di generare e scrive un journal riprendibile
 (`generations.jsonl`). `check` calibra gli oracoli funzionali forniti e li esegue in un container
 Docker locale senza rete, con immagine fissata per digest. `analyze` esegue l'analisi appaiata sul
-disegno dichiarato. Nessun comando sceglie un benchmark o produce giudizi di sicurezza: finché il
-protocollo non è approvato, i loro output sono prove tecniche, non risultati.
+disegno dichiarato. Nessun comando sceglie da solo un benchmark: finché il protocollo non è
+congelato, i loro output sono prove tecniche, non risultati.
+
+Gli altri comandi downstream, nell'ordine in cui si usano (`--help` ne descrive gli argomenti):
+
+| Fase | Comandi |
+|---|---|
+| Dati e campioni | `import-benchmark`, `calibrate-bigcodebench`, `merge-calibrations`, `sample`, `sample-pilot`, `sample-families` |
+| Annotazione gold | `propose-spans` (solo bozze `draft`), `gold-lint`, `canonicalize`, `agreement` |
+| Generazione | `render`, `generate` (anche su Colab con `notebooks/downstream.ipynb`) |
+| Valutazione | `check-bigcodebench` (harness ufficiale, 2+1 esecuzioni), `calibrate-security`, `check-security` (CodeQL, un database per programma) |
+| Pilot e freeze | `pilot-report` (non direzionale), `power`, `freeze`, `freeze-verify` |
+| Analisi | `analyze`, `covariates`, `contamination`, `near-duplicates` |
+| Tesi | `tables`, `figures`, `thesis-tables` |
+
+`thesis-tables` rigenera ogni tabella (CSV e LaTeX) e figura (PDF e PNG) che i file di una run
+consentono, in una directory nuova; ogni file riporta il `run_id`, lo SHA-256 di ogni input e il
+digest dei sorgenti. Le figure richiedono l'extra `analysis` (matplotlib):
+
+```bash
+make thesis-tables DS_RUN=results/downstream/<run_id> TABLES=<directory nuova>
+```
 
 ## Notebook Colab
 

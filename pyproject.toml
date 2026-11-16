@@ -67,6 +67,11 @@ dev = [
     "types-pyyaml>=6.0.12",
     "pandas-stubs>=2.2",
 ]
+# Thesis figures (tables and figures commands). Only figures need it, and
+# the module imports it lazily, so generation and evaluation run without it.
+analysis = [
+    "matplotlib>=3.8",
+]
 
 [project.scripts]
 pstparser = "pstparser.cli.main:app"
