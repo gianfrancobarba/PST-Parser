@@ -59,7 +59,9 @@ families:
       - {path: "cwe-22/CWE-22_ILP-2c.py", sha256: 4763acf4257a5b7871679160d770bcee30427fb05d7d91192a8b19580105309c}
   - family_id: 22-ILP-3
     cwe: CWE-22
-    target_rules: [py/tarslip, py/tarslip-extended]
+    # Only the queries the targeted suite runs: py/tarslip-extended is
+    # experimental and not in python-security-extended, so it never runs.
+    target_rules: [py/tarslip]
     state: excluded
     controls:
       vulnerable:

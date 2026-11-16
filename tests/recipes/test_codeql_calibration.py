@@ -112,12 +112,15 @@ def test_target_queries_report_the_vulnerable_controls_of_the_calibrated_familie
 def test_the_provisional_calibration_is_reproduced_one_database_per_program(
     report: dict[str, Any],
 ) -> None:
-    # Values of the provisional calibration (one shared database, 2.22.1).
+    # Values of the collection settings. The provisional calibration (one
+    # shared database) also ran py/tarslip-extended, which is not in the
+    # targeted suite: there the tar controls of 22-ILP-3 gave 21/21 and 1/20.
     totals = report["totals"]
-    assert totals["vulnerable_detected_by_target_rules"] == [21, 21]
+    assert totals["vulnerable_detected_by_target_rules"] == [20, 21]
+    tar = next(row for row in report["controls"] if row["name"].endswith("V__22-ILP-3__tar.py"))
+    assert tar["target_findings"] == [] and report["families"]["22-ILP-3"]["observed"] == "excluded"
     assert totals["vulnerable_flagged_by_general_suite"] == [13, 21]
-    # Only the tar archive extracted with filter='data' is flagged.
-    assert totals["safe_flagged_by_target_rules"] == [1, 20]
+    assert totals["safe_flagged_by_target_rules"] == [0, 20]
     assert totals["safe_flagged_by_general_suite"] == [0, 20]
     if os.environ.get("PST_LLMSECEVAL_SECURE"):
         # The cards name the 56 dataset implementations of the 20 families with
