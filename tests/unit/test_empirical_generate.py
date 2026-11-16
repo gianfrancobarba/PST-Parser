@@ -16,7 +16,7 @@ from typer.testing import CliRunner
 from pstparser.empirical.cli import app
 from pstparser.empirical.contracts import CanonicalPrompt, SpanAnnotation
 from pstparser.empirical.messages import fill_user_template
-from pstparser.empirical.rendering import render_prompt_variants
+from pstparser.empirical.rendering import render_envelope_variant, render_prompt_variants
 from pstparser.models import loader
 from pstparser.models.loader import SnapshotIdentity
 from pstparser.repro import manifest as manifest_module
@@ -513,6 +513,30 @@ def test_invalid_configuration_is_refused_before_loading(harness, changes, messa
     assert message in str(result.exception)
     assert harness.model is None
     assert not (harness.root / "out").exists()
+
+
+def test_the_core_journal_generates_t_h_gold_and_e_in_one_session(harness) -> None:
+    rows = list(harness.rows)
+    for task, text in (("task-a", BRACES), ("task-b", "Second task.")):
+        canonical = CanonicalPrompt(task, text, (), "")
+        rows.append(render_envelope_variant(canonical).as_dict())
+    harness.variants.write_text(
+        "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8", newline="\n"
+    )
+    harness.rows = rows
+    result = harness.run(**{**V2, "conditions": ["T", "H-gold", "E"]})
+    assert result.exit_code == 0, result.exception
+    assert harness.manifest()["configuration"]["conditions"] == ["T", "H-gold", "E"]
+    records = harness.journal()
+    assert len(records) == 6
+    for start in (0, 3):
+        block = records[start : start + 3]
+        assert len({r["task_id"] for r in block}) == 1
+        assert sorted(r["condition"] for r in block) == ["E", "H-gold", "T"]
+    envelope = next(r for r in records if (r["task_id"], r["condition"]) == ("task-a", "E"))
+    assert json.loads(envelope["text"]) == {"prompt": BRACES}
+    assert envelope["user_message_sha256"] == sha256(wrapped(envelope["text"]))
+    assert tokenised(harness) == expected_tokenisations(harness, wrapped)
 
 
 def test_version_2_accepts_a_null_template(harness) -> None:

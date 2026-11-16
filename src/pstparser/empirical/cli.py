@@ -13,7 +13,7 @@ from pstparser.empirical.analysis import AnalysisDesign, TaskSpec, analyze_paire
 from pstparser.empirical.contracts import CanonicalPrompt, PromptVariant, SpanAnnotation
 from pstparser.empirical.journal import request_plan, run_journal
 from pstparser.empirical.messages import chat_messages, validate_user_template
-from pstparser.empirical.rendering import render_prompt_variants
+from pstparser.empirical.rendering import render_envelope_variant, render_prompt_variants
 
 app = typer.Typer(
     help="Prepared empirical workflow; real benchmark choices require protocol freeze."
@@ -21,9 +21,9 @@ app = typer.Typer(
 
 
 def _rows(path: Path) -> list[dict[str, Any]]:
-    return [
-        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
-    ]
+    """Read JSON Lines split on the line feed only, skipping blank lines."""
+    text = path.read_bytes().decode("utf-8")
+    return [json.loads(line) for line in text.split("\n") if line.strip()]
 
 
 def _json_lines(path: Path) -> list[dict[str, Any]]:
@@ -55,8 +55,14 @@ def _write_rows(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 @app.command()
-def render(source: Path, destination: Path) -> None:
-    """Render reviewed canonical JSONL annotations into paired T/H-gold JSONL."""
+def render(
+    source: Path,
+    destination: Path,
+    envelope: Annotated[
+        bool, typer.Option(help="Also write E (envelope-json-v1) after T and H-gold.")
+    ] = False,
+) -> None:
+    """Render reviewed canonical JSONL annotations into T/H-gold (and E) JSONL."""
     variants: list[dict[str, Any]] = []
     seen: set[str] = set()
     for row in _rows(source):
@@ -70,6 +76,8 @@ def render(source: Path, destination: Path) -> None:
             raise ValueError("duplicate canonical task")
         seen.add(canonical.task_id)
         variants.extend(v.as_dict() for v in render_prompt_variants(canonical))
+        if envelope:
+            variants.append(render_envelope_variant(canonical).as_dict())
     if not variants:
         raise ValueError("empty corpus")
     _write_rows(destination, variants)
@@ -907,7 +915,8 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     rendered = [PromptVariant(**row) for row in _rows(variants)]
     if versioned and {variant.condition for variant in rendered} != set(config["conditions"]):
         raise ValueError("the variants do not hold exactly the configured conditions")
-    requests = request_plan(rendered, config["replicate_ids"], config["seed"])
+    conditions = tuple(config["conditions"]) if versioned else ("T", "H-gold")
+    requests = request_plan(rendered, config["replicate_ids"], config["seed"], conditions)
     seed_everything(config["seed"])
     final = config["purpose"] == "final"
     # Only the transformers backend loads the repository it is asked for; the
@@ -966,7 +975,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
             inference,
             max_seq_length=model_config.max_seq_length,
         )
-        return {
+        record = {
             "user_message_sha256": digest_text(messages[1]["content"]),
             "raw_output": result.text,
             "input_tokens": result.input_tokens,
@@ -974,13 +983,25 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
             "finish_reason": result.finish_reason,
             "elapsed_seconds": result.elapsed_seconds,
         }
+        return record
 
     records = run_journal(requests, frozen, directory, complete)
     typer.echo(f"{len(records)} recorded completions; {directory}")
 
 
 @app.command()
-def analyze(design: Path, outcomes: Path, destination: Path) -> None:
+def analyze(
+    design: Path,
+    outcomes: Path,
+    destination: Path,
+    ledger_conditions: Annotated[
+        str | None,
+        typer.Option(
+            help="Comma-separated conditions of a ledger holding more than the analysed "
+            "pair (e.g. T,H-gold,E); rows of the others are counted and left out."
+        ),
+    ] = None,
+) -> None:
     """Analyse the explicit paired design, rejecting absent/duplicate/mixed rows."""
     from pstparser.repro.manifest import (
         digest_file,
@@ -995,7 +1016,10 @@ def analyze(design: Path, outcomes: Path, destination: Path) -> None:
     for key in ("replicate_ids", "conditions"):
         if key in payload:
             payload[key] = tuple(payload[key])
-    report = analyze_paired(AnalysisDesign(**payload), read_outcomes(outcomes))
+    declared = tuple(ledger_conditions.split(",")) if ledger_conditions is not None else None
+    report = analyze_paired(
+        AnalysisDesign(**payload), read_outcomes(outcomes), ledger_conditions=declared
+    )
     destination.parent.mkdir(parents=True, exist_ok=True)
     with destination.open("x", encoding="utf-8") as handle:
         json.dump(report.as_dict(), handle, indent=2, ensure_ascii=False, allow_nan=False)
@@ -1007,6 +1031,7 @@ def analyze(design: Path, outcomes: Path, destination: Path) -> None:
             "outcomes_sha256": digest_file(outcomes),
             "report_sha256": digest_file(destination),
             "source": source_snapshot(),
+            **({"ledger_conditions": list(declared)} if declared is not None else {}),
         },
         destination.parent,
     )

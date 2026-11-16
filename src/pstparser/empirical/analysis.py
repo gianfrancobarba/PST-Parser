@@ -105,10 +105,20 @@ class PairedReport:
     conservative_ci: tuple[float, float] | None
     sensitivity: dict[str, float | None]
     warnings: tuple[str, ...]
+    ledger_conditions: tuple[str, ...] | None = None
+    ignored_records: dict[str, int] | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        """Return a serialisable report, including explicit null estimates."""
-        return asdict(self)
+        """Return a serialisable report, including explicit null estimates.
+
+        The two ledger fields appear only when the ledger declared more
+        conditions than the analysed pair, so a two-condition report keeps the
+        exact form it had before they existed.
+        """
+        report = asdict(self)
+        if self.ledger_conditions is None:
+            del report["ledger_conditions"], report["ignored_records"]
+        return report
 
 
 def _identifier(value: object, label: str) -> None:
@@ -117,7 +127,10 @@ def _identifier(value: object, label: str) -> None:
 
 
 def _join(
-    design: AnalysisDesign, records: Sequence[OutcomeRecord]
+    design: AnalysisDesign,
+    records: Sequence[OutcomeRecord],
+    ledger_conditions: Sequence[str] | None = None,
+    ignored: Counter[str] | None = None,
 ) -> dict[tuple[str, str, int], OutcomeRecord]:
     _identifier(design.analysis_id, "analysis_id")
     if design.endpoint not in ("functional", "security"):
@@ -126,6 +139,15 @@ def _join(
         raise ValueError("Exactly two distinct conditions are required")
     for condition in design.conditions:
         _identifier(condition, "condition")
+    other_arms: set[str] = set()
+    if ledger_conditions is not None:
+        for condition in ledger_conditions:
+            _identifier(condition, "ledger condition")
+        if len(set(ledger_conditions)) != len(ledger_conditions):
+            raise ValueError("ledger conditions must be distinct")
+        if not set(design.conditions) <= set(ledger_conditions):
+            raise ValueError("ledger conditions must include the analysed pair")
+        other_arms = set(ledger_conditions) - set(design.conditions)
     if not design.tasks or len({t.task_id for t in design.tasks}) != len(design.tasks):
         raise ValueError("Tasks must be non-empty and unique")
     for task in design.tasks:
@@ -151,6 +173,10 @@ def _join(
         if design.endpoint == "functional"
         else {"V", "N", "I", "U", "missing"}
     )
+    planned_cells = {
+        (task.task_id, replicate) for task in design.tasks for replicate in design.replicate_ids
+    }
+    seen_other: set[tuple[str, str, int]] = set()
     joined: dict[tuple[str, str, int], OutcomeRecord] = {}
     for record in records:
         if record.analysis_id != design.analysis_id or record.endpoint != design.endpoint:
@@ -158,6 +184,17 @@ def _join(
         if type(record.replicate_id) is not int:
             raise ValueError("Record replicate_id must be an integer")
         key = (record.task_id, record.condition, record.replicate_id)
+        if record.condition in other_arms:
+            # A declared arm outside the pair: checked as part of the plan,
+            # then left out explicitly and counted.
+            if (record.task_id, record.replicate_id) not in planned_cells:
+                raise ValueError(f"Unexpected record key: {key}")
+            if key in seen_other:
+                raise ValueError(f"Duplicate record key: {key}")
+            seen_other.add(key)
+            if ignored is not None:
+                ignored[record.condition] += 1
+            continue
         if key not in expected:
             raise ValueError(f"Unexpected record key: {key}")
         if key in joined:
@@ -286,8 +323,14 @@ def analyze_paired(
     bootstrap_samples: int = 10_000,
     seed: int = 42,
     confidence: float = 0.95,
+    ledger_conditions: Sequence[str] | None = None,
 ) -> PairedReport:
     """Join the entire planned ledger and estimate the paired effect.
+
+    ``ledger_conditions`` declares every condition of a ledger with more than
+    the analysed pair (for example T, H-gold and E). Rows of the other declared
+    conditions must still belong to the plan; they are then left out and
+    counted in ``ignored_records``. Rows of an undeclared condition are refused.
 
     Primary analysis excludes a whole task if any planned arm/replicate is
     explicitly missing. U is zero for the primary security endpoint. Sensitivity
@@ -301,7 +344,8 @@ def analyze_paired(
         raise ValueError("seed must be a nonnegative integer")
     if not math.isfinite(confidence) or not 0 < confidence < 1:
         raise ValueError("confidence must lie in (0, 1)")
-    joined = _join(design, records)
+    ignored: Counter[str] = Counter()
+    joined = _join(design, records, ledger_conditions, ignored)
     baseline, treatment = design.conditions
     excluded: dict[str, list[str]] = {}
     estimates: list[TaskEstimate] = []
@@ -425,6 +469,12 @@ def analyze_paired(
         conservative_ci=conservative,
         sensitivity=sensitivity,
         warnings=tuple(warnings),
+        ledger_conditions=tuple(ledger_conditions) if ledger_conditions is not None else None,
+        ignored_records=(
+            {name: ignored[name] for name in ledger_conditions if name not in design.conditions}
+            if ledger_conditions is not None
+            else None
+        ),
     )
 
 

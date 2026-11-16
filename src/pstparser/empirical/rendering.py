@@ -11,10 +11,47 @@ from pstparser.empirical.contracts import CanonicalPrompt, PromptVariant, SpanAn
 from pstparser.pst.taxonomy import LEAF_PATHS, assemble
 
 RENDERER_VERSION: Final = "pst-gold-json-v1"
+ENVELOPE_RENDERER_VERSION: Final = "envelope-json-v1"
 
 
 def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def envelope_text(text: str) -> str:
+    """Serialise ``{"prompt": text}`` exactly as H is serialised.
+
+    Same ``json.dumps`` options as the hierarchical variant (UTF-8 characters,
+    ``indent=2``, no final newline), so code is escaped the same way in E and H.
+    """
+    return json.dumps({"prompt": text}, ensure_ascii=False, indent=2, allow_nan=False)
+
+
+def render_envelope_variant(prompt: CanonicalPrompt) -> PromptVariant:
+    """Produce E (``envelope-json-v1``): the whole source text in one neutral field.
+
+    E isolates the JSON envelope, its escaping and part of the length (00 T-4).
+    It carries no PST label and no annotation: the spans of ``prompt`` are
+    ignored, so ``annotation_hash`` and ``annotation_version`` are empty.
+
+    Raises:
+        ValueError: If the task identifier or the text is empty.
+    """
+    if not prompt.task_id.strip():
+        raise ValueError("task_id must be non-empty")
+    if not prompt.text.strip():
+        raise ValueError("A benchmark prompt must contain non-whitespace text")
+    text = envelope_text(prompt.text)
+    return PromptVariant(
+        task_id=prompt.task_id,
+        condition="E",
+        text=text,
+        prompt_hash=_sha256(text),
+        source_hash=_sha256(prompt.text),
+        annotation_hash="",
+        annotation_version="",
+        renderer_version=ENVELOPE_RENDERER_VERSION,
+    )
 
 
 def _validated_spans(prompt: CanonicalPrompt) -> list[SpanAnnotation]:
