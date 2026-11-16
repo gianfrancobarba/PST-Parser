@@ -562,3 +562,90 @@ def docker_resources() -> dict[str, Any]:
         "operating_system": info.get("OperatingSystem"),
         "architecture": info.get("Architecture"),
     }
+
+
+#: Fields that must coincide for calibrations to describe the same oracle.
+_SAME_ORACLE: Final = (
+    "format_version",
+    "benchmark",
+    "dataset_revision",
+    "split",
+    "dataset_file_sha256",
+    "hard_revision",
+    "hard_file_sha256",
+    "tasks",
+    "hard",
+    "harness",
+    "harness_version",
+    "rules",
+)
+
+
+def merge_calibrations(calibrations: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Combine complete calibrations: a task excluded by any of them is excluded.
+
+    The reference solution of a few tasks fails only now and then. Rule E1
+    excludes a task whose reference fails in at least one reference run, so the
+    rule is applied to every run made in the final configuration: the frozen
+    exclusions are the union over the calibrations, each task keeping the rules
+    and the evidence of every calibration that excluded it. Nothing is ever
+    removed by adding a calibration.
+
+    Raises:
+        ValueError: If a calibration is partial or inconclusive, or the
+            calibrations do not share dataset, Hard subset and harness settings.
+    """
+    if len(calibrations) < 2:
+        raise ValueError("merging needs at least two calibrations")
+    first = calibrations[0]
+    for calibration in calibrations:
+        if calibration.get("scope") != "all" or calibration.get("unexplained") != []:
+            raise ValueError("only complete, conclusive calibrations can be merged")
+        for name in _SAME_ORACLE:
+            if calibration.get(name) != first.get(name) or name not in calibration:
+                raise ValueError(f"the calibrations differ in {name!r}")
+    merged: dict[str, dict[str, Any]] = {}
+    for index, calibration in enumerate(calibrations):
+        for row in calibration["excluded"]:
+            entry = merged.setdefault(
+                row["task_id"],
+                {"task_id": row["task_id"], "hard": row["hard"], "rules": [], "evidence": []},
+            )
+            if entry["hard"] != row["hard"]:
+                raise ValueError(f"{row['task_id']}: calibrations disagree on the Hard label")
+            entry["rules"] = sorted(set(entry["rules"]) | set(row["rules"]))
+            entry["evidence"].append(
+                {"calibration": index, "rules": row["rules"], **row["evidence"]}
+            )
+    excluded = []
+    for task_id in sorted(merged, key=task_number):
+        entry = merged[task_id]
+        excluded.append({**entry, "reason": RULES[entry["rules"][0]]})
+        entry_calibrations = {item["calibration"] for item in entry["evidence"]}
+        excluded[-1]["excluded_in"] = sorted(entry_calibrations)
+    hard_excluded = sum(1 for row in excluded if row["hard"])
+    return {
+        **{name: first[name] for name in _SAME_ORACLE},
+        "scope": "all",
+        "merge_rule": "union-of-calibrations-v1",
+        "calibrations": len(calibrations),
+        "reference_runs": sum(
+            1
+            for calibration in calibrations
+            for run in calibration["runs"]
+            if run["name"].startswith("reference-")
+        ),
+        "excluded": excluded,
+        "excluded_count": len(excluded),
+        "eligible": first["tasks"] - len(excluded),
+        "eligible_hard": first["hard"] - hard_excluded,
+        "unexplained": [],
+        "per_calibration": [
+            {
+                "excluded": [row["task_id"] for row in calibration["excluded"]],
+                "docker": calibration.get("docker"),
+                "runs": calibration["runs"],
+            }
+            for calibration in calibrations
+        ],
+    }

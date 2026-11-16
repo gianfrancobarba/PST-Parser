@@ -32,9 +32,9 @@ pytestmark = pytest.mark.slow
 REVISION = "b74c0d0bf70d2c0bc459be537895cca163007f1a"
 HARD_REVISION = "298d2cc7b96612e15e47313c3603ee124cee0c1f"
 SPLIT = "v0.1.4"
-# Reference fails offline: 101, 176, 314, 363, 590, 1005, 1012.
-# Tests that pass a program doing nothing: 59, 272.
-EXCLUDED = [59, 101, 176, 272, 314, 363, 590, 1005, 1012]
+# Excluded in every calibration made so far. Reference fails offline: 101, 176,
+# 314, 590, 1005, 1012. Tests that pass a program doing nothing: 59, 272.
+ALWAYS_EXCLUDED = {59, 101, 176, 272, 314, 590, 1005, 1012}
 
 
 def _setting(variable: str) -> str:
@@ -97,7 +97,7 @@ def test_first_ten_hard_tasks_calibrate_and_repeat(
     assert (report["tasks"], report["hard"], report["eligible_hard"]) == (10, 10, 10)
 
 
-def test_full_calibration_reproduces_the_nine_exclusions(
+def test_full_calibration_excludes_the_stable_cases_and_only_adds_rule_e1(
     parquet: Path, hard_parquet: Path, nltk_dir: Path, image: str, tmp_path: Path
 ) -> None:
     if os.environ.get("PST_BCB_FULL") != "1":
@@ -129,9 +129,15 @@ def test_full_calibration_reproduces_the_nine_exclusions(
 
     assert result.exit_code == 0, result.output
     payload = json.loads(out.read_text(encoding="utf-8"))
-    assert [task_number(row["task_id"]) for row in payload["excluded"]] == EXCLUDED
-    assert (payload["tasks"], payload["excluded_count"], payload["eligible"]) == (1140, 9, 1131)
-    assert (payload["hard"], payload["eligible_hard"]) == (148, 145)
+    rules = {task_number(row["task_id"]): row["rules"] for row in payload["excluded"]}
+    assert set(rules) >= ALWAYS_EXCLUDED
+    assert rules[59] == rules[272] == ["E2", "E3"]
+    # A few references fail only now and then (205, 363 and 823 so far): one
+    # calibration may add such tasks, always and only through rule E1. The
+    # frozen exclusions are the union of the calibrations.
+    assert all(rules[task] == ["E1"] for task in set(rules) - ALWAYS_EXCLUDED)
+    assert (payload["tasks"], payload["hard"]) == (1140, 148)
+    assert payload["eligible"] == 1140 - payload["excluded_count"]
     assert payload["unexplained"] == []
     assert payload["scope"] == "all"
     manifest = json.loads(

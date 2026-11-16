@@ -243,6 +243,47 @@ def calibrate_bigcodebench(
         raise ValueError(f"unexplained reference failures: {report['unexplained']}")
 
 
+@app.command("merge-calibrations")
+def merge_calibrations(
+    calibrations: list[Path],
+    out: Annotated[Path, typer.Option(help="New file for the frozen exclusions.")],
+) -> None:
+    """Freeze the exclusions as the union of complete BigCodeBench calibrations.
+
+    A task is excluded when any calibration excludes it: a reference solution
+    that fails in one run out of several is not a usable oracle.
+    """
+    from pstparser.empirical import bigcodebench
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    if len(set(calibrations)) != len(calibrations):
+        raise ValueError("a calibration is listed twice")
+    merged = bigcodebench.merge_calibrations([_read_document(path) for path in calibrations])
+    digests = [digest_file(path) for path in calibrations]
+    if len(set(digests)) != len(digests):
+        raise ValueError("two calibration files are identical")
+    ensure_stage_outputs(out.parent, "empirical-merge-calibrations", [out.name])
+    _write_document(out, {**merged, "calibration_sha256": digests})
+    write_manifest(
+        {
+            "stage": "empirical-merge-calibrations",
+            "calibration_sha256": digests,
+            "exclusions_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(
+        f"{merged['excluded_count']} excluded, {merged['eligible']} eligible, "
+        f"{merged['eligible_hard']} eligible Hard"
+    )
+
+
 def _write_document(path: Path, document: dict[str, Any]) -> None:
     """Write a frozen JSON document to a new file, with LF line endings."""
     path.parent.mkdir(parents=True, exist_ok=True)
