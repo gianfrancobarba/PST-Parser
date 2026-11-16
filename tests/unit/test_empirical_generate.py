@@ -15,6 +15,7 @@ from typer.testing import CliRunner
 
 from pstparser.empirical.cli import app
 from pstparser.empirical.contracts import CanonicalPrompt, SpanAnnotation
+from pstparser.empirical.freeze import build_freeze, write_freeze
 from pstparser.empirical.messages import fill_user_template
 from pstparser.empirical.rendering import render_envelope_variant, render_prompt_variants
 from pstparser.models import loader
@@ -189,9 +190,28 @@ class Harness:
             "review_record": "review.md",
         }
         document.update(changes)
+        # A final run needs a verified protocol freeze listing its inputs (S17):
+        # unless a test names its own record, one is written for these files.
+        frozen = document["purpose"] == "final" and "review_record" not in changes
+        if frozen:
+            document["review_record"] = "protocol/protocol-freeze.json"
         path = self.root / "generate.json"
         path.write_text(json.dumps(document), encoding="utf-8")
+        if frozen:
+            self.freeze(["generate.json", "variants.jsonl"])
         return path
+
+    def freeze(self, items: list[str]) -> Path:
+        """Write a minimal repository (source, lock) and a fresh freeze of ``items``."""
+        package = self.root / "src" / "pstparser"
+        package.mkdir(parents=True, exist_ok=True)
+        (package / "__init__.py").write_text("VERSION = 1\n", encoding="utf-8")
+        (self.root / "uv.lock").write_text("lock\n", encoding="utf-8")
+        (self.root / "protocol").mkdir(exist_ok=True)
+        target = self.root / "protocol" / "protocol-freeze.json"
+        target.unlink(missing_ok=True)
+        meta = {"protocol_version": "test-1.0.0", "frozen_by": "test"}
+        return write_freeze(build_freeze(self.root, items, meta), target)
 
     def run(self, directory: str = "out", **changes: Any) -> Any:
         return CliRunner().invoke(
@@ -673,3 +693,37 @@ def test_every_completion_records_its_session_and_a_resume_adds_a_second_one(
     harness.gpu = "NVIDIA L4"
     other = harness.run(**V2)
     assert isinstance(other.exception, ValueError)
+
+
+# --- Protocol freeze (M12) -------------------------------------------------------------------
+
+
+def test_a_final_run_on_a_freeze_that_does_not_list_the_configuration_is_refused(harness) -> None:
+    harness.freeze(["variants.jsonl"])
+    result = harness.run(purpose="final", review_record="protocol/protocol-freeze.json")
+    assert isinstance(result.exception, ValueError)
+    assert "does not list the configuration" in str(result.exception)
+    assert harness.model is None
+    assert not (harness.root / "out").exists()
+
+
+def test_a_final_run_on_a_plain_review_record_is_refused(harness) -> None:
+    result = harness.run(purpose="final", review_record="review.md")
+    assert isinstance(result.exception, ValueError)
+    assert "require a protocol freeze" in str(result.exception)
+    assert harness.model is None
+
+
+def test_a_final_run_on_a_valid_freeze_records_its_hash(harness) -> None:
+    result = harness.run(purpose="final")
+    assert result.exit_code == 0, result.exception
+    freeze = harness.root / "protocol" / "protocol-freeze.json"
+    configuration = harness.manifest()["configuration"]
+    assert configuration["review_record"] == "protocol/protocol-freeze.json"
+    assert configuration["review_record_sha256"] == hashlib.sha256(freeze.read_bytes()).hexdigest()
+
+
+def test_a_pilot_run_keeps_a_plain_review_record(harness) -> None:
+    result = harness.run()
+    assert result.exit_code == 0, result.exception
+    assert harness.manifest()["configuration"]["review_record"] == "review.md"

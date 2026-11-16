@@ -1,0 +1,93 @@
+# Freeze specification (freeze-spec-v1). DRAFT: not frozen yet.
+# Before F4: add the files marked TO ADD, set the pilot block, run
+#   python -m pstparser.empirical freeze --spec protocol/freeze-spec.yaml --out protocol/protocol-freeze.json
+# and record the SHA-256 of the result in the OSF amendment and in the e-mail to the supervisor.
+format: freeze-spec-v1
+protocol_version: downstream-1.0.0
+frozen_by: studente
+supervisor_ack: {date: null, channel: email, record: null}
+preregistration: {registry: OSF, phase1_url: null, phase2_amendment_url: null, embargo_until: null}
+pilot: {run_ids: [], report_sha256: null, changelog_sha256: null}
+extraction_policies:
+  bigcodebench: bigcodebench-sanitize
+  llmseceval: python-fenced-blocks-v1
+  diagnostic: python-single-block-v1
+conditions:
+  bigcodebench: [T, H-gold, E]
+  llmseceval: [T, H-gold]
+renderer_version: {H-gold: pst-gold-json-v1, E: envelope-json-v1}
+items:
+  - protocol/README.md
+  - protocol/analysis/contamination.json
+  - protocol/freeze-spec.yaml
+  - protocol/oracles/bcb-exclusions.json
+  - protocol/oracles/codeql.json
+  - protocol/oracles/empirical-merge-calibrations_manifest.json
+  - protocol/samples/bcb-final.json
+  - protocol/samples/bcb-full.json
+  - protocol/samples/bcb-permutation.json
+  - protocol/samples/empirical-sample-families_manifest.json
+  - protocol/samples/empirical-sample-pilot_manifest.json
+  - protocol/samples/empirical-sample_manifest.json
+  - protocol/samples/llmseceval-ids.json
+  - protocol/samples/pilot-bcb.json
+  - protocol/samples/pilot-llmseceval.json
+  - protocol/security/README.md
+  - protocol/security/cards.yaml
+  - protocol/security/controls/B__732-IPA-3__chmod_symbolic.py
+  - protocol/security/controls/B__79-INI-1__streams.py
+  - protocol/security/controls/M__comment_only_stub.py
+  - protocol/security/controls/M__flask_debug_only.py
+  - protocol/security/controls/M__noop.py
+  - protocol/security/controls/M__sqli_param.py
+  - protocol/security/controls/S2__20-IIV-1__regex.py
+  - protocol/security/controls/S2__20-IIV-2__netloc.py
+  - protocol/security/controls/S2__22-ILP-1__argv.py
+  - protocol/security/controls/S2__22-ILP-2__senddir.py
+  - protocol/security/controls/S2__22-ILP-3__filter.py
+  - protocol/security/controls/S2__502-DUD-1__safeload.py
+  - protocol/security/controls/S2__502-DUD-2__json.py
+  - protocol/security/controls/S2__502-DUD-3__safeload.py
+  - protocol/security/controls/S2__732-IPA-1__osopen.py
+  - protocol/security/controls/S2__732-IPA-2__osopen.py
+  - protocol/security/controls/S2__732-IPA-3__own.py
+  - protocol/security/controls/S2__78-INS-1__list.py
+  - protocol/security/controls/S2__78-INS-2__list.py
+  - protocol/security/controls/S2__78-INS-3__const.py
+  - protocol/security/controls/S2__79-INI-1__escape.py
+  - protocol/security/controls/S2__79-INI-2__autoescape.py
+  - protocol/security/controls/S2__79-INI-3__template.py
+  - protocol/security/controls/S2__89-SQI-1__param.py
+  - protocol/security/controls/S2__89-SQI-2__param.py
+  - protocol/security/controls/S2__89-SQI-3__param.py
+  - protocol/security/controls/V__20-IIV-1__regex.py
+  - protocol/security/controls/V__20-IIV-2__substring.py
+  - protocol/security/controls/V__22-ILP-1__argv.py
+  - protocol/security/controls/V__22-ILP-1__web.py
+  - protocol/security/controls/V__22-ILP-2__web.py
+  - protocol/security/controls/V__22-ILP-3__tar.py
+  - protocol/security/controls/V__502-DUD-1__yaml.py
+  - protocol/security/controls/V__502-DUD-2__yaml.py
+  - protocol/security/controls/V__502-DUD-3__pickle.py
+  - protocol/security/controls/V__732-IPA-1__osopen.py
+  - protocol/security/controls/V__732-IPA-2__osopen.py
+  - protocol/security/controls/V__732-IPA-3__chmod.py
+  - protocol/security/controls/V__78-INS-1__argv.py
+  - protocol/security/controls/V__78-INS-2__web.py
+  - protocol/security/controls/V__78-INS-3__argv.py
+  - protocol/security/controls/V__79-INI-1__web.py
+  - protocol/security/controls/V__79-INI-2__jinja.py
+  - protocol/security/controls/V__79-INI-3__web.py
+  - protocol/security/controls/V__89-SQI-1__web.py
+  - protocol/security/controls/V__89-SQI-2__web.py
+  - protocol/security/controls/V__89-SQI-3__web.py
+  # TO ADD before the freeze (08 §3.2.1), once they exist:
+  # - protocol/guidelines/<gold guidelines, copied by hand>
+  # - data/annotated/downstream/<benchmark>/annotations.jsonl (reviewed gold, status frozen)
+  # - protocol/variants/<benchmark>.variants.jsonl (output of render, T, H-gold, E)
+  # - protocol/covariates/<benchmark>.covariates.jsonl (output of covariates)
+  # - protocol/prompts/<system message and wrapper>
+  # - protocol/model.json
+  # - protocol/configs/<benchmark>-<greedy|sampled>.json (review_record: ../protocol-freeze.json)
+  # - protocol/analysis/plan.md and design-*.json
+  # - protocol/rules/prompt-as-data.md

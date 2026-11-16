@@ -936,6 +936,12 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     review = configuration.parent / config["review_record"]
     if not review.is_file():
         raise ValueError("an explicit review/freeze record is required")
+    if config["purpose"] == "final":
+        from pstparser.empirical.freeze import require_final_freeze
+
+        # Before any model is loaded: a final run belongs to a verified freeze
+        # that lists this configuration and these variants (M12).
+        require_final_freeze(review, variants, configuration)
     model_config = ModelConfig(**config["model"])
     inference = InferenceConfig(**config["inference"])
     if not re.fullmatch(r"[0-9a-f]{40}", model_config.revision or ""):
@@ -1702,3 +1708,44 @@ def agreement(
         out.parent,
     )
     typer.echo(str(out))
+
+
+@app.command()
+def freeze(
+    spec: Annotated[Path, typer.Option(help="Freeze specification (freeze-spec-v1, YAML).")],
+    out: Annotated[Path, typer.Option(help="New freeze file, inside <root>/protocol/.")],
+    root: Annotated[Path, typer.Option(help="Repository root of the listed items.")] = Path(),
+) -> None:
+    """Freeze the protocol: hash every listed file, the package source and the lock file.
+
+    The file is written once; a freeze that already exists is never replaced.
+    """
+    from pstparser.empirical.freeze import build_freeze, read_spec, verify_freeze, write_freeze
+    from pstparser.repro.manifest import digest_file
+
+    if out.resolve().parent != (root / "protocol").resolve():
+        raise ValueError("the freeze must be written in <root>/protocol/")
+    items, meta = read_spec(spec)
+    write_freeze(build_freeze(root, items, meta), out)
+    mismatches = verify_freeze(out, root)
+    if mismatches:
+        raise ValueError(f"the new freeze does not verify: {mismatches[:5]}")
+    typer.echo(f"{len(items)} items frozen in {out} (sha256 {digest_file(out)})")
+
+
+@app.command("freeze-verify")
+def freeze_verify(
+    freeze_file: Annotated[Path, typer.Argument(help="protocol-freeze.json to verify.")],
+    root: Annotated[
+        Path | None, typer.Option(help="Repository root; default: the parent of protocol/.")
+    ] = None,
+) -> None:
+    """Verify a protocol freeze against the repository; exit with an error on any difference."""
+    from pstparser.empirical.freeze import verify_freeze
+
+    mismatches = verify_freeze(freeze_file, root)
+    for mismatch in mismatches:
+        typer.echo(f"{mismatch.kind}: {mismatch.path}", err=True)
+    if mismatches:
+        raise typer.Exit(code=1)
+    typer.echo(f"{freeze_file}: verified")
