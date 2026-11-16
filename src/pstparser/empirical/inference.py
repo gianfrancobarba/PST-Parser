@@ -377,3 +377,61 @@ def cluster_t_interval(
         interval=(centre - quantile * se, centre + quantile * se),
         confidence=confidence,
     )
+
+
+#: Equivalence margin of the primary reading (00 A-4), on the proportion scale.
+TOST_MARGIN: Final = 0.05
+Reading = Literal["E1", "E2", "E3", "E4"]
+
+
+def tost(interval: Sequence[float], margin: float = TOST_MARGIN) -> bool:
+    """Two one-sided tests at level alpha each, read on the (1 - 2 alpha) interval.
+
+    Equivalence is declared only if the whole interval (90% for alpha = 0.05:
+    Tango's for one greedy pair per task, CR1 with families) lies strictly
+    inside ``(-margin, margin)``. A non-significant difference is never
+    equivalence by itself.
+
+    Raises:
+        ValueError: If the margin is not positive or the interval is not ordered.
+    """
+    if not math.isfinite(margin) or margin <= 0:
+        raise ValueError("the margin must be positive")
+    low, high = interval
+    if not (math.isfinite(low) and math.isfinite(high)) or low > high:
+        raise ValueError("the interval must be finite and ordered")
+    return -margin < low and high < margin
+
+
+def cluster_interval_at(
+    interval: Sequence[float], standard_error: float, degrees_of_freedom: int, confidence: float
+) -> tuple[float, float]:
+    """The CR1 interval of a report at another confidence (same centre, se and t(G - 1))."""
+    _check_confidence(confidence)
+    if degrees_of_freedom < 1 or not math.isfinite(standard_error) or standard_error < 0:
+        raise ValueError("need at least one degree of freedom and a finite standard error")
+    centre = (interval[0] + interval[1]) / 2
+    quantile = float(stats.t.ppf(1 - (1 - confidence) / 2, degrees_of_freedom))
+    return centre - quantile * standard_error, centre + quantile * standard_error
+
+
+def four_way_reading(
+    p_value: float,
+    interval_90: Sequence[float],
+    *,
+    alpha: float = 0.05,
+    margin: float = TOST_MARGIN,
+) -> Reading:
+    """The frozen four-way reading (06 §3.5.2): difference test crossed with TOST.
+
+    E1 relevant effect (different, not equivalent); E2 different from zero but
+    negligible (different and equivalent); E3 equivalence (only equivalent);
+    E4 inconclusive (neither). The difference is read from the primary test.
+    """
+    if not 0 < alpha < 1 or not 0 <= p_value <= 1:
+        raise ValueError("alpha must lie in (0, 1) and the p-value in [0, 1]")
+    different = p_value <= alpha
+    equivalent = tost(interval_90, margin)
+    if different:
+        return "E2" if equivalent else "E1"
+    return "E3" if equivalent else "E4"

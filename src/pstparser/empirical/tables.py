@@ -25,7 +25,13 @@ from typing import Any, Final
 
 from pstparser.empirical.analysis import OutcomeRecord
 from pstparser.empirical.contracts import CONDITIONS
-from pstparser.empirical.inference import CONFIRMATORY_WEIGHTS, weighted_holm
+from pstparser.empirical.inference import (
+    CONFIRMATORY_WEIGHTS,
+    cluster_interval_at,
+    four_way_reading,
+    tost,
+    weighted_holm,
+)
 from pstparser.pst.taxonomy import LEAF_PATHS, split_path
 
 TABLES_VERSION: Final = "thesis-tables-v1"
@@ -371,6 +377,16 @@ def _primary_p(report: Mapping[str, Any]) -> float | None:
     return value if value is not None else report.get("signflip_p")
 
 
+def _equivalence_interval(report: Mapping[str, Any]) -> tuple[float, float] | None:
+    """The 90% interval of the TOST: Tango with one greedy pair per task, else CR1."""
+    if report.get("tango_ci_90") is not None:
+        low, high = report["tango_ci_90"]
+        return float(low), float(high)
+    if report.get("cr1_ci") is not None:
+        return cluster_interval_at(report["cr1_ci"], report["cr1_se"], report["cr1_df"], 0.90)
+    return None
+
+
 def paired_tables(
     reports: Mapping[str, Mapping[str, Any]],
     confirmatory: Mapping[str, str] | None = None,
@@ -381,6 +397,9 @@ def paired_tables(
     ``analysis_id`` of its report; their primary p-values are decided with the
     weighted Holm procedure (0.04 / 0.01, with recycling). Without H3 the
     family is H1 alone, read at 0.05 (failed parser gate).
+
+    Every report also gets the TOST at +/-5 pp on its 90% interval and the
+    four-way reading E1-E4 (00 A-4), crossed with the primary test at 0.05.
     """
     by_id = {report["analysis_id"]: report for report in reports.values()}
     if len(by_id) != len(reports):
@@ -416,6 +435,14 @@ def paired_tables(
         newcombe = _bounds(report.get("newcombe_ci"))
         conservative = _bounds(report.get("conservative_ci"))
         cr1 = _bounds(report.get("cr1_ci"))
+        equivalence = _equivalence_interval(report)
+        primary = _primary_p(report)
+        equivalent = tost(equivalence) if equivalence is not None else None
+        reading = (
+            four_way_reading(primary, equivalence)
+            if primary is not None and equivalence is not None
+            else None
+        )
         baseline, treatment = report["conditions"]
         main.append(
             (
@@ -436,6 +463,9 @@ def paired_tables(
                 *conservative,
                 _float(report.get("signflip_p")),
                 *cr1,
+                *_bounds(equivalence),
+                None if equivalent is None else "yes" if equivalent else "no",
+                reading,
                 decisions.get(identifier, "exploratory"),
             )
         )
@@ -467,6 +497,10 @@ def paired_tables(
                 "signflip_p",
                 "cr1_low",
                 "cr1_high",
+                "equivalence90_low",
+                "equivalence90_high",
+                "tost_5pp",
+                "reading_5pp",
                 "decision",
             ),
             tuple(main),

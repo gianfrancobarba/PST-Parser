@@ -14,7 +14,11 @@ from pstparser.empirical.analysis import AnalysisDesign, TaskSpec, analyze_paire
 from pstparser.empirical.contracts import CanonicalPrompt, PromptVariant, SpanAnnotation
 from pstparser.empirical.journal import request_plan, run_journal
 from pstparser.empirical.messages import chat_messages, validate_user_template
-from pstparser.empirical.rendering import render_envelope_variant, render_prompt_variants
+from pstparser.empirical.rendering import (
+    render_envelope_variant,
+    render_flat_variant,
+    render_prompt_variants,
+)
 
 app = typer.Typer(
     help="Prepared empirical workflow; real benchmark choices require protocol freeze."
@@ -72,13 +76,16 @@ def render(
         Path | None,
         typer.Option(help="S_parse document: render only its tasks, verified by hash."),
     ] = None,
+    flat: Annotated[
+        bool, typer.Option(help="Also write F (pst-flat-json-v1) after the hierarchical variant.")
+    ] = False,
 ) -> None:
     """Render reviewed canonical JSONL annotations into T/H-gold (and E) JSONL.
 
     With ``--condition H-auto`` the hierarchical variant of parsed spans is
     labelled H-auto (M19); ``--no-traditional`` leaves T out, so that it can be
     joined with the gold rendering of the same tasks; ``--tasks`` keeps only
-    the tasks of an S_parse document.
+    the tasks of an S_parse document; ``--flat`` adds the extension F.
     """
     if condition not in {"H-gold", "H-auto"}:
         raise ValueError("condition must be H-gold or H-auto")
@@ -109,6 +116,8 @@ def render(
         if traditional:
             variants.append(plain.as_dict())
         variants.append(hierarchical.as_dict())
+        if flat:
+            variants.append(render_flat_variant(canonical).as_dict())
         if envelope:
             variants.append(render_envelope_variant(canonical).as_dict())
     if selected is not None and not selected <= seen:

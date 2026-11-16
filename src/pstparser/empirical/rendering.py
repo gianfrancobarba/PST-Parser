@@ -12,6 +12,7 @@ from pstparser.pst.taxonomy import LEAF_PATHS, assemble
 
 RENDERER_VERSION: Final = "pst-gold-json-v1"
 ENVELOPE_RENDERER_VERSION: Final = "envelope-json-v1"
+FLAT_RENDERER_VERSION: Final = "pst-flat-json-v1"
 
 
 def _sha256(text: str) -> str:
@@ -88,6 +89,42 @@ def _validated_spans(prompt: CanonicalPrompt) -> list[SpanAnnotation]:
     return ordered
 
 
+def _leaf_values(prompt: CanonicalPrompt) -> tuple[dict[str, Any], dict[str, str]]:
+    """Positional values per leaf and annotation metadata, shared by H and F.
+
+    Applies the frozen separator policy: unassigned whitespace between spans and
+    at the end goes to the preceding span; a prefix goes to the first.
+    """
+    ordered = _validated_spans(prompt)
+    values: dict[str, Any] = {path: [] for path in LEAF_PATHS}
+    reconstructed: list[str] = []
+    for rank, span in enumerate(ordered):
+        start = 0 if rank == 0 else span.start
+        end = ordered[rank + 1].start if rank + 1 < len(ordered) else len(prompt.text)
+        phrase = prompt.text[start:end]
+        values[span.path].append({"position": rank, "phrase": phrase})
+        reconstructed.append(phrase)
+    if "".join(reconstructed) != prompt.text:
+        raise ValueError("Renderer failed exact source reconstruction")
+    annotation_payload = json.dumps(
+        {
+            "source_hash": _sha256(prompt.text),
+            "annotation_version": prompt.annotation_version,
+            "spans": [asdict(span) for span in ordered],
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    metadata = {
+        "task_id": prompt.task_id,
+        "source_hash": _sha256(prompt.text),
+        "annotation_hash": _sha256(annotation_payload),
+        "annotation_version": prompt.annotation_version,
+    }
+    return values, metadata
+
+
 def render_prompt_variants(prompt: CanonicalPrompt) -> tuple[PromptVariant, PromptVariant]:
     """Produce T and H-gold using a frozen, lossless separator policy.
 
@@ -104,40 +141,43 @@ def render_prompt_variants(prompt: CanonicalPrompt) -> tuple[PromptVariant, Prom
     Raises:
         ValueError: If the reviewed annotations do not cover the original text.
     """
-    ordered = _validated_spans(prompt)
-    values: dict[str, Any] = {path: [] for path in LEAF_PATHS}
-    reconstructed: list[str] = []
-    for rank, span in enumerate(ordered):
-        start = 0 if rank == 0 else span.start
-        end = ordered[rank + 1].start if rank + 1 < len(ordered) else len(prompt.text)
-        phrase = prompt.text[start:end]
-        values[span.path].append({"position": rank, "phrase": phrase})
-        reconstructed.append(phrase)
-    if "".join(reconstructed) != prompt.text:
-        raise ValueError("Renderer failed exact source reconstruction")
+    values, metadata = _leaf_values(prompt)
     hierarchical = json.dumps(assemble(values), ensure_ascii=False, indent=2, allow_nan=False)
-    annotation_payload = json.dumps(
-        {
-            "source_hash": _sha256(prompt.text),
-            "annotation_version": prompt.annotation_version,
-            "spans": [asdict(span) for span in ordered],
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    metadata = {
-        "task_id": prompt.task_id,
-        "source_hash": _sha256(prompt.text),
-        "annotation_hash": _sha256(annotation_payload),
-        "annotation_version": prompt.annotation_version,
-        "renderer_version": RENDERER_VERSION,
-    }
     return (
         PromptVariant(
-            condition="T", text=prompt.text, prompt_hash=_sha256(prompt.text), **metadata
+            condition="T",
+            text=prompt.text,
+            prompt_hash=_sha256(prompt.text),
+            renderer_version=RENDERER_VERSION,
+            **metadata,
         ),
         PromptVariant(
-            condition="H-gold", text=hierarchical, prompt_hash=_sha256(hierarchical), **metadata
+            condition="H-gold",
+            text=hierarchical,
+            prompt_hash=_sha256(hierarchical),
+            renderer_version=RENDERER_VERSION,
+            **metadata,
         ),
+    )
+
+
+def render_flat_variant(prompt: CanonicalPrompt) -> PromptVariant:
+    """Produce F (``pst-flat-json-v1``): the leaves of H at one level, keyed by path.
+
+    Same spans, validation, separator policy, positions and serialisation as H;
+    only the intermediate ``context`` and ``reasoning`` nodes are gone (02 §3.8):
+    ``{"prompt": {"main_instruction": [...], "context.format": [...], ...}}``.
+    The annotation metadata is that of T and H.
+
+    Raises:
+        ValueError: If the reviewed annotations do not cover the original text.
+    """
+    values, metadata = _leaf_values(prompt)
+    flat = json.dumps({"prompt": values}, ensure_ascii=False, indent=2, allow_nan=False)
+    return PromptVariant(
+        condition="F",
+        text=flat,
+        prompt_hash=_sha256(flat),
+        renderer_version=FLAT_RENDERER_VERSION,
+        **metadata,
     )
