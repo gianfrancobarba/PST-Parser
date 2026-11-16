@@ -543,3 +543,25 @@ def test_version_2_accepts_a_null_template(harness) -> None:
     result = harness.run(**{**V2, "user_template": None})
     assert result.exit_code == 0, result.exception
     assert harness.manifest()["configuration"]["user_template_sha256"] is None
+
+
+def test_peak_vram_is_recorded_per_request_on_a_gpu(harness, monkeypatch) -> None:
+    from pstparser.empirical import cli
+
+    resets: list[bool] = []
+    peaks = iter([111, 222, 333, 444])
+    monkeypatch.setattr(cli, "_reset_peak_vram", lambda: resets.append(True) or True)
+    monkeypatch.setattr(cli, "_peak_vram_bytes", lambda: next(peaks))
+    result = harness.run(**V2)
+    assert result.exit_code == 0, result.exception
+    assert [r["peak_vram_bytes"] for r in harness.journal()] == [111, 222, 333, 444]
+    assert len(resets) == 4
+    # The optional field does not disturb a resume.
+    again = harness.run(**V2)
+    assert again.exit_code == 0, again.exception
+    assert len(harness.journal()) == 4
+
+
+def test_no_peak_vram_field_without_a_gpu(harness) -> None:
+    assert harness.run(**V2).exit_code == 0
+    assert all("peak_vram_bytes" not in r for r in harness.journal())

@@ -837,6 +837,23 @@ def canonicalize(
     typer.echo(f"{len(prompts)} canonical prompts in {out}")
 
 
+def _reset_peak_vram() -> bool:
+    """Start a peak-memory window on the GPU; False when there is no CUDA device."""
+    import torch
+
+    if not torch.cuda.is_available():
+        return False
+    torch.cuda.reset_peak_memory_stats()
+    return True
+
+
+def _peak_vram_bytes() -> int:
+    """Peak GPU memory allocated by torch since the last reset (pilot criterion G11)."""
+    import torch
+
+    return int(torch.cuda.max_memory_allocated())
+
+
 @app.command()
 def generate(variants: Path, configuration: Path, directory: Path) -> None:
     """Generate/resume only an explicitly configured, revision-pinned experiment."""
@@ -968,6 +985,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     def complete(request: Any) -> dict[str, Any]:
         seed_everything(request["seed"])
         messages = chat_messages(config["system_prompt"], user_template, request["text"])
+        measured = _reset_peak_vram()
         result = generate_messages(
             model,
             tokenizer,
@@ -983,10 +1001,62 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
             "finish_reason": result.finish_reason,
             "elapsed_seconds": result.elapsed_seconds,
         }
+        if measured:
+            record["peak_vram_bytes"] = _peak_vram_bytes()
         return record
 
     records = run_journal(requests, frozen, directory, complete)
     typer.echo(f"{len(records)} recorded completions; {directory}")
+
+
+@app.command("pilot-report")
+def pilot_report_command(
+    journal: Annotated[Path, typer.Argument(help="Directory of one generation journal.")],
+    out: Annotated[Path, typer.Option(help="New JSON file for the report.")],
+    outcomes: Annotated[
+        Path | None, typer.Option(help="Outcomes of one check run of this journal.")
+    ] = None,
+    details: Annotated[
+        Path | None, typer.Option(help="Details written by the same check run.")
+    ] = None,
+) -> None:
+    """Report the technical pilot criteria and b + c, never a difference between conditions."""
+    from pstparser.empirical.pilot_report import pilot_report
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    ensure_stage_outputs(out.parent, "empirical-pilot-report", [out.name])
+    manifest_path = journal / "empirical-generate_manifest.json"
+    journal_path = journal / "generations.jsonl"
+    manifest = json.loads(manifest_path.read_bytes().decode("utf-8"))
+    rows = _json_lines(journal_path)
+    report = pilot_report(
+        manifest,
+        rows,
+        read_outcomes(outcomes) if outcomes is not None else None,
+        _json_lines(details) if details is not None else None,
+    )
+    with out.open("x", encoding="utf-8", newline="\n") as handle:
+        json.dump(report, handle, indent=2, ensure_ascii=False, allow_nan=False)
+        handle.write("\n")
+    write_manifest(
+        {
+            "stage": "empirical-pilot-report",
+            "report_version": report["report_version"],
+            "generate_manifest_sha256": digest_file(manifest_path),
+            "journal_sha256": digest_file(journal_path),
+            "outcomes_sha256": digest_file(outcomes) if outcomes is not None else None,
+            "details_sha256": digest_file(details) if details is not None else None,
+            "report_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(str(out))
 
 
 @app.command()
