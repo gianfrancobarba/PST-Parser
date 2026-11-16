@@ -1,0 +1,201 @@
+{
+  "format_version": 1,
+  "kind": "pilot-sample",
+  "n": 30,
+  "seed": 7319,
+  "dataset_file_sha256": "d9a4965821c9507ebdfb551c288656b2d5fe553234f5183044333ca8a4018267",
+  "text_field": "instruct_prompt",
+  "purpose": "pilot",
+  "hard_excluded": 145,
+  "benchmark": "bigcodebench",
+  "permutation_sha256": "2037d8c8ed94e591e537afe3a11062b77014d7377d025e616864bff2797d8f79",
+  "final_sha256": "894527480079cc3a9c9c0e48f84385e851fc696e871dbe3356412b3d5fdcc62a",
+  "stratum_counts": {
+    "exceptions/doctest": 2,
+    "exceptions/no-doctest": 4,
+    "no-exceptions/no-doctest": 24
+  },
+  "hard_count": 0,
+  "tasks": [
+    {
+      "position": 1038,
+      "task_id": "BigCodeBench/349",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 984,
+      "task_id": "BigCodeBench/71",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1085,
+      "task_id": "BigCodeBench/728",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1089,
+      "task_id": "BigCodeBench/281",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 887,
+      "task_id": "BigCodeBench/293",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1081,
+      "task_id": "BigCodeBench/49",
+      "stratum": "exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1103,
+      "task_id": "BigCodeBench/115",
+      "stratum": "exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1033,
+      "task_id": "BigCodeBench/323",
+      "stratum": "exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 845,
+      "task_id": "BigCodeBench/521",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1075,
+      "task_id": "BigCodeBench/472",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 860,
+      "task_id": "BigCodeBench/815",
+      "stratum": "exceptions/doctest",
+      "hard": false
+    },
+    {
+      "position": 1065,
+      "task_id": "BigCodeBench/1036",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 900,
+      "task_id": "BigCodeBench/353",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 946,
+      "task_id": "BigCodeBench/342",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1023,
+      "task_id": "BigCodeBench/605",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1125,
+      "task_id": "BigCodeBench/244",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 966,
+      "task_id": "BigCodeBench/269",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 933,
+      "task_id": "BigCodeBench/172",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1107,
+      "task_id": "BigCodeBench/670",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 958,
+      "task_id": "BigCodeBench/940",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 884,
+      "task_id": "BigCodeBench/698",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 868,
+      "task_id": "BigCodeBench/1058",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 995,
+      "task_id": "BigCodeBench/749",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1100,
+      "task_id": "BigCodeBench/40",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 929,
+      "task_id": "BigCodeBench/1029",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 804,
+      "task_id": "BigCodeBench/829",
+      "stratum": "exceptions/doctest",
+      "hard": false
+    },
+    {
+      "position": 1099,
+      "task_id": "BigCodeBench/248",
+      "stratum": "exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1042,
+      "task_id": "BigCodeBench/1105",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1101,
+      "task_id": "BigCodeBench/801",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    },
+    {
+      "position": 1021,
+      "task_id": "BigCodeBench/257",
+      "stratum": "no-exceptions/no-doctest",
+      "hard": false
+    }
+  ]
+}

@@ -1,0 +1,835 @@
+{
+  "format_version": 1,
+  "benchmark": "bigcodebench",
+  "dataset_revision": "b74c0d0bf70d2c0bc459be537895cca163007f1a",
+  "split": "v0.1.4",
+  "dataset_file_sha256": "d9a4965821c9507ebdfb551c288656b2d5fe553234f5183044333ca8a4018267",
+  "hard_revision": "298d2cc7b96612e15e47313c3603ee124cee0c1f",
+  "hard_file_sha256": "73a4270b43feb81abefad7bb1b592937c768ea45c3263bedc1cabd30a9a6ce79",
+  "tasks": 1140,
+  "hard": 148,
+  "harness": {
+    "image": "bigcodebench/bigcodebench-evaluate@sha256:a3cd34ec3840a49d6b7afb240f4bdd47c350bc5991043fd0a91773830f7cd405",
+    "dataset_jsonl": "BigCodeBench-v0.1.4.jsonl",
+    "dataset_sha256": "f6704a124f4edcec9d12cc7912f41f3d4207f51b87f091d136e3436f7e25149f",
+    "nltk_dir": "nltk_data",
+    "nltk_sha256": "affadd4df43396f958bed719b19692f3e821d897b3ace38873df6d8373a4e6d9",
+    "parallel": 8,
+    "calibrated": true,
+    "network": "none"
+  },
+  "harness_version": "0.2.4",
+  "rules": {
+    "E1": "reference_fails_offline",
+    "E2": "trivial_program_passes",
+    "E3": "empty_program_passes",
+    "E4": "network_dependency"
+  },
+  "scope": "all",
+  "merge_rule": "union-of-calibrations-v1",
+  "calibrations": 2,
+  "reference_runs": 4,
+  "excluded": [
+    {
+      "task_id": "BigCodeBench/59",
+      "hard": false,
+      "rules": [
+        "E2",
+        "E3"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E2",
+            "E3"
+          ],
+          "reference_runs_failed": [],
+          "reference_sample_status": "pass",
+          "trivial_status": "pass",
+          "empty_status": "pass",
+          "network_message": null
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E2",
+            "E3"
+          ],
+          "reference_runs_failed": [],
+          "reference_sample_status": "pass",
+          "trivial_status": "pass",
+          "empty_status": "pass",
+          "network_message": null
+        }
+      ],
+      "reason": "trivial_program_passes",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/101",
+      "hard": true,
+      "rules": [
+        "E1",
+        "E4"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "gaierror"
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "gaierror"
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/176",
+      "hard": false,
+      "rules": [
+        "E1"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E1"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": null
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E1"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": null
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/205",
+      "hard": false,
+      "rules": [
+        "E1"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E1"
+          ],
+          "reference_runs_failed": [
+            1
+          ],
+          "reference_sample_status": "timeout",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": null
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E1"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "pass",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": null
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/272",
+      "hard": false,
+      "rules": [
+        "E2",
+        "E3"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E2",
+            "E3"
+          ],
+          "reference_runs_failed": [],
+          "reference_sample_status": "pass",
+          "trivial_status": "pass",
+          "empty_status": "pass",
+          "network_message": null
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E2",
+            "E3"
+          ],
+          "reference_runs_failed": [],
+          "reference_sample_status": "pass",
+          "trivial_status": "pass",
+          "empty_status": "pass",
+          "network_message": null
+        }
+      ],
+      "reason": "trivial_program_passes",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/314",
+      "hard": false,
+      "rules": [
+        "E1",
+        "E4"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "gaierror"
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "gaierror"
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/363",
+      "hard": false,
+      "rules": [
+        "E1"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E1"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "timeout",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": null
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E1"
+          ],
+          "reference_runs_failed": [
+            0
+          ],
+          "reference_sample_status": "timeout",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": null
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/590",
+      "hard": true,
+      "rules": [
+        "E1",
+        "E4"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "gaierror"
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "gaierror"
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/823",
+      "hard": false,
+      "rules": [
+        "E1"
+      ],
+      "evidence": [
+        {
+          "calibration": 1,
+          "rules": [
+            "E1"
+          ],
+          "reference_runs_failed": [
+            1
+          ],
+          "reference_sample_status": "pass",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": null
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/1005",
+      "hard": false,
+      "rules": [
+        "E1",
+        "E4"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "Temporary failure in name resolution"
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "Temporary failure in name resolution"
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        0,
+        1
+      ]
+    },
+    {
+      "task_id": "BigCodeBench/1012",
+      "hard": true,
+      "rules": [
+        "E1",
+        "E4"
+      ],
+      "evidence": [
+        {
+          "calibration": 0,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "Max retries exceeded"
+        },
+        {
+          "calibration": 1,
+          "rules": [
+            "E1",
+            "E4"
+          ],
+          "reference_runs_failed": [
+            0,
+            1
+          ],
+          "reference_sample_status": "fail",
+          "trivial_status": "fail",
+          "empty_status": "fail",
+          "network_message": "Max retries exceeded"
+        }
+      ],
+      "reason": "reference_fails_offline",
+      "excluded_in": [
+        0,
+        1
+      ]
+    }
+  ],
+  "excluded_count": 11,
+  "eligible": 1129,
+  "eligible_hard": 145,
+  "unexplained": [],
+  "per_calibration": [
+    {
+      "excluded": [
+        "BigCodeBench/59",
+        "BigCodeBench/101",
+        "BigCodeBench/176",
+        "BigCodeBench/205",
+        "BigCodeBench/272",
+        "BigCodeBench/314",
+        "BigCodeBench/363",
+        "BigCodeBench/590",
+        "BigCodeBench/1005",
+        "BigCodeBench/1012"
+      ],
+      "docker": {
+        "server_version": "28.5.1",
+        "cpus": 28,
+        "memory_bytes": 16624820224,
+        "operating_system": "Docker Desktop",
+        "architecture": "x86_64"
+      },
+      "runs": [
+        {
+          "name": "reference-a",
+          "exit_code": 0,
+          "elapsed_seconds": 301.0,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--check_gt_only"
+          ],
+          "log_sha256": "5a585510ec2e6c659cb4d5ef05b1d67360eb84cf4a3d538d542eb3b44f15bbb3",
+          "failed": [
+            "BigCodeBench/101",
+            "BigCodeBench/176",
+            "BigCodeBench/314",
+            "BigCodeBench/363",
+            "BigCodeBench/590",
+            "BigCodeBench/1005",
+            "BigCodeBench/1012"
+          ]
+        },
+        {
+          "name": "reference-b",
+          "exit_code": 0,
+          "elapsed_seconds": 312.2,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--check_gt_only"
+          ],
+          "log_sha256": "e1db195461f830b071222dd5720fb697dc1d43d4b2609101eb85960d9efcfe13",
+          "failed": [
+            "BigCodeBench/101",
+            "BigCodeBench/176",
+            "BigCodeBench/205",
+            "BigCodeBench/314",
+            "BigCodeBench/363",
+            "BigCodeBench/590",
+            "BigCodeBench/1005",
+            "BigCodeBench/1012"
+          ]
+        },
+        {
+          "name": "samples-reference",
+          "exit_code": 0,
+          "elapsed_seconds": 315.9,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--no_gt"
+          ],
+          "log_sha256": "0016f0be1099b26ae1cfefdde1e1cdb9998efc9b4d7fb998aeb125a107d527a8",
+          "samples_sha256": "c0b8ecfb0bda3a484adfc4c2497a4d2090c5cb987b69e13e977dec21586a4f4c",
+          "results_sha256": "0e18d063a9e38e4c3f1fab27489aff0606ce82b6bde5cd2cf709570dbaa761ea",
+          "statuses": {
+            "pass": 1132,
+            "fail": 6,
+            "timeout": 2
+          }
+        },
+        {
+          "name": "samples-trivial",
+          "exit_code": 0,
+          "elapsed_seconds": 303.4,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--no_gt"
+          ],
+          "log_sha256": "e1a61ba06cf2551427b3516d686b4c23003ba6ea21ded5ed440bd4ac9fe67773",
+          "samples_sha256": "595c82c378c9b698498299cae15030898e571195074dd2363b793e144f9485f3",
+          "results_sha256": "9ed7d405616bc07cee6a260ad6ccb8edc3e148a7c3f09f0dca97f6ef9e08a3a0",
+          "statuses": {
+            "pass": 2,
+            "fail": 1137,
+            "timeout": 1
+          }
+        },
+        {
+          "name": "samples-empty",
+          "exit_code": 0,
+          "elapsed_seconds": 302.1,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--no_gt"
+          ],
+          "log_sha256": "60e5f41dcd3f7717931c9eab06683b31638c4f4bf0441ee46ffeb6bd3290be15",
+          "samples_sha256": "52828c931d15a54fd961618122b3766425e61852e914d7ea2310cfcd9f1ffe98",
+          "results_sha256": "4a6fffc0e7cf651d5ae291950640f00d735192180b0e82f437b785969c117726",
+          "statuses": {
+            "pass": 2,
+            "fail": 1137,
+            "timeout": 1
+          }
+        }
+      ]
+    },
+    {
+      "excluded": [
+        "BigCodeBench/59",
+        "BigCodeBench/101",
+        "BigCodeBench/176",
+        "BigCodeBench/205",
+        "BigCodeBench/272",
+        "BigCodeBench/314",
+        "BigCodeBench/363",
+        "BigCodeBench/590",
+        "BigCodeBench/823",
+        "BigCodeBench/1005",
+        "BigCodeBench/1012"
+      ],
+      "docker": {
+        "server_version": "28.5.1",
+        "cpus": 28,
+        "memory_bytes": 16624820224,
+        "operating_system": "Docker Desktop",
+        "architecture": "x86_64"
+      },
+      "runs": [
+        {
+          "name": "reference-a",
+          "exit_code": 0,
+          "elapsed_seconds": 305.2,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--check_gt_only"
+          ],
+          "log_sha256": "e6c34780d9ff7820f8d6cdd1b7dcbb74bb3af36ab14e0ed39fccb6cd664941b5",
+          "failed": [
+            "BigCodeBench/101",
+            "BigCodeBench/176",
+            "BigCodeBench/205",
+            "BigCodeBench/314",
+            "BigCodeBench/363",
+            "BigCodeBench/590",
+            "BigCodeBench/1005",
+            "BigCodeBench/1012"
+          ]
+        },
+        {
+          "name": "reference-b",
+          "exit_code": 0,
+          "elapsed_seconds": 274.1,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--check_gt_only"
+          ],
+          "log_sha256": "11c20d065341f8aa75a1c41680bde58841850e398245344d27c786499d1af5fe",
+          "failed": [
+            "BigCodeBench/101",
+            "BigCodeBench/176",
+            "BigCodeBench/205",
+            "BigCodeBench/314",
+            "BigCodeBench/590",
+            "BigCodeBench/823",
+            "BigCodeBench/1005",
+            "BigCodeBench/1012"
+          ]
+        },
+        {
+          "name": "samples-reference",
+          "exit_code": 0,
+          "elapsed_seconds": 302.9,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--no_gt"
+          ],
+          "log_sha256": "c56469e5cf1482934fbee444f87985d42f81337c592cf2574aef76f5c8d06ed5",
+          "samples_sha256": "c0b8ecfb0bda3a484adfc4c2497a4d2090c5cb987b69e13e977dec21586a4f4c",
+          "results_sha256": "34a7203ea0ca75b58252ae98be69864c1567d64620f9b4a48e0fc47acefc274e",
+          "statuses": {
+            "pass": 1133,
+            "fail": 6,
+            "timeout": 1
+          }
+        },
+        {
+          "name": "samples-trivial",
+          "exit_code": 0,
+          "elapsed_seconds": 307.2,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--no_gt"
+          ],
+          "log_sha256": "815b71d6b6bacb66b744bddbf7015d74a4b73317932e208b26579b18ee55dd1f",
+          "samples_sha256": "595c82c378c9b698498299cae15030898e571195074dd2363b793e144f9485f3",
+          "results_sha256": "5520adf6048f1f00e2f35013ee9abb66bcf533d933e0d646bf719d741d5c56b7",
+          "statuses": {
+            "pass": 2,
+            "fail": 1137,
+            "timeout": 1
+          }
+        },
+        {
+          "name": "samples-empty",
+          "exit_code": 0,
+          "elapsed_seconds": 307.9,
+          "arguments": [
+            "--execution",
+            "local",
+            "--split",
+            "instruct",
+            "--subset",
+            "full",
+            "--samples",
+            "samples.jsonl",
+            "--parallel",
+            "8",
+            "--calibrated",
+            "True",
+            "--no_gt"
+          ],
+          "log_sha256": "53d75c7d88539d65f1cba53609cfc129890d69d87bb0ceb88e2b132810489d82",
+          "samples_sha256": "52828c931d15a54fd961618122b3766425e61852e914d7ea2310cfcd9f1ffe98",
+          "results_sha256": "e095671ef76fa677bf7372c2df5fa7d08f414b9ee885e105edb958a0a51a82a7",
+          "statuses": {
+            "pass": 2,
+            "fail": 1137,
+            "timeout": 1
+          }
+        }
+      ]
+    }
+  ],
+  "calibration_sha256": [
+    "245bd2edf2058e19cdab6ab4ab7fb6ba308d75d7840656fea0e94ad664b741fc",
+    "94c9f0cd65463497c64203fde88404801a0e41849faee722d59cd4558634a39c"
+  ]
+}

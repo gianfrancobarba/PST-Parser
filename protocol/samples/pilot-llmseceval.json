@@ -1,0 +1,84 @@
+{
+  "format_version": 1,
+  "kind": "family-sample",
+  "benchmark": "llmseceval",
+  "dataset_revision": "39e97f046dbb2c4c604d31b86f2a4d3d27827388",
+  "dataset_file_sha256": "a1b7307678e061faefb8d666eb6cec506d6a40751175716af07703b3f12433cc",
+  "text_field": "Manually-fixed NL Prompt",
+  "method": "sha256-order-v1",
+  "purpose": "pilot-families",
+  "seed": 7319,
+  "family_size": 3,
+  "candidate_families": 15,
+  "families": [
+    "787-OOW-3",
+    "119-BOF-3",
+    "190-IOW-1",
+    "787-OOW-1"
+  ],
+  "n": 12,
+  "sources_sha256": "a40855d62e6f76574c24d7c4be2d0e7483609c0bdb113e59846446ede0faade4",
+  "disjoint_from_sha256": "376156b141fbbf66347927e7cc65b29600a7e37cadd7cfa7a73e2ed9a134c1ba",
+  "tasks": [
+    {
+      "task_id": "LSE-122",
+      "family_id": "787-OOW-3",
+      "source_sha256": "5c6f867b739c1c33723158c1dbeb38364086660c93aa56cce589b06e0cb6e445"
+    },
+    {
+      "task_id": "LSE-123",
+      "family_id": "787-OOW-3",
+      "source_sha256": "cea9d3f28eac278638d1fd5dbbc368fa0d31edea67b438c1eeef7de7fa477211"
+    },
+    {
+      "task_id": "LSE-124",
+      "family_id": "787-OOW-3",
+      "source_sha256": "a4fd079e140aa27f7556136a8eefafa83698451ed8c229fb309cb5bd54942b96"
+    },
+    {
+      "task_id": "LSE-006",
+      "family_id": "119-BOF-3",
+      "source_sha256": "5a079e1598815beb0f58e9d78d571cf703d067e6218ee125e951d849d5a89ba8"
+    },
+    {
+      "task_id": "LSE-007",
+      "family_id": "119-BOF-3",
+      "source_sha256": "e9dbbece0c8fd9e87d7b97e4e3bbe20ad949a67397430fe931a67f85d3fe7d72"
+    },
+    {
+      "task_id": "LSE-008",
+      "family_id": "119-BOF-3",
+      "source_sha256": "614988fb084e2a1c1f66c5f5c7faaf4136318380d24542aa8e3c7976c468530a"
+    },
+    {
+      "task_id": "LSE-018",
+      "family_id": "190-IOW-1",
+      "source_sha256": "2b6d39cb2f833cba8101c9907704769a867ed454ababfc068d28e1bc89a1f1cb"
+    },
+    {
+      "task_id": "LSE-019",
+      "family_id": "190-IOW-1",
+      "source_sha256": "ab70597ce51e9525e0fb4fc5a9a22f65da50085a05ebd235a17ee2103ff4032c"
+    },
+    {
+      "task_id": "LSE-020",
+      "family_id": "190-IOW-1",
+      "source_sha256": "4ed29be5ac7823411ee68473565466105ff159ff401f2af797f76444df187953"
+    },
+    {
+      "task_id": "LSE-116",
+      "family_id": "787-OOW-1",
+      "source_sha256": "1eee9bdf12d01f11821cd679673e5bd0028e2a383b96fe103e5da0155e202dfd"
+    },
+    {
+      "task_id": "LSE-117",
+      "family_id": "787-OOW-1",
+      "source_sha256": "5ef2d0a3b9588bd36cf908b4462fbb9d9c6346998e2d6e2a3743a95af1996f8a"
+    },
+    {
+      "task_id": "LSE-118",
+      "family_id": "787-OOW-1",
+      "source_sha256": "e48c9593521f9b49486f63300d273d2ee20758339f1083656b08b804576d7801"
+    }
+  ]
+}

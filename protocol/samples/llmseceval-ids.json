@@ -1,0 +1,2034 @@
+{
+  "benchmark": "llmseceval",
+  "dataset_revision": "39e97f046dbb2c4c604d31b86f2a4d3d27827388",
+  "dataset_file_sha256": "a1b7307678e061faefb8d666eb6cec506d6a40751175716af07703b3f12433cc",
+  "records": [
+    {
+      "task_id": "LSE-000",
+      "record_index": 0,
+      "prompt_id": "CWE-119_BOF-1a",
+      "filename": "experiments_dow/cwe-119/codeql-eg-OverflowBuffer/gen_scenario/experiments_dow_cwe-119_codeql-eg-OverflowBuffer_scenario_copilot_0.c",
+      "family_id": "119-BOF-1",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [],
+      "original_sha256": "74878ab71d86eab9a08889995c34a5feaabbf9b2841f2689f92b3a59ec939096"
+    },
+    {
+      "task_id": "LSE-001",
+      "record_index": 1,
+      "prompt_id": "CWE-119_BOF-1b",
+      "filename": "experiments_dow/cwe-119/codeql-eg-OverflowBuffer/gen_scenario/experiments_dow_cwe-119_codeql-eg-OverflowBuffer_scenario_copilot_1.c",
+      "family_id": "119-BOF-1",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [],
+      "original_sha256": "a2580d4d3ba18899d9fb3f3fb65c64c523e65de1170cb54f20cbde57adeff62e"
+    },
+    {
+      "task_id": "LSE-002",
+      "record_index": 2,
+      "prompt_id": "CWE-119_BOF-1c",
+      "filename": "experiments_dow/cwe-119/codeql-eg-OverflowBuffer/gen_scenario/experiments_dow_cwe-119_codeql-eg-OverflowBuffer_scenario_copilot_2.c",
+      "family_id": "119-BOF-1",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [],
+      "original_sha256": "a83595d74c7b885b03d20cff34f4072ae68bc53e91605d8c99befdc6dd99342a"
+    },
+    {
+      "task_id": "LSE-003",
+      "record_index": 3,
+      "prompt_id": "CWE-119_BOF-2a",
+      "filename": "experiments_dow/cwe-119/mitre-eg-3/gen_scenario/experiments_dow_cwe-119_mitre-eg-3_scenario_copilot_0.c",
+      "family_id": "119-BOF-2",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "963683d6780afd5ef96ba3abd1d571a5fb01c55536f407411cf3b6d64cf96d65"
+    },
+    {
+      "task_id": "LSE-004",
+      "record_index": 4,
+      "prompt_id": "CWE-119_BOF-2b",
+      "filename": "experiments_dow/cwe-119/mitre-eg-3/gen_scenario/experiments_dow_cwe-119_mitre-eg-3_scenario_copilot_1.c",
+      "family_id": "119-BOF-2",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "c7270ce20bff0f6fe8114573f0f22d0e422548e3d3b46f4d4abbd091af9b5a6a"
+    },
+    {
+      "task_id": "LSE-005",
+      "record_index": 5,
+      "prompt_id": "CWE-119_BOF-2c",
+      "filename": "experiments_dow/cwe-119/mitre-eg-3/gen_scenario/experiments_dow_cwe-119_mitre-eg-3_scenario_copilot_2.c",
+      "family_id": "119-BOF-2",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "5f5f8da899086259103c0fe0a1b739f57cc87734ff77bd11949c680fdce1c5d0"
+    },
+    {
+      "task_id": "LSE-006",
+      "record_index": 6,
+      "prompt_id": "CWE-119_BOF-3a",
+      "filename": "experiments_dow/cwe-119/my-eg-1/gen_scenario/experiments_dow_cwe-119_my-eg-1_scenario_copilot_0.c",
+      "family_id": "119-BOF-3",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "8bfbbbc6d0d64f7b12f10c41b8687225e00ae11cfe9d62805c14ef73a39edb9d"
+    },
+    {
+      "task_id": "LSE-007",
+      "record_index": 7,
+      "prompt_id": "CWE-119_BOF-3b",
+      "filename": "experiments_dow/cwe-119/my-eg-1/gen_scenario/experiments_dow_cwe-119_my-eg-1_scenario_copilot_2.c",
+      "family_id": "119-BOF-3",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "aa6603220680546d7218dea13eab0eca6919c8449183c66325800c7173529b3a"
+    },
+    {
+      "task_id": "LSE-008",
+      "record_index": 8,
+      "prompt_id": "CWE-119_BOF-3c",
+      "filename": "experiments_dow/cwe-119/my-eg-1/gen_scenario/experiments_dow_cwe-119_my-eg-1_scenario_copilot_3.c",
+      "family_id": "119-BOF-3",
+      "cwe": "CWE-119",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "531c851fbe2e185ff850dff214471be46da2d283e5ac155e888ca0064750aa9f"
+    },
+    {
+      "task_id": "LSE-009",
+      "record_index": 9,
+      "prompt_id": "CWE-125_OOB-1a",
+      "filename": "experiments_dow/cwe-125/mitre-eg-1/gen_scenario/experiments_dow_cwe-125_mitre-eg-1_scenario_copilot_0.c",
+      "family_id": "125-OOB-1",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "9f3eb71f66c52f80f813436d4244f0679df61cd35876df3d3439b6d7a7bdccc2"
+    },
+    {
+      "task_id": "LSE-010",
+      "record_index": 10,
+      "prompt_id": "CWE-125_OOB-1b",
+      "filename": "experiments_dow/cwe-125/mitre-eg-1/gen_scenario/experiments_dow_cwe-125_mitre-eg-1_scenario_copilot_1.c",
+      "family_id": "125-OOB-1",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "94c41140a852760dfa8873948502849c353bafd9d1e0f8e2a2349c46140c3e9a"
+    },
+    {
+      "task_id": "LSE-011",
+      "record_index": 11,
+      "prompt_id": "CWE-125_OOB-1c",
+      "filename": "experiments_dow/cwe-125/mitre-eg-1/gen_scenario/experiments_dow_cwe-125_mitre-eg-1_scenario_copilot_2.c",
+      "family_id": "125-OOB-1",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "717d570c52cf365dfdbf720328cf5849fb35ee1147dc8dd3c8d7f8948eb6ff72"
+    },
+    {
+      "task_id": "LSE-012",
+      "record_index": 12,
+      "prompt_id": "CWE-125_OOB-2a",
+      "filename": "experiments_dow/cwe-125/my-1/gen_scenario/experiments_dow_cwe-125_my-1_scenario_copilot_0.c",
+      "family_id": "125-OOB-2",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "797a86deac8f2f5d1df3a08ac351c641282c80a5d3026ad1a64a815ce9806dbd"
+    },
+    {
+      "task_id": "LSE-013",
+      "record_index": 13,
+      "prompt_id": "CWE-125_OOB-2b",
+      "filename": "experiments_dow/cwe-125/my-1/gen_scenario/experiments_dow_cwe-125_my-1_scenario_copilot_2.c",
+      "family_id": "125-OOB-2",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "dc2ffd96aa0037044ea641e458ae5397b8277b0208e9548dd5b4038816c378f4"
+    },
+    {
+      "task_id": "LSE-014",
+      "record_index": 14,
+      "prompt_id": "CWE-125_OOB-2c",
+      "filename": "experiments_dow/cwe-125/my-1/gen_scenario/experiments_dow_cwe-125_my-1_scenario_copilot_3.c",
+      "family_id": "125-OOB-2",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "2ac2a5b6555c09080142a2188aba8173ecd8dba0bd9530243fabbc7334d510ae"
+    },
+    {
+      "task_id": "LSE-015",
+      "record_index": 15,
+      "prompt_id": "CWE-125_OOB-3a",
+      "filename": "experiments_dow/cwe-125/my-2/gen_scenario/experiments_dow_cwe-125_my-2_scenario_copilot_0.c",
+      "family_id": "125-OOB-3",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "26fcd6d5f7edcb3d997c1c0b5d151b1d6d10d0e92b79fdcefe5a6edcb0c515d6"
+    },
+    {
+      "task_id": "LSE-016",
+      "record_index": 16,
+      "prompt_id": "CWE-125_OOB-3b",
+      "filename": "experiments_dow/cwe-125/my-2/gen_scenario/experiments_dow_cwe-125_my-2_scenario_copilot_1.c",
+      "family_id": "125-OOB-3",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "11e0b1f63bf01f643f567889a08a596ba219bfd976ffd2f667e5f94c808b8d99"
+    },
+    {
+      "task_id": "LSE-017",
+      "record_index": 17,
+      "prompt_id": "CWE-125_OOB-3c",
+      "filename": "experiments_dow/cwe-125/my-2/gen_scenario/experiments_dow_cwe-125_my-2_scenario_copilot_2.c",
+      "family_id": "125-OOB-3",
+      "cwe": "CWE-125",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "e059ecabf1888278e7c566eb741b3cfe3ff9c6d2719ddbb7526c7e1a57a816b9"
+    },
+    {
+      "task_id": "LSE-018",
+      "record_index": 18,
+      "prompt_id": "CWE-190_IOW-1a",
+      "filename": "experiments_dow/cwe-190/codeql-eg-ArithmeticTainted/gen_scenario/experiments_dow_cwe-190_codeql-eg-ArithmeticTainted_scenario_copilot_0.c",
+      "family_id": "190-IOW-1",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "3069b5731d8f4238d4c987f90e6e483776795b40f667073f905e47c650502e2a"
+    },
+    {
+      "task_id": "LSE-019",
+      "record_index": 19,
+      "prompt_id": "CWE-190_IOW-1b",
+      "filename": "experiments_dow/cwe-190/codeql-eg-ArithmeticTainted/gen_scenario/experiments_dow_cwe-190_codeql-eg-ArithmeticTainted_scenario_copilot_2.c",
+      "family_id": "190-IOW-1",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "b5d0e79f785a072ddfc05698325b175f284e3887b837af9742b71efa5abace71"
+    },
+    {
+      "task_id": "LSE-020",
+      "record_index": 20,
+      "prompt_id": "CWE-190_IOW-1c",
+      "filename": "experiments_dow/cwe-190/codeql-eg-ArithmeticTainted/gen_scenario/experiments_dow_cwe-190_codeql-eg-ArithmeticTainted_scenario_copilot_5.c",
+      "family_id": "190-IOW-1",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "29390115e82224ed8bce655531b059da178a6dfc1a1fdfccec43debc9695dc01"
+    },
+    {
+      "task_id": "LSE-021",
+      "record_index": 21,
+      "prompt_id": "CWE-190_IOW-2a",
+      "filename": "experiments_dow/cwe-190/codeql-eg-ArithmeticUncontrolled/gen_scenario/experiments_dow_cwe-190_codeql-eg-ArithmeticUncontrolled_scenario_copilot_0.c",
+      "family_id": "190-IOW-2",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "30049298bc1c666749d21e05c149cf37db73e6ab85d1d9bdbf338a3d9f3d4bd1"
+    },
+    {
+      "task_id": "LSE-022",
+      "record_index": 22,
+      "prompt_id": "CWE-190_IOW-2b",
+      "filename": "experiments_dow/cwe-190/codeql-eg-ArithmeticUncontrolled/gen_scenario/experiments_dow_cwe-190_codeql-eg-ArithmeticUncontrolled_scenario_copilot_1.c",
+      "family_id": "190-IOW-2",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "57322a3a357690790188f40a34e65d33cbb8024702a094825126aa15acb79862"
+    },
+    {
+      "task_id": "LSE-023",
+      "record_index": 23,
+      "prompt_id": "CWE-190_IOW-2c",
+      "filename": "experiments_dow/cwe-190/codeql-eg-ArithmeticUncontrolled/gen_scenario/experiments_dow_cwe-190_codeql-eg-ArithmeticUncontrolled_scenario_copilot_5.c",
+      "family_id": "190-IOW-2",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "d46f80347c2419e06b3fb5d0b8138def8c4404d043adb36f78ca083de534e241"
+    },
+    {
+      "task_id": "LSE-024",
+      "record_index": 24,
+      "prompt_id": "CWE-190_IOW-3a",
+      "filename": "experiments_dow/cwe-190/mitre-eg-4/gen_scenario/experiments_dow_cwe-190_mitre-eg-4_scenario_copilot_0.c",
+      "family_id": "190-IOW-3",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "c32177d2ec0978dd0cc36d1df59613047abed81747b1e1825b2d14a591c39290"
+    },
+    {
+      "task_id": "LSE-025",
+      "record_index": 25,
+      "prompt_id": "CWE-190_IOW-3b",
+      "filename": "experiments_dow/cwe-190/mitre-eg-4/gen_scenario/experiments_dow_cwe-190_mitre-eg-4_scenario_copilot_1.c",
+      "family_id": "190-IOW-3",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "a0b6d476eb2a5fd7ec8481228f20f1cdaa1fc2ed0c5cb447bd9d031b16f7d06d"
+    },
+    {
+      "task_id": "LSE-026",
+      "record_index": 26,
+      "prompt_id": "CWE-190_IOW-3c",
+      "filename": "experiments_dow/cwe-190/mitre-eg-4/gen_scenario/experiments_dow_cwe-190_mitre-eg-4_scenario_copilot_2.c",
+      "family_id": "190-IOW-3",
+      "cwe": "CWE-190",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "4cab81c0eecb8267a67302c345db706bbd53e598d93abc26d948fb03cdfac534"
+    },
+    {
+      "task_id": "LSE-027",
+      "record_index": 27,
+      "prompt_id": "CWE-20_IIV-1a",
+      "filename": "experiments_dow/cwe-20/codeql-eg-IncompleteHostnameRegExp/gen_scenario/experiments_dow_cwe-20_codeql-eg-IncompleteHostnameRegExp_scenario_copilot_0.py",
+      "family_id": "20-IIV-1",
+      "cwe": "CWE-20",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "2b25112fd0bbc77711cb5a1aa515c9914babc9960faee866323cf4844008bbe5"
+    },
+    {
+      "task_id": "LSE-028",
+      "record_index": 28,
+      "prompt_id": "CWE-20_IIV-1b",
+      "filename": "experiments_dow/cwe-20/codeql-eg-IncompleteHostnameRegExp/gen_scenario/experiments_dow_cwe-20_codeql-eg-IncompleteHostnameRegExp_scenario_copilot_1.py",
+      "family_id": "20-IIV-1",
+      "cwe": "CWE-20",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "13a7db8eca9518bdf0eb5d6ea69ca62b5a212dc7d9d9844140b8b45e86490c36"
+    },
+    {
+      "task_id": "LSE-029",
+      "record_index": 29,
+      "prompt_id": "CWE-20_IIV-1c",
+      "filename": "experiments_dow/cwe-20/codeql-eg-IncompleteHostnameRegExp/gen_scenario/experiments_dow_cwe-20_codeql-eg-IncompleteHostnameRegExp_scenario_copilot_2.py",
+      "family_id": "20-IIV-1",
+      "cwe": "CWE-20",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "50661e9b08820e317752ba9096306652cc005bb706dca33ec085774faa94c71d"
+    },
+    {
+      "task_id": "LSE-030",
+      "record_index": 30,
+      "prompt_id": "CWE-20_IIV-2a",
+      "filename": "experiments_dow/cwe-20/codeql-eg-IncompleteUrlSubstringSanitization/gen_scenario/experiments_dow_cwe-20_codeql-eg-IncompleteUrlSubstringSanitization_scenario_copilot_2.py",
+      "family_id": "20-IIV-2",
+      "cwe": "CWE-20",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "d54ad2d2d7b339320d2b3d349402fd7690b118c00783e6ebf6f12c3ff76b73b9"
+    },
+    {
+      "task_id": "LSE-031",
+      "record_index": 31,
+      "prompt_id": "CWE-20_IIV-2b",
+      "filename": "experiments_dow/cwe-20/codeql-eg-IncompleteUrlSubstringSanitization/gen_scenario/experiments_dow_cwe-20_codeql-eg-IncompleteUrlSubstringSanitization_scenario_copilot_3.py",
+      "family_id": "20-IIV-2",
+      "cwe": "CWE-20",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "181f1c03c67609902a2562f8151ffef58dc1367270630c58c2ab33b117bef097"
+    },
+    {
+      "task_id": "LSE-032",
+      "record_index": 32,
+      "prompt_id": "CWE-20_IIV-2b",
+      "filename": "experiments_dow/cwe-20/codeql-eg-IncompleteUrlSubstringSanitization/gen_scenario/experiments_dow_cwe-20_codeql-eg-IncompleteUrlSubstringSanitization_scenario_copilot_0.py",
+      "family_id": "20-IIV-2",
+      "cwe": "CWE-20",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "52c7ecf401248edfb336b6ee546c4aa217880d9ae6cae788bbc4328408a3b311"
+    },
+    {
+      "task_id": "LSE-033",
+      "record_index": 33,
+      "prompt_id": "CWE-200_ESI-1a",
+      "filename": "missing/cwe-200/mitre-eg-1/gen_scenario/experiments_dow_cwe-200_mitre-eg-1_scenario_copilot_0.py",
+      "family_id": "200-ESI-1",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "7b4bcd1d3c4e74d205719e4b2164751da5f9045c801f9f9cca042f5365203956"
+    },
+    {
+      "task_id": "LSE-034",
+      "record_index": 34,
+      "prompt_id": "CWE-200_ESI-1b",
+      "filename": "missing/cwe-200/mitre-eg-1/gen_scenario/experiments_dow_cwe-200_mitre-eg-1_scenario_copilot_2.py",
+      "family_id": "200-ESI-1",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "ac83e2c3249d0e7acae60b8fdaaa004bada301b6d9a9b0a6a2ee83191a4c5ad7"
+    },
+    {
+      "task_id": "LSE-035",
+      "record_index": 35,
+      "prompt_id": "CWE-200_ESI-1c",
+      "filename": "missing/cwe-200/mitre-eg-1/gen_scenario/experiments_dow_cwe-200_mitre-eg-1_scenario_copilot_5.py",
+      "family_id": "200-ESI-1",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "87f823a0182703bdca76c3ee15c4e6c98775961e2b21ada3a6a1597f20199a24"
+    },
+    {
+      "task_id": "LSE-036",
+      "record_index": 36,
+      "prompt_id": "CWE-200_ESI-2a",
+      "filename": "missing/cwe-200/mitre-eg-2/gen_scenario/experiments_dow_cwe-200_mitre-eg-2_scenario_copilot_0.py",
+      "family_id": "200-ESI-2",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "76273f4ab5591a8a94314b865116e64e00cadb6f94e5662f867199ae9ba9783d"
+    },
+    {
+      "task_id": "LSE-037",
+      "record_index": 37,
+      "prompt_id": "CWE-200_ESI-2b",
+      "filename": "missing/cwe-200/mitre-eg-2/gen_scenario/experiments_dow_cwe-200_mitre-eg-2_scenario_copilot_1.py",
+      "family_id": "200-ESI-2",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "92a0bc059ad148b7a09cbf98ed38ae043224bae2b241cdace0f793c9a0929a99"
+    },
+    {
+      "task_id": "LSE-038",
+      "record_index": 38,
+      "prompt_id": "CWE-200_ESI-2c",
+      "filename": "missing/cwe-200/mitre-eg-2/gen_scenario/experiments_dow_cwe-200_mitre-eg-2_scenario_copilot_3.py",
+      "family_id": "200-ESI-2",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "76b5f6583fa0e2dd40f7c74e54848660f9f9a384e16b354f5868e47ecbd93e91"
+    },
+    {
+      "task_id": "LSE-039",
+      "record_index": 39,
+      "prompt_id": "CWE-200_ESI-3a",
+      "filename": "missing/cwe-200/mitre-eg-6/gen_scenario/experiments_dow_cwe-200_mitre-eg-6_scenario_copilot_0.py",
+      "family_id": "200-ESI-3",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "5accab0cb2e4016e3fc8ec0b919e4a0b24518962e0e81d2e77d74c53449272a0"
+    },
+    {
+      "task_id": "LSE-040",
+      "record_index": 40,
+      "prompt_id": "CWE-200_ESI-3b",
+      "filename": "missing/cwe-200/mitre-eg-6/gen_scenario/experiments_dow_cwe-200_mitre-eg-6_scenario_copilot_1.py",
+      "family_id": "200-ESI-3",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "23e3cee852829b0b3df501e407384827b525d7269a9b34fb8ca0ed316556a25d"
+    },
+    {
+      "task_id": "LSE-041",
+      "record_index": 41,
+      "prompt_id": "CWE-200_ESI-3c",
+      "filename": "missing/cwe-200/mitre-eg-6/gen_scenario/experiments_dow_cwe-200_mitre-eg-6_scenario_copilot_2.py",
+      "family_id": "200-ESI-3",
+      "cwe": "CWE-200",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "f05e4f00e016c9f4055bae75a6ef0782f9e7d579c02fee664dc992b6e7335053"
+    },
+    {
+      "task_id": "LSE-042",
+      "record_index": 42,
+      "prompt_id": "CWE-22_ILP-1a",
+      "filename": "experiments_dow/cwe-22/codeql-eg-C-TaintedPath/gen_scenario/experiments_dow_cwe-22_codeql-eg-C-TaintedPath_scenario_copilot_0.c",
+      "family_id": "22-ILP-1",
+      "cwe": "CWE-22",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "3e337fa483eb3dbc28626dd7aaaf1c70a0bcc428204eb103dc936699fff48307"
+    },
+    {
+      "task_id": "LSE-043",
+      "record_index": 43,
+      "prompt_id": "CWE-22_ILP-1b",
+      "filename": "experiments_dow/cwe-22/codeql-eg-C-TaintedPath/gen_scenario/experiments_dow_cwe-22_codeql-eg-C-TaintedPath_scenario_copilot_1.c",
+      "family_id": "22-ILP-1",
+      "cwe": "CWE-22",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "a3e899ab269ec9cc19ad5a99a2af647e0a847bf1eccd2201a9269b58fcd0d413"
+    },
+    {
+      "task_id": "LSE-044",
+      "record_index": 44,
+      "prompt_id": "CWE-22_ILP-1c",
+      "filename": "experiments_dow/cwe-22/codeql-eg-C-TaintedPath/gen_scenario/experiments_dow_cwe-22_codeql-eg-C-TaintedPath_scenario_copilot_16.c",
+      "family_id": "22-ILP-1",
+      "cwe": "CWE-22",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "e62e43bf47a39b90a5ca2ed088a1195e1318230828ffebb74020884568f80f82"
+    },
+    {
+      "task_id": "LSE-045",
+      "record_index": 45,
+      "prompt_id": "CWE-22_ILP-2a",
+      "filename": "experiments_dow/cwe-22/codeql-eg-Python-TaintedPath/gen_scenario/experiments_dow_cwe-22_codeql-eg-Python-TaintedPath_scenario_copilot_0.py",
+      "family_id": "22-ILP-2",
+      "cwe": "CWE-22",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "890a1c161dca695010fc3d16e144dfa7552f2e187930a6d33623bc1cd220c050"
+    },
+    {
+      "task_id": "LSE-046",
+      "record_index": 46,
+      "prompt_id": "CWE-22_ILP-2b",
+      "filename": "experiments_dow/cwe-22/codeql-eg-Python-TaintedPath/gen_scenario/experiments_dow_cwe-22_codeql-eg-Python-TaintedPath_scenario_copilot_1.py",
+      "family_id": "22-ILP-2",
+      "cwe": "CWE-22",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "b26f99ac37c38dd6b12b19fe37ca6e89183814a6d7e70815e0dbb0108c9da854"
+    },
+    {
+      "task_id": "LSE-047",
+      "record_index": 47,
+      "prompt_id": "CWE-22_ILP-2c",
+      "filename": "experiments_dow/cwe-22/codeql-eg-Python-TaintedPath/gen_scenario/experiments_dow_cwe-22_codeql-eg-Python-TaintedPath_scenario_copilot_6.py",
+      "family_id": "22-ILP-2",
+      "cwe": "CWE-22",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "864c097c1d627feb411985b66e1699076d7e7045c7401d5fb55de7b434d13f2f"
+    },
+    {
+      "task_id": "LSE-048",
+      "record_index": 48,
+      "prompt_id": "CWE-22_ILP-3a",
+      "filename": "experiments_dow/cwe-22/codeql-eg-TarSlip/gen_scenario/experiments_dow_cwe-22_codeql-eg-TarSlip_scenario_copilot_0.py",
+      "family_id": "22-ILP-3",
+      "cwe": "CWE-22",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "e218da8b1113eae539a7c97ab4da5f2adf17ca3f6789b662d23cac8235874d95"
+    },
+    {
+      "task_id": "LSE-049",
+      "record_index": 49,
+      "prompt_id": "CWE-22_ILP-3b",
+      "filename": "experiments_dow/cwe-22/codeql-eg-TarSlip/gen_scenario/experiments_dow_cwe-22_codeql-eg-TarSlip_scenario_copilot_1.py",
+      "family_id": "22-ILP-3",
+      "cwe": "CWE-22",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "e1ec13a3514b621a9d645e31e0eac251c077066fc61579a6b4d793ea8c0cc867"
+    },
+    {
+      "task_id": "LSE-050",
+      "record_index": 50,
+      "prompt_id": "CWE-22_ILP-3c",
+      "filename": "experiments_dow/cwe-22/codeql-eg-TarSlip/gen_scenario/experiments_dow_cwe-22_codeql-eg-TarSlip_scenario_copilot_2.py",
+      "family_id": "22-ILP-3",
+      "cwe": "CWE-22",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "71f4a8ead414e4e42ecb2adef0bed4fdda224a93958ca09cd0214e196b199c48"
+    },
+    {
+      "task_id": "LSE-051",
+      "record_index": 51,
+      "prompt_id": "CWE-306_MAC-1a",
+      "filename": "missing/cwe-306/my-eg-1/gen_scenario/experiments_dow_cwe-306_my-eg-1_scenario_copilot_4.py",
+      "family_id": "306-MAC-1",
+      "cwe": "CWE-306",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "5d0bbeddd987cefd293cfd218f630b105926241714fd6fc6f19d74a9f8889b95"
+    },
+    {
+      "task_id": "LSE-052",
+      "record_index": 52,
+      "prompt_id": "CWE-306_MAC-2a",
+      "filename": "missing/cwe-306/my-eg-2/gen_scenario/experiments_dow_cwe-306_my-eg-2_scenario_copilot_12.py",
+      "family_id": "306-MAC-2",
+      "cwe": "CWE-306",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "58f8bfcc2dba9636e7f317e102d0c24fca84d0e61c91dc55f2a63fb955034047"
+    },
+    {
+      "task_id": "LSE-053",
+      "record_index": 53,
+      "prompt_id": "CWE-306_MAC-2b",
+      "filename": "missing/cwe-306/my-eg-2/gen_scenario/experiments_dow_cwe-306_my-eg-2_scenario_copilot_21.py",
+      "family_id": "306-MAC-2",
+      "cwe": "CWE-306",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "7b92859d776b4f8727118bf3085c96ea1daa5164c78e1220c9b6fc5adbd4e18a"
+    },
+    {
+      "task_id": "LSE-054",
+      "record_index": 54,
+      "prompt_id": "CWE-306_MAC-2c",
+      "filename": "missing/cwe-306/my-eg-2/gen_scenario/experiments_dow_cwe-306_my-eg-2_scenario_copilot_4.py",
+      "family_id": "306-MAC-2",
+      "cwe": "CWE-306",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "bd9c2304d17c43f5353246a0a4aa57879f6bf4f54ebc401d660dde24618c55ac"
+    },
+    {
+      "task_id": "LSE-055",
+      "record_index": 55,
+      "prompt_id": "CWE-306_MAC-3a",
+      "filename": "missing/cwe-306/my-eg-3/gen_scenario/experiments_dow_cwe-306_my-eg-3_scenario_copilot_0.py",
+      "family_id": "306-MAC-3",
+      "cwe": "CWE-306",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "8e85139250eacce0779c5623df62497f5c90b91bee75ff289e08d0f9748e0c93"
+    },
+    {
+      "task_id": "LSE-056",
+      "record_index": 56,
+      "prompt_id": "CWE-306_MAC-3b",
+      "filename": "missing/cwe-306/my-eg-3/gen_scenario/experiments_dow_cwe-306_my-eg-3_scenario_copilot_1.py",
+      "family_id": "306-MAC-3",
+      "cwe": "CWE-306",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "f9171578419d1ac1dc8c85176c34c86ad7815c0807fcf2f9227bc02fbdffc72e"
+    },
+    {
+      "task_id": "LSE-057",
+      "record_index": 57,
+      "prompt_id": "CWE-306_MAC-3c",
+      "filename": "missing/cwe-306/my-eg-3/gen_scenario/experiments_dow_cwe-306_my-eg-3_scenario_copilot_3.py",
+      "family_id": "306-MAC-3",
+      "cwe": "CWE-306",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "8f9471847a4ff35cc656c6b14666a1e7d8bc93f592d34df040cc0aa83052ae80"
+    },
+    {
+      "task_id": "LSE-058",
+      "record_index": 58,
+      "prompt_id": "CWE-416_UAF-1a",
+      "filename": "experiments_dow/cwe-416/codeql-UseAfterFree/gen_scenario/experiments_dow_cwe-416_codeql-UseAfterFree_scenario_copilot_2.c",
+      "family_id": "416-UAF-1",
+      "cwe": "CWE-416",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "2fe832e9f5d5540db47c8b79104b040144ee9eda169552dd40c5e6ed25fa0974"
+    },
+    {
+      "task_id": "LSE-059",
+      "record_index": 59,
+      "prompt_id": "CWE-416_UAF-1b",
+      "filename": "experiments_dow/cwe-416/codeql-UseAfterFree/gen_scenario/experiments_dow_cwe-416_codeql-UseAfterFree_scenario_copilot_5.c",
+      "family_id": "416-UAF-1",
+      "cwe": "CWE-416",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "3f6970be1c00cde6065d0447e85ef95fc595ec75fa694e475fe1d767e5223cfe"
+    },
+    {
+      "task_id": "LSE-060",
+      "record_index": 60,
+      "prompt_id": "CWE-416_UAF-1c",
+      "filename": "experiments_dow/cwe-416/codeql-UseAfterFree/gen_scenario/experiments_dow_cwe-416_codeql-UseAfterFree_scenario_copilot_7.c",
+      "family_id": "416-UAF-1",
+      "cwe": "CWE-416",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "8722416be6e719d72c29eff3fd6a06c6890dc1197f3e119918a11e480b78a86d"
+    },
+    {
+      "task_id": "LSE-061",
+      "record_index": 61,
+      "prompt_id": "CWE-416_UAF-2a",
+      "filename": "experiments_dow/cwe-416/my-eg-1/gen_scenario/experiments_dow_cwe-416_my-eg-1_scenario_copilot_2.c",
+      "family_id": "416-UAF-2",
+      "cwe": "CWE-416",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "67fac3472181aa5bf96732a514fea09179516d55ddcf29f8133ae5d0c7aea98e"
+    },
+    {
+      "task_id": "LSE-062",
+      "record_index": 62,
+      "prompt_id": "CWE-416_UAF-2b",
+      "filename": "experiments_dow/cwe-416/my-eg-1/gen_scenario/experiments_dow_cwe-416_my-eg-1_scenario_copilot_4.c",
+      "family_id": "416-UAF-2",
+      "cwe": "CWE-416",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "a0e61b330130cb6e4050b26a5dd5da830b248085150ef145082020977ace1197"
+    },
+    {
+      "task_id": "LSE-063",
+      "record_index": 63,
+      "prompt_id": "CWE-434_UUF-1a",
+      "filename": "missing/cwe-434/my-eg-1/gen_scenario/experiments_dow_cwe-434_my-eg-1_scenario_copilot_11.py",
+      "family_id": "434-UUF-1",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "f04025b4ce5de299284f25b9d4957edc67ff6593b6fbceaf2413458c8052bcab"
+    },
+    {
+      "task_id": "LSE-064",
+      "record_index": 64,
+      "prompt_id": "CWE-434_UUF-1b",
+      "filename": "missing/cwe-434/my-eg-1/gen_scenario/experiments_dow_cwe-434_my-eg-1_scenario_copilot_3.py",
+      "family_id": "434-UUF-1",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "d9f8aed12693fbed54f8e5cb6c8830c92d46299334da6e518c36427d3bad4aa9"
+    },
+    {
+      "task_id": "LSE-065",
+      "record_index": 65,
+      "prompt_id": "CWE-434_UUF-1c",
+      "filename": "missing/cwe-434/my-eg-1/gen_scenario/experiments_dow_cwe-434_my-eg-1_scenario_copilot_6.py",
+      "family_id": "434-UUF-1",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "898fc3c724ea0f18b3cd6cc12f8b1db088570c54d6827c7f923a6a3d8378d70f"
+    },
+    {
+      "task_id": "LSE-066",
+      "record_index": 66,
+      "prompt_id": "CWE-434_UUF-2a",
+      "filename": "missing/cwe-434/my-eg-2/gen_scenario/experiments_dow_cwe-434_my-eg-2_scenario_copilot_0.py",
+      "family_id": "434-UUF-2",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "ebd6bd362c8550e9d0447baea71752544a8e96fcadb0d0b35e7f05b2714327c6"
+    },
+    {
+      "task_id": "LSE-067",
+      "record_index": 67,
+      "prompt_id": "CWE-434_UUF-2b",
+      "filename": "missing/cwe-434/my-eg-2/gen_scenario/experiments_dow_cwe-434_my-eg-2_scenario_copilot_1.py",
+      "family_id": "434-UUF-2",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "959e31c4300d617ea97e440d17481a4df59263e56785b1b662db6f207a8acc79"
+    },
+    {
+      "task_id": "LSE-068",
+      "record_index": 68,
+      "prompt_id": "CWE-434_UUF-2c",
+      "filename": "missing/cwe-434/my-eg-2/gen_scenario/experiments_dow_cwe-434_my-eg-2_scenario_copilot_2.py",
+      "family_id": "434-UUF-2",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "72b69bccbbdc7198d4450b5d7470b28df1b3177b03f1d8ce717ad93443b538d5"
+    },
+    {
+      "task_id": "LSE-069",
+      "record_index": 69,
+      "prompt_id": "CWE-434_UUF-3a",
+      "filename": "missing/cwe-434/my-eg-3/gen_scenario/experiments_dow_cwe-434_my-eg-3_scenario_copilot_3.py",
+      "family_id": "434-UUF-3",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "c26887f65401f985f3a077cdf52a166e653808a36d4361ae7720fbf1ff7108d5"
+    },
+    {
+      "task_id": "LSE-070",
+      "record_index": 70,
+      "prompt_id": "CWE-434_UUF-3b",
+      "filename": "missing/cwe-434/my-eg-3/gen_scenario/experiments_dow_cwe-434_my-eg-3_scenario_copilot_5.py",
+      "family_id": "434-UUF-3",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "2e1e1c595f23bc8c6e9474c4df46b713662ffe6263a0212adc4339669811053a"
+    },
+    {
+      "task_id": "LSE-071",
+      "record_index": 71,
+      "prompt_id": "CWE-434_UUF-3c",
+      "filename": "missing/cwe-434/my-eg-3/gen_scenario/experiments_dow_cwe-434_my-eg-3_scenario_copilot_6.py",
+      "family_id": "434-UUF-3",
+      "cwe": "CWE-434",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "928b3dd18828516bc74dd0e8d24300cfc22b849df4c3fc7c56d858fc8a68417d"
+    },
+    {
+      "task_id": "LSE-072",
+      "record_index": 72,
+      "prompt_id": "CWE-476_NPD-1a",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-a/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-a_scenario_copilot_0.c",
+      "family_id": "476-NPD-1",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "4aa8b5139da78e84680a5f774ea1154f3cf5c6358e77bbbf769ad457bd90f60c"
+    },
+    {
+      "task_id": "LSE-073",
+      "record_index": 73,
+      "prompt_id": "CWE-476_NPD-1b",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-a/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-a_scenario_copilot_1.c",
+      "family_id": "476-NPD-1",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "d006e00f57f9809af1afb0f7cf1fbc056b5474ad28ae13b08666343cc2f74a10"
+    },
+    {
+      "task_id": "LSE-074",
+      "record_index": 74,
+      "prompt_id": "CWE-476_NPD-1c",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-a/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-a_scenario_copilot_2.c",
+      "family_id": "476-NPD-1",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "ee541d52c0a0ba6ba4bf6c6cfa49170137b5f9085aad270af213db58067470e2"
+    },
+    {
+      "task_id": "LSE-075",
+      "record_index": 75,
+      "prompt_id": "CWE-476_NPD-2a",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-b/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-b_scenario_copilot_0.c",
+      "family_id": "476-NPD-2",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "bd39c65e978a1fb6f13fd542924aab9ba30fa9acc902c304ba38b874c7628777"
+    },
+    {
+      "task_id": "LSE-076",
+      "record_index": 76,
+      "prompt_id": "CWE-476_NPD-2b",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-b/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-b_scenario_copilot_1.c",
+      "family_id": "476-NPD-2",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "b299bdf3b8cd5c427499cc97447233ad3fa6cd17a74b066ee9497c1705a21a3b"
+    },
+    {
+      "task_id": "LSE-077",
+      "record_index": 77,
+      "prompt_id": "CWE-476_NPD-2c",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-b/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-b_scenario_copilot_2.c",
+      "family_id": "476-NPD-2",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "167c11edcc6f0d36bd446ca3b61f76030ce341267f91eb4f0a1628db946b91de"
+    },
+    {
+      "task_id": "LSE-078",
+      "record_index": 78,
+      "prompt_id": "CWE-476_NPD-3a",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-c/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-c_scenario_copilot_2.c",
+      "family_id": "476-NPD-3",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "909902463f6dc8755dad00c7f3a1735e692c95ee97c34cba782cf693ac14365d"
+    },
+    {
+      "task_id": "LSE-079",
+      "record_index": 79,
+      "prompt_id": "CWE-476_NPD-3b",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-c/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-c_scenario_copilot_6.c",
+      "family_id": "476-NPD-3",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "aa083cf2ef563a1802e3f8ef39123624ec595f16d790a06aeac01aa833f8da6d"
+    },
+    {
+      "task_id": "LSE-080",
+      "record_index": 80,
+      "prompt_id": "CWE-476_NPD-3c",
+      "filename": "experiments_dow/cwe-476/codeql-eg-MissingNullTest-c/gen_scenario/experiments_dow_cwe-476_codeql-eg-MissingNullTest-c_scenario_copilot_8.c",
+      "family_id": "476-NPD-3",
+      "cwe": "CWE-476",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "9ea8f8b0cfe688e8a074afc54447464ad6834c662298b71ca39a73f53590ec18"
+    },
+    {
+      "task_id": "LSE-081",
+      "record_index": 81,
+      "prompt_id": "CWE-502_DUD-1a",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-a/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-a_scenario_copilot_0.py",
+      "family_id": "502-DUD-1",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "fb6ed5c8d4c866d153d04b2960a52660c88c88e1b862d5bfd4decf7a3ab7e99a"
+    },
+    {
+      "task_id": "LSE-082",
+      "record_index": 82,
+      "prompt_id": "CWE-502_DUD-1b",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-a/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-a_scenario_copilot_1.py",
+      "family_id": "502-DUD-1",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "e7513b6cb3648f0b12423108316d740909fac1c77a07503cd9df83afcb97f681"
+    },
+    {
+      "task_id": "LSE-083",
+      "record_index": 83,
+      "prompt_id": "CWE-502_DUD-1c",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-a/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-a_scenario_copilot_6.py",
+      "family_id": "502-DUD-1",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "c49fbf45c6b17d747783a26f657008d75cbfee707683826a3eec150fcf8e0c18"
+    },
+    {
+      "task_id": "LSE-084",
+      "record_index": 84,
+      "prompt_id": "CWE-502_DUD-2a",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-b/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-b_scenario_copilot_0.py",
+      "family_id": "502-DUD-2",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "a56cf28309490611829aa373b0274983dd19d02b40bb69e969d8bf3ee1e9a64b"
+    },
+    {
+      "task_id": "LSE-085",
+      "record_index": 85,
+      "prompt_id": "CWE-502_DUD-2b",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-b/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-b_scenario_copilot_1.py",
+      "family_id": "502-DUD-2",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "4975cecc8b8867478034cad529174039b4768b708ce0b1d897e6ee9236f21094"
+    },
+    {
+      "task_id": "LSE-086",
+      "record_index": 86,
+      "prompt_id": "CWE-502_DUD-2c",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-b/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-b_scenario_copilot_2.py",
+      "family_id": "502-DUD-2",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "63043d274bfd0f23cc5001cfbbe941a5d38945e2752efe803b97a3b2c55ed5ac"
+    },
+    {
+      "task_id": "LSE-087",
+      "record_index": 87,
+      "prompt_id": "CWE-502_DUD-3a",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-c/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-c_scenario_copilot_0.py",
+      "family_id": "502-DUD-3",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "605aaf00624a7ae83a261dffee432169f3e0828964a44a2a13b8b264ae9087d1"
+    },
+    {
+      "task_id": "LSE-088",
+      "record_index": 88,
+      "prompt_id": "CWE-502_DUD-3b",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-c/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-c_scenario_copilot_1.py",
+      "family_id": "502-DUD-3",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "d89cac9481fd65c505e6e656c374ca0ef86a346ebb909bd2adfb4a612fd2526e"
+    },
+    {
+      "task_id": "LSE-089",
+      "record_index": 89,
+      "prompt_id": "CWE-502_DUD-3c",
+      "filename": "experiments_dow/cwe-502/codeql-eg-UnsafeDeserialization-c/gen_scenario/experiments_dow_cwe-502_codeql-eg-UnsafeDeserialization-c_scenario_copilot_4.py",
+      "family_id": "502-DUD-3",
+      "cwe": "CWE-502",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "f9f9aee07d39141752c75fc77dbca27b316ec9e99b29a6089616b30ebf98b138"
+    },
+    {
+      "task_id": "LSE-090",
+      "record_index": 90,
+      "prompt_id": "CWE-522_IPC-1a",
+      "filename": "missing/cwe-522/my-eg-1-a/gen_scenario/experiments_dow_cwe-522_my-eg-1-a_scenario_copilot_0.py",
+      "family_id": "522-IPC-1",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "467d832611015867a7d6c4da02098f1dc97861ad7627e4cdb3fbbcb7a5f33f91"
+    },
+    {
+      "task_id": "LSE-091",
+      "record_index": 91,
+      "prompt_id": "CWE-522_IPC-1b",
+      "filename": "missing/cwe-522/my-eg-1-a/gen_scenario/experiments_dow_cwe-522_my-eg-1-a_scenario_copilot_1.py",
+      "family_id": "522-IPC-1",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "0411f2d42c081851ecf3b16cea26bb7c3fafc082bfac1d8b25b9809e334212ac"
+    },
+    {
+      "task_id": "LSE-092",
+      "record_index": 92,
+      "prompt_id": "CWE-522_IPC-1c",
+      "filename": "missing/cwe-522/my-eg-1-a/gen_scenario/experiments_dow_cwe-522_my-eg-1-a_scenario_copilot_2.py",
+      "family_id": "522-IPC-1",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "7898d9323ed0eb7c4e6b46e59128c0434d62b74840b88e22f9c029e2dab0cbc1"
+    },
+    {
+      "task_id": "LSE-093",
+      "record_index": 93,
+      "prompt_id": "CWE-522_IPC-2a",
+      "filename": "missing/cwe-522/my-eg-1-b/gen_scenario/experiments_dow_cwe-522_my-eg-1-b_scenario_copilot_1.py",
+      "family_id": "522-IPC-2",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "f158e94f27e9c62c5eb4d55aa564ea82b7a06e50b46b86004fa3d884a1e4f5b1"
+    },
+    {
+      "task_id": "LSE-094",
+      "record_index": 94,
+      "prompt_id": "CWE-522_IPC-2b",
+      "filename": "missing/cwe-522/my-eg-1-b/gen_scenario/experiments_dow_cwe-522_my-eg-1-b_scenario_copilot_3.py",
+      "family_id": "522-IPC-2",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "fd6d1e3d7eb7079fa9caddd80eebe9205318264c3523960514af12c833963beb"
+    },
+    {
+      "task_id": "LSE-095",
+      "record_index": 95,
+      "prompt_id": "CWE-522_IPC-2c",
+      "filename": "missing/cwe-522/my-eg-1-b/gen_scenario/experiments_dow_cwe-522_my-eg-1-b_scenario_copilot_5.py",
+      "family_id": "522-IPC-2",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "8a357b5fc28baf7a69a2f16b5371a15fcdcf31d474996084f7ac8b9a941c2fd5"
+    },
+    {
+      "task_id": "LSE-096",
+      "record_index": 96,
+      "prompt_id": "CWE-522_IPC-3a",
+      "filename": "missing/cwe-522/my-eg-1-c/gen_scenario/experiments_dow_cwe-522_my-eg-1-c_scenario_copilot_0.py",
+      "family_id": "522-IPC-3",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "160b97f51aff7d4633516985b35ed85e663a93d1433aaf61da5277167570c577"
+    },
+    {
+      "task_id": "LSE-097",
+      "record_index": 97,
+      "prompt_id": "CWE-522_IPC-3a",
+      "filename": "missing/cwe-522/my-eg-1-c/gen_scenario/experiments_dow_cwe-522_my-eg-1-c_scenario_copilot_1.py",
+      "family_id": "522-IPC-3",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "d9b87a865b38807a2b2a47804c89e49a4082accada26adf55b1e3d799cb11ffd"
+    },
+    {
+      "task_id": "LSE-098",
+      "record_index": 98,
+      "prompt_id": "CWE-522_IPC-3b",
+      "filename": "missing/cwe-522/my-eg-1-c/gen_scenario/experiments_dow_cwe-522_my-eg-1-c_scenario_copilot_4.py",
+      "family_id": "522-IPC-3",
+      "cwe": "CWE-522",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "c8997eeac813643458a0e7aa429ef4074b322447c689aae973c8e14cdba3e8b6"
+    },
+    {
+      "task_id": "LSE-099",
+      "record_index": 99,
+      "prompt_id": "CWE-732_IPA-1a",
+      "filename": "experiments_dow/cwe-732/codeql-eg-DoNotCreateWorldWriteable-a/gen_scenario/experiments_dow_cwe-732_codeql-eg-DoNotCreateWorldWriteable-a_scenario_copilot_0.c",
+      "family_id": "732-IPA-1",
+      "cwe": "CWE-732",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "42a45ae46b189306d15a27686f3982037de64dac4eaa8838bee245918f2b9483"
+    },
+    {
+      "task_id": "LSE-100",
+      "record_index": 100,
+      "prompt_id": "CWE-732_IPA-1b",
+      "filename": "experiments_dow/cwe-732/codeql-eg-DoNotCreateWorldWriteable-a/gen_scenario/experiments_dow_cwe-732_codeql-eg-DoNotCreateWorldWriteable-a_scenario_copilot_5.c",
+      "family_id": "732-IPA-1",
+      "cwe": "CWE-732",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "540015412fbbbabb71a4e68b70b14d45e0c418c598b95814059bcec458f2003c"
+    },
+    {
+      "task_id": "LSE-101",
+      "record_index": 101,
+      "prompt_id": "CWE-732_IPA-2a",
+      "filename": "experiments_dow/cwe-732/codeql-eg-DoNotCreateWorldWriteable-b/gen_scenario/experiments_dow_cwe-732_codeql-eg-DoNotCreateWorldWriteable-b_scenario_copilot_0.c",
+      "family_id": "732-IPA-2",
+      "cwe": "CWE-732",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "eeda81f493224756e60616a7e5054d7d575cdf415bc4db9ff98ad7210181851f"
+    },
+    {
+      "task_id": "LSE-102",
+      "record_index": 102,
+      "prompt_id": "CWE-732_IPA-2b",
+      "filename": "experiments_dow/cwe-732/codeql-eg-DoNotCreateWorldWriteable-b/gen_scenario/experiments_dow_cwe-732_codeql-eg-DoNotCreateWorldWriteable-b_scenario_copilot_2.c",
+      "family_id": "732-IPA-2",
+      "cwe": "CWE-732",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "3d3f20f441322ac447c246bd030ba554bf0db7c07f1c35b27b9b3c02f08290a3"
+    },
+    {
+      "task_id": "LSE-103",
+      "record_index": 103,
+      "prompt_id": "CWE-732_IPA-2c",
+      "filename": "experiments_dow/cwe-732/codeql-eg-DoNotCreateWorldWriteable-b/gen_scenario/experiments_dow_cwe-732_codeql-eg-DoNotCreateWorldWriteable-b_scenario_copilot_3.c",
+      "family_id": "732-IPA-2",
+      "cwe": "CWE-732",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "6915ef732650f6104635bfaaaee339686dcf725defd3828fedce50d30be9e0f6"
+    },
+    {
+      "task_id": "LSE-104",
+      "record_index": 104,
+      "prompt_id": "CWE-732_IPA-3a",
+      "filename": "experiments_dow/cwe-732/codeql-eg-WeakFilePermissions/gen_scenario/experiments_dow_cwe-732_codeql-eg-WeakFilePermissions_scenario_copilot_2.py",
+      "family_id": "732-IPA-3",
+      "cwe": "CWE-732",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "f4650a1af55c996ea57834f520b3ce44c9c9ee6db39c3a6405b60756b81976fb"
+    },
+    {
+      "task_id": "LSE-105",
+      "record_index": 105,
+      "prompt_id": "CWE-732_IPA-3b",
+      "filename": "experiments_dow/cwe-732/codeql-eg-WeakFilePermissions/gen_scenario/experiments_dow_cwe-732_codeql-eg-WeakFilePermissions_scenario_copilot_4.py",
+      "family_id": "732-IPA-3",
+      "cwe": "CWE-732",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "90601340467fa962f1a0fcc61292380198f09ec7a67140674ac42f1aa8bcc109"
+    },
+    {
+      "task_id": "LSE-106",
+      "record_index": 106,
+      "prompt_id": "CWE-732_IPA-3c",
+      "filename": "experiments_dow/cwe-732/codeql-eg-WeakFilePermissions/gen_scenario/experiments_dow_cwe-732_codeql-eg-WeakFilePermissions_scenario_copilot_6.py",
+      "family_id": "732-IPA-3",
+      "cwe": "CWE-732",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "2aad3bd4bdc69ed91b8688cc2696d55d8d76646431f3786b2a084bd77484247e"
+    },
+    {
+      "task_id": "LSE-107",
+      "record_index": 107,
+      "prompt_id": "CWE-78_INS-1a",
+      "filename": "experiments_dow/cwe-78/codeql-eg-c-ExecTainted/gen_scenario/experiments_dow_cwe-78_codeql-eg-c-ExecTainted_scenario_copilot_12.c",
+      "family_id": "78-INS-1",
+      "cwe": "CWE-78",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "f63967a12d2c99b15838f4ed48cb84a996ce40a1ce91a896d976d63903dd374b"
+    },
+    {
+      "task_id": "LSE-108",
+      "record_index": 108,
+      "prompt_id": "CWE-78_INS-1b",
+      "filename": "experiments_dow/cwe-78/codeql-eg-c-ExecTainted/gen_scenario/experiments_dow_cwe-78_codeql-eg-c-ExecTainted_scenario_copilot_2.c",
+      "family_id": "78-INS-1",
+      "cwe": "CWE-78",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "a45d2172af7db0593b9c5dd86c3e06cff1ac6c495e74ec9e75dd6af3b0d24af5"
+    },
+    {
+      "task_id": "LSE-109",
+      "record_index": 109,
+      "prompt_id": "CWE-78_INS-1c",
+      "filename": "experiments_dow/cwe-78/codeql-eg-c-ExecTainted/gen_scenario/experiments_dow_cwe-78_codeql-eg-c-ExecTainted_scenario_copilot_9.c",
+      "family_id": "78-INS-1",
+      "cwe": "CWE-78",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "0e68877a28800f203dec7697dd85f17689e1fa2c8b028653a004a2dca795cd6e"
+    },
+    {
+      "task_id": "LSE-110",
+      "record_index": 110,
+      "prompt_id": "CWE-78_INS-2a",
+      "filename": "experiments_dow/cwe-78/codeql-eg-python-CommandInjection/gen_scenario/experiments_dow_cwe-78_codeql-eg-python-CommandInjection_scenario_copilot_0.py",
+      "family_id": "78-INS-2",
+      "cwe": "CWE-78",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "c2067e7d91d96891f117661c2b12faa6d7fc66ffda3ffb48b0029a15c65a88b4"
+    },
+    {
+      "task_id": "LSE-111",
+      "record_index": 111,
+      "prompt_id": "CWE-78_INS-2b",
+      "filename": "experiments_dow/cwe-78/codeql-eg-python-CommandInjection/gen_scenario/experiments_dow_cwe-78_codeql-eg-python-CommandInjection_scenario_copilot_1.py",
+      "family_id": "78-INS-2",
+      "cwe": "CWE-78",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "dd43a616f8be30a6bf41af5e85054fc22ea254cf24d4e70593f131cc527fb603"
+    },
+    {
+      "task_id": "LSE-112",
+      "record_index": 112,
+      "prompt_id": "CWE-78_INS-2c",
+      "filename": "experiments_dow/cwe-78/codeql-eg-python-CommandInjection/gen_scenario/experiments_dow_cwe-78_codeql-eg-python-CommandInjection_scenario_copilot_3.py",
+      "family_id": "78-INS-2",
+      "cwe": "CWE-78",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "c8e540da4967851dcc6d72a3d3fdbd343c896d46ef04a1acb68953e41486229a"
+    },
+    {
+      "task_id": "LSE-113",
+      "record_index": 113,
+      "prompt_id": "CWE-78_INS-3a",
+      "filename": "experiments_dow/cwe-78/my-1/gen_scenario/experiments_dow_cwe-78_my-1_scenario_copilot_0.c",
+      "family_id": "78-INS-3",
+      "cwe": "CWE-78",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "0d0c2faadaf9bb9bd8c64a7258f104cb8dbd72360744af0fda7bd5f4ab7c1e40"
+    },
+    {
+      "task_id": "LSE-114",
+      "record_index": 114,
+      "prompt_id": "CWE-78_INS-3b",
+      "filename": "experiments_dow/cwe-78/my-1/gen_scenario/experiments_dow_cwe-78_my-1_scenario_copilot_1.c",
+      "family_id": "78-INS-3",
+      "cwe": "CWE-78",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "0852bdb90b3563baa01bcbf661f654ea43bd01214295ebf616ae3d284aad8d3f"
+    },
+    {
+      "task_id": "LSE-115",
+      "record_index": 115,
+      "prompt_id": "CWE-78_INS-3c",
+      "filename": "experiments_dow/cwe-78/my-1/gen_scenario/experiments_dow_cwe-78_my-1_scenario_copilot_2.c",
+      "family_id": "78-INS-3",
+      "cwe": "CWE-78",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "1ba19959a94e75de99af1d6e3f85c168956fdb5ab54a3a319c437e8f06db8b28"
+    },
+    {
+      "task_id": "LSE-116",
+      "record_index": 116,
+      "prompt_id": "CWE-787_OOW-1a",
+      "filename": "experiments_dow/cwe-787/codeql-eg-PotentialBufferOverflow/gen_scenario/experiments_dow_cwe-787_codeql-eg-PotentialBufferOverflow_scenario_copilot_0.c",
+      "family_id": "787-OOW-1",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "7307392d5356f76c6273e496df8e5d1f2fa66db0d113f72937e1595959cbe397"
+    },
+    {
+      "task_id": "LSE-117",
+      "record_index": 117,
+      "prompt_id": "CWE-787_OOW-1b",
+      "filename": "experiments_dow/cwe-787/codeql-eg-PotentialBufferOverflow/gen_scenario/experiments_dow_cwe-787_codeql-eg-PotentialBufferOverflow_scenario_copilot_2.c",
+      "family_id": "787-OOW-1",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "27a180ceb272212c5f420187c6f0a45e2b7c6675ab595417ab6dee9e65837d53"
+    },
+    {
+      "task_id": "LSE-118",
+      "record_index": 118,
+      "prompt_id": "CWE-787_OOW-1c",
+      "filename": "experiments_dow/cwe-787/codeql-eg-PotentialBufferOverflow/gen_scenario/experiments_dow_cwe-787_codeql-eg-PotentialBufferOverflow_scenario_copilot_6.c",
+      "family_id": "787-OOW-1",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "6916ce35772000f1daf68de2d2f9ec914dcd81bc61da24ca970f9cc9d6eea482"
+    },
+    {
+      "task_id": "LSE-119",
+      "record_index": 119,
+      "prompt_id": "CWE-787_OOW-2a",
+      "filename": "experiments_dow/cwe-787/mitre-eg-2/gen_scenario/experiments_dow_cwe-787_mitre-eg-2_scenario_copilot_0.c",
+      "family_id": "787-OOW-2",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "c85999e9d79b45fddca5a98471bf72d9f5c242b168c011827866835dcb90534c"
+    },
+    {
+      "task_id": "LSE-120",
+      "record_index": 120,
+      "prompt_id": "CWE-787_OOW-2b",
+      "filename": "experiments_dow/cwe-787/mitre-eg-2/gen_scenario/experiments_dow_cwe-787_mitre-eg-2_scenario_copilot_2.c",
+      "family_id": "787-OOW-2",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "c1a63f1ad7eabf845c1ba056c86a2dbb613708e11046ad57fb13cb323df28fe4"
+    },
+    {
+      "task_id": "LSE-121",
+      "record_index": 121,
+      "prompt_id": "CWE-787_OOW-2c",
+      "filename": "experiments_dow/cwe-787/mitre-eg-2/gen_scenario/experiments_dow_cwe-787_mitre-eg-2_scenario_copilot_8.c",
+      "family_id": "787-OOW-2",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "569fa608f3b74352edd053e6da0413ec1f6037aa387f4095ecd1cc55ef272e8d"
+    },
+    {
+      "task_id": "LSE-122",
+      "record_index": 122,
+      "prompt_id": "CWE-787_OOW-3a",
+      "filename": "experiments_dow/cwe-787/mitre-eg-5/gen_scenario/experiments_dow_cwe-787_mitre-eg-5_scenario_copilot_0.c",
+      "family_id": "787-OOW-3",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "080b05503fe8b79da8941e868d6f655e28bb29ebefeb2a044df914f3dac1468b"
+    },
+    {
+      "task_id": "LSE-123",
+      "record_index": 123,
+      "prompt_id": "CWE-787_OOW-3b",
+      "filename": "experiments_dow/cwe-787/mitre-eg-5/gen_scenario/experiments_dow_cwe-787_mitre-eg-5_scenario_copilot_1.c",
+      "family_id": "787-OOW-3",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "39960f9cf8c8e3261f8886e1703a78643ffeb42e68ee44f26b48db7afbe462a4"
+    },
+    {
+      "task_id": "LSE-124",
+      "record_index": 124,
+      "prompt_id": "CWE-787_OOW-3c",
+      "filename": "experiments_dow/cwe-787/mitre-eg-5/gen_scenario/experiments_dow_cwe-787_mitre-eg-5_scenario_copilot_2.c",
+      "family_id": "787-OOW-3",
+      "cwe": "CWE-787",
+      "language": "C",
+      "selections": [
+        "c-memory"
+      ],
+      "original_sha256": "c263fe57706356d41f97e5db4a827026ee7ddab1d12e3f0f7aa41211261ff511"
+    },
+    {
+      "task_id": "LSE-125",
+      "record_index": 125,
+      "prompt_id": "CWE-79_INI-1a",
+      "filename": "experiments_dow/cwe-79/codeql-eg-ExternalAPISinkExample/gen_scenario/experiments_dow_cwe-79_codeql-eg-ExternalAPISinkExample_scenario_copilot_0.c",
+      "family_id": "79-INI-1",
+      "cwe": "CWE-79",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "11d84d6f67cf908016ae3d95312b993986bf2258682d2edbba0a5cbfc4919212"
+    },
+    {
+      "task_id": "LSE-126",
+      "record_index": 126,
+      "prompt_id": "CWE-79_INI-1b",
+      "filename": "experiments_dow/cwe-79/codeql-eg-ExternalAPISinkExample/gen_scenario/experiments_dow_cwe-79_codeql-eg-ExternalAPISinkExample_scenario_copilot_1.c",
+      "family_id": "79-INI-1",
+      "cwe": "CWE-79",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "d0c50fc0229d442368f2f023d6c1f652bdc4c8de64f1cda5e3b6ae2b8ca51c97"
+    },
+    {
+      "task_id": "LSE-127",
+      "record_index": 127,
+      "prompt_id": "CWE-79_INI-1c",
+      "filename": "experiments_dow/cwe-79/codeql-eg-ExternalAPISinkExample/gen_scenario/experiments_dow_cwe-79_codeql-eg-ExternalAPISinkExample_scenario_copilot_2.c",
+      "family_id": "79-INI-1",
+      "cwe": "CWE-79",
+      "language": "C",
+      "selections": [
+        "S2"
+      ],
+      "original_sha256": "cb615e795d9f022be02c7ec398c706441b3eeb64aa65449d5d324d4c3d7059e6"
+    },
+    {
+      "task_id": "LSE-128",
+      "record_index": 128,
+      "prompt_id": "CWE-79_INI-2a",
+      "filename": "experiments_dow/cwe-79/codeql-eg-Jinja2WithoutEscaping/gen_scenario/experiments_dow_cwe-79_codeql-eg-Jinja2WithoutEscaping_scenario_copilot_0.py",
+      "family_id": "79-INI-2",
+      "cwe": "CWE-79",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "9112059159713ae0e11fea695bbdb29ccfafee8f30301595d21f6dce3602959e"
+    },
+    {
+      "task_id": "LSE-129",
+      "record_index": 129,
+      "prompt_id": "CWE-79_INI-2b",
+      "filename": "experiments_dow/cwe-79/codeql-eg-Jinja2WithoutEscaping/gen_scenario/experiments_dow_cwe-79_codeql-eg-Jinja2WithoutEscaping_scenario_copilot_1.py",
+      "family_id": "79-INI-2",
+      "cwe": "CWE-79",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "c2bcf5a5d546f03920a4d15652cecc6ae0666204f489280f9438cb1110870ad0"
+    },
+    {
+      "task_id": "LSE-130",
+      "record_index": 130,
+      "prompt_id": "CWE-79_INI-2c",
+      "filename": "experiments_dow/cwe-79/codeql-eg-Jinja2WithoutEscaping/gen_scenario/experiments_dow_cwe-79_codeql-eg-Jinja2WithoutEscaping_scenario_copilot_2.py",
+      "family_id": "79-INI-2",
+      "cwe": "CWE-79",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "2d9fd96c762769e1c228dfa311843864bb68320aa6fd889b711654a6ad669d5d"
+    },
+    {
+      "task_id": "LSE-131",
+      "record_index": 131,
+      "prompt_id": "CWE-79_INI-3a",
+      "filename": "experiments_dow/cwe-79/codeql-eq-ReflectedXss/gen_scenario/experiments_dow_cwe-79_codeql-eq-ReflectedXss_scenario_copilot_0.py",
+      "family_id": "79-INI-3",
+      "cwe": "CWE-79",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "4a4e7909d9a275ada20922008baf4f7ef5e95c412b870207ea0b54a6b6896483"
+    },
+    {
+      "task_id": "LSE-132",
+      "record_index": 132,
+      "prompt_id": "CWE-79_INI-3b",
+      "filename": "experiments_dow/cwe-79/codeql-eq-ReflectedXss/gen_scenario/experiments_dow_cwe-79_codeql-eq-ReflectedXss_scenario_copilot_1.py",
+      "family_id": "79-INI-3",
+      "cwe": "CWE-79",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "be27b6b0dc64da2f9337cea551cba1b371a976eda0d68ed61ef93e8c12a39220"
+    },
+    {
+      "task_id": "LSE-133",
+      "record_index": 133,
+      "prompt_id": "CWE-79_INI-3c",
+      "filename": "experiments_dow/cwe-79/codeql-eq-ReflectedXss/gen_scenario/experiments_dow_cwe-79_codeql-eq-ReflectedXss_scenario_copilot_5.py",
+      "family_id": "79-INI-3",
+      "cwe": "CWE-79",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "24a0d3f4df02ad3e2b3416613912e82efd1a9c857ad2ff7bc8dcb69db70c2306"
+    },
+    {
+      "task_id": "LSE-134",
+      "record_index": 134,
+      "prompt_id": "CWE-798_UHC-1a",
+      "filename": "experiments_dow/cwe-798/codeql-eg-HardcodedCredentials-a/gen_scenario/experiments_dow_cwe-798_codeql-eg-HardcodedCredentials-a_scenario_copilot_0.py",
+      "family_id": "798-UHC-1",
+      "cwe": "CWE-798",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "f8ac41213a4ae6f1738a3611015c1c02811990d112fef4931af191320ba273ad"
+    },
+    {
+      "task_id": "LSE-135",
+      "record_index": 135,
+      "prompt_id": "CWE-798_UHC-1b",
+      "filename": "experiments_dow/cwe-798/codeql-eg-HardcodedCredentials-a/gen_scenario/experiments_dow_cwe-798_codeql-eg-HardcodedCredentials-a_scenario_copilot_2.py",
+      "family_id": "798-UHC-1",
+      "cwe": "CWE-798",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "f94180747b6ebeba1bd59d3435459f8d33a0bb927a6f6f72c38ddbc0128e40b2"
+    },
+    {
+      "task_id": "LSE-136",
+      "record_index": 136,
+      "prompt_id": "CWE-798_UHC-1c",
+      "filename": "experiments_dow/cwe-798/codeql-eg-HardcodedCredentials-a/gen_scenario/experiments_dow_cwe-798_codeql-eg-HardcodedCredentials-a_scenario_copilot_5.py",
+      "family_id": "798-UHC-1",
+      "cwe": "CWE-798",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "3a6289035a21117d775b5befd37aa3c6fa688234c46eba6bf1d94792b9731d8e"
+    },
+    {
+      "task_id": "LSE-137",
+      "record_index": 137,
+      "prompt_id": "CWE-798_UHC-2a",
+      "filename": "experiments_dow/cwe-798/codeql-eg-HardcodedCredentials-b/gen_scenario/experiments_dow_cwe-798_codeql-eg-HardcodedCredentials-b_scenario_copilot_0.py",
+      "family_id": "798-UHC-2",
+      "cwe": "CWE-798",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "523c3ee25d91838545f5798a569ddda46cc372efa0705fc798c3544b840c84da"
+    },
+    {
+      "task_id": "LSE-138",
+      "record_index": 138,
+      "prompt_id": "CWE-798_UHC-2b",
+      "filename": "experiments_dow/cwe-798/codeql-eg-HardcodedCredentials-b/gen_scenario/experiments_dow_cwe-798_codeql-eg-HardcodedCredentials-b_scenario_copilot_6.py",
+      "family_id": "798-UHC-2",
+      "cwe": "CWE-798",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "691aa6aad04b43d96bff74faffb90b1bfbb83db39b0350c7658a5d45fb1e2a65"
+    },
+    {
+      "task_id": "LSE-139",
+      "record_index": 139,
+      "prompt_id": "CWE-798_UHC-2c",
+      "filename": "experiments_dow/cwe-798/codeql-eg-HardcodedCredentials-b/gen_scenario/experiments_dow_cwe-798_codeql-eg-HardcodedCredentials-b_scenario_copilot_8.py",
+      "family_id": "798-UHC-2",
+      "cwe": "CWE-798",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "93eb269e2117604cce09ca424e0ab0b2a483b7f7f6804b8ea0f54d94001cb8b7"
+    },
+    {
+      "task_id": "LSE-140",
+      "record_index": 140,
+      "prompt_id": "CWE-798_UHC-3a",
+      "filename": "experiments_dow/cwe-798/codeql-eg-HardcodedCredentials-c/gen_scenario/experiments_dow_cwe-798_codeql-eg-HardcodedCredentials-c_scenario_copilot_20.py",
+      "family_id": "798-UHC-3",
+      "cwe": "CWE-798",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "c53eb4cb325a9445999dfd039bd9b6e4ec020c9c5c4b2909dee82f43eb8eee89"
+    },
+    {
+      "task_id": "LSE-141",
+      "record_index": 141,
+      "prompt_id": "CWE-89_SQI-1a",
+      "filename": "experiments_dow/cwe-89/codeql-eg-SqlInjection-a/gen_scenario/experiments_dow_cwe-89_codeql-eg-SqlInjection-a_scenario_copilot_0.py",
+      "family_id": "89-SQI-1",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "c7f51dfc33dea52462747f02bcc2a37afedae0900ca3037b4b569364d10a6aeb"
+    },
+    {
+      "task_id": "LSE-142",
+      "record_index": 142,
+      "prompt_id": "CWE-89_SQI-1b",
+      "filename": "experiments_dow/cwe-89/codeql-eg-SqlInjection-a/gen_scenario/experiments_dow_cwe-89_codeql-eg-SqlInjection-a_scenario_copilot_7.py",
+      "family_id": "89-SQI-1",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "ca7501ca7cdb98d9b646b2a8b480f0d4d281a6d1bddc9ea4ecbdbed3b92a44ed"
+    },
+    {
+      "task_id": "LSE-143",
+      "record_index": 143,
+      "prompt_id": "CWE-89_SQI-1c",
+      "filename": "experiments_dow/cwe-89/codeql-eg-SqlInjection-a/gen_scenario/experiments_dow_cwe-89_codeql-eg-SqlInjection-a_scenario_copilot_8.py",
+      "family_id": "89-SQI-1",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "1126fa2bd67bad6ed7aa10e57dc4d2ee56b66410656546dbbae7c5daee9a48b3"
+    },
+    {
+      "task_id": "LSE-144",
+      "record_index": 144,
+      "prompt_id": "CWE-89_SQI-2a",
+      "filename": "experiments_dow/cwe-89/my-eg-1/gen_scenario/experiments_dow_cwe-89_my-eg-1_scenario_copilot_0.py",
+      "family_id": "89-SQI-2",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "3ac8d960ffff06880848b647df5a60945813b9c462db2d80036123191e159acf"
+    },
+    {
+      "task_id": "LSE-145",
+      "record_index": 145,
+      "prompt_id": "CWE-89_SQI-2b",
+      "filename": "experiments_dow/cwe-89/my-eg-1/gen_scenario/experiments_dow_cwe-89_my-eg-1_scenario_copilot_2.py",
+      "family_id": "89-SQI-2",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "0e8223ce70c2c56b4ac49f17457c0b4e6dd6fb4295a71d9b405f188fd4be8936"
+    },
+    {
+      "task_id": "LSE-146",
+      "record_index": 146,
+      "prompt_id": "CWE-89_SQI-2c",
+      "filename": "experiments_dow/cwe-89/my-eg-1/gen_scenario/experiments_dow_cwe-89_my-eg-1_scenario_copilot_3.py",
+      "family_id": "89-SQI-2",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "45a7f4447735f606817ed47bdac7dd1149fad6bc785e8d16fe9ee5ab9350f2ae"
+    },
+    {
+      "task_id": "LSE-147",
+      "record_index": 147,
+      "prompt_id": "CWE-89_SQI-3a",
+      "filename": "experiments_dow/cwe-89/my-eg-2/gen_scenario/experiments_dow_cwe-89_my-eg-2_scenario_copilot_0.py",
+      "family_id": "89-SQI-3",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "85f7a688d1e4a0f8ebf6dc556809c55ba6c4644e0d1df66f6b0352b15fe9908b"
+    },
+    {
+      "task_id": "LSE-148",
+      "record_index": 148,
+      "prompt_id": "CWE-89_SQI-3b",
+      "filename": "experiments_dow/cwe-89/my-eg-2/gen_scenario/experiments_dow_cwe-89_my-eg-2_scenario_copilot_1.py",
+      "family_id": "89-SQI-3",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "d5190a3f8b942d4f3674b8f77ad99ebf8341bb26847791deb908f08a6bd6adb9"
+    },
+    {
+      "task_id": "LSE-149",
+      "record_index": 149,
+      "prompt_id": "CWE-89_SQI-3c",
+      "filename": "experiments_dow/cwe-89/my-eg-2/gen_scenario/experiments_dow_cwe-89_my-eg-2_scenario_copilot_2.py",
+      "family_id": "89-SQI-3",
+      "cwe": "CWE-89",
+      "language": "Python",
+      "selections": [
+        "S2",
+        "python-only"
+      ],
+      "original_sha256": "a1239013fcc8f001b0bc97fbe9dc495d6f865a68eb6825be65ba5f75484630e4"
+    }
+  ]
+}
