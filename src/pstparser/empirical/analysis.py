@@ -17,6 +17,8 @@ from typing import Any, Literal
 
 import numpy as np
 
+from pstparser.empirical.inference import midp_mcnemar, sign_flip_test
+
 Endpoint = Literal["functional", "security"]
 Outcome = Literal["pass", "fail", "V", "N", "I", "U", "missing"]
 
@@ -105,6 +107,11 @@ class PairedReport:
     conservative_ci: tuple[float, float] | None
     sensitivity: dict[str, float | None]
     warnings: tuple[str, ...]
+    midp_p: float | None = None
+    signflip_p: float | None = None
+    signflip_exact: bool | None = None
+    signflip_samples: int | None = None
+    signflip_unit: str | None = None
     ledger_conditions: tuple[str, ...] | None = None
     ignored_records: dict[str, int] | None = None
 
@@ -335,8 +342,13 @@ def analyze_paired(
     Primary analysis excludes a whole task if any planned arm/replicate is
     explicitly missing. U is zero for the primary security endpoint. Sensitivity
     includes U=1 and U bounds on complete tasks, missing bounds on all planned
-    tasks (holding U=0), and joint U/missing bounds. No p-value is emitted for
-    clustered or repeated-sample designs. Bootstrap preserves complete blocks.
+    tasks (holding U=0), and joint U/missing bounds. Bootstrap preserves
+    complete blocks.
+
+    Primary tests (paired-v2): with one greedy pair per independent task, the
+    mid-p McNemar test (``midp_p``; the exact test stays as a sensitivity
+    analysis); with families or replicates, the studentized sign-flip of whole
+    families, or of tasks without families (``signflip_*``), seeded by ``seed``.
     """
     if type(bootstrap_samples) is not int or bootstrap_samples < 2:
         raise ValueError("bootstrap_samples must be an integer >= 2")
@@ -444,8 +456,15 @@ def analyze_paired(
             conservative = (h_low - t_high, h_high - t_low)
     else:
         warnings.append("No complete tasks; primary estimate and inference are unavailable.")
+    midp = None
+    flip = None
+    if table is not None:
+        midp = midp_mcnemar(table["baseline_only"], table["treatment_only"])
     if clustered or len(design.replicate_ids) != 1:
         warnings.append("McNemar omitted: repeated observations or predeclared family clustering.")
+        units = {e.family_id if clustered else e.task_id for e in estimates}
+        if len(units) >= 2:
+            flip = sign_flip_test(estimates, by_family=clustered, seed=seed)
     return PairedReport(
         analysis_id=design.analysis_id,
         endpoint=design.endpoint,
@@ -469,6 +488,11 @@ def analyze_paired(
         conservative_ci=conservative,
         sensitivity=sensitivity,
         warnings=tuple(warnings),
+        midp_p=midp,
+        signflip_p=flip.p_value if flip is not None else None,
+        signflip_exact=flip.exact if flip is not None else None,
+        signflip_samples=flip.samples if flip is not None else None,
+        signflip_unit=None if flip is None else "family" if clustered else "task",
         ledger_conditions=tuple(ledger_conditions) if ledger_conditions is not None else None,
         ignored_records=(
             {name: ignored[name] for name in ledger_conditions if name not in design.conditions}

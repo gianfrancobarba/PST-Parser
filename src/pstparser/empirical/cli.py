@@ -1009,6 +1009,52 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     typer.echo(f"{len(records)} recorded completions; {directory}")
 
 
+@app.command()
+def power(
+    grid: Annotated[
+        Path, typer.Option(help="YAML or JSON grid: seed, paired and clustered cells.")
+    ],
+    out: Annotated[Path, typer.Option(help="New CSV file for the power table.")],
+) -> None:
+    """Exact mid-p power and MDE (paired cells); sign-flip power by simulation (clustered)."""
+    import csv
+
+    import yaml
+
+    from pstparser.empirical.power import COLUMNS, power_grid
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    ensure_stage_outputs(out.parent, "empirical-power", [out.name])
+    rows = power_grid(yaml.safe_load(grid.read_bytes().decode("utf-8")))
+    with out.open("x", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle, lineterminator="\n")
+        writer.writerow(COLUMNS)
+        for row in rows:
+            writer.writerow(
+                ""
+                if row.get(column) is None
+                else repr(row[column])
+                if isinstance(row[column], float)
+                else str(row[column])
+                for column in COLUMNS
+            )
+    write_manifest(
+        {
+            "stage": "empirical-power",
+            "grid_sha256": digest_file(grid),
+            "table_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(str(out))
+
+
 @app.command("pilot-report")
 def pilot_report_command(
     journal: Annotated[Path, typer.Argument(help="Directory of one generation journal.")],
@@ -1096,7 +1142,7 @@ def analyze(
     write_manifest(
         {
             "stage": "empirical-analysis",
-            "analysis_version": "paired-v1",
+            "analysis_version": "paired-v2",
             "design_sha256": digest_file(design),
             "outcomes_sha256": digest_file(outcomes),
             "report_sha256": digest_file(destination),
