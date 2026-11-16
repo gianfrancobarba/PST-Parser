@@ -559,6 +559,150 @@ def sample_families(
     typer.echo(f"{len(drawn)} prompts in {families} families in {out}")
 
 
+def _sample_ids(path: Path, selection: str | None) -> list[str]:
+    """Read the task identifiers of a frozen sample, or of one LLMSecEval selection."""
+    document = _read_document(path)
+    if "tasks" in document:
+        if selection is not None:
+            raise ValueError("--selection applies to an identifier map only")
+        return [row["task_id"] for row in document["tasks"]]
+    if "records" in document and selection is not None:
+        return [row["task_id"] for row in document["records"] if selection in row["selections"]]
+    raise ValueError(f"{path}: not a sample, or an identifier map without --selection")
+
+
+@app.command("propose-spans")
+def propose_spans(
+    sources: Path,
+    rule: Annotated[str, typer.Option(help="Named pre-annotation rule.")],
+    out: Annotated[Path, typer.Option(help="New annotation file; every row is a draft.")],
+    sample: Annotated[
+        Path | None, typer.Option(help="Draft only the tasks of this sample.")
+    ] = None,
+    selection: Annotated[str | None, typer.Option(help="Selection of an identifier map.")] = None,
+) -> None:
+    """Propose draft spans from fixed markers; a draft is never gold."""
+    from pstparser.empirical import annotations
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    by_id = {record.task_id: record for record in read_sources(sources)}
+    wanted = _sample_ids(sample, selection) if sample is not None else list(by_id)
+    absent = [task for task in wanted if task not in by_id]
+    if absent or not wanted:
+        raise ValueError(f"sample tasks without a source: {absent[:5]}")
+    rows = [annotations.propose(by_id[task], rule) for task in wanted]
+    # A proposal that the renderer would refuse is a defect of the rule: stop.
+    annotations.canonicalize(
+        [by_id[task] for task in wanted], rows, require_status="draft", sample_ids=wanted
+    )
+    ensure_stage_outputs(out.parent, "empirical-propose-spans", [out.name])
+    annotations.write_annotations(rows, out)
+    write_manifest(
+        {
+            "stage": "empirical-propose-spans",
+            "rule": rule,
+            "splitter": annotations.SPLITTER_VERSION,
+            "annotation_version": annotations.ANNOTATION_VERSION,
+            "status": "draft",
+            "rows": len(rows),
+            "sources_sha256": digest_file(sources),
+            "sample_sha256": digest_file(sample) if sample is not None else None,
+            "selection": selection,
+            "annotations_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(rows)} draft annotations in {out}")
+
+
+@app.command("gold-lint")
+def gold_lint(sources: Path, annotation_file: Path) -> None:
+    """List the blocking defects of an annotation file; fail if there is any."""
+    from pstparser.empirical import annotations
+    from pstparser.empirical.benchmarks import read_sources
+
+    by_id = {record.task_id: record for record in read_sources(sources)}
+    defects = 0
+    rows = annotations.load_annotations(annotation_file)
+    for row in rows:
+        source = by_id.get(row.task_id)
+        problems = ["no such source"] if source is None else annotations.lint(source, row)
+        for problem in problems:
+            defects += 1
+            typer.echo(f"{row.task_id}: {problem}")
+    states = sorted({row.status for row in rows})
+    typer.echo(f"{len(rows)} annotations, states {states}, {defects} defects")
+    if defects:
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def canonicalize(
+    sources: Path,
+    annotation_file: Path,
+    sample: Annotated[Path, typer.Option(help="Frozen sample the annotations must cover.")],
+    out: Annotated[Path, typer.Option(help="New canonical file, input of the render command.")],
+    selection: Annotated[str | None, typer.Option(help="Selection of an identifier map.")] = None,
+    require_status: Annotated[
+        str, typer.Option(help="State every annotation must be in.")
+    ] = "frozen",
+) -> None:
+    """Join annotations in the required state to their sources, for rendering."""
+    from pstparser.empirical import annotations
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    prompts = annotations.canonicalize(
+        read_sources(sources),
+        annotations.load_annotations(annotation_file),
+        require_status=require_status,
+        sample_ids=_sample_ids(sample, selection),
+    )
+    ensure_stage_outputs(out.parent, "empirical-canonicalize", [out.name])
+    _write_rows(
+        out,
+        [
+            {
+                "task_id": prompt.task_id,
+                "text": prompt.text,
+                "annotation_version": prompt.annotation_version,
+                "annotations": [
+                    {"path": s.path, "start": s.start, "end": s.end, "phrase": s.phrase}
+                    for s in prompt.annotations
+                ],
+            }
+            for prompt in prompts
+        ],
+    )
+    write_manifest(
+        {
+            "stage": "empirical-canonicalize",
+            "require_status": require_status,
+            "rows": len(prompts),
+            "sources_sha256": digest_file(sources),
+            "annotations_sha256": digest_file(annotation_file),
+            "sample_sha256": digest_file(sample),
+            "selection": selection,
+            "canonical_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(prompts)} canonical prompts in {out}")
+
+
 @app.command()
 def generate(variants: Path, configuration: Path, directory: Path) -> None:
     """Generate/resume only an explicitly configured, revision-pinned experiment."""
