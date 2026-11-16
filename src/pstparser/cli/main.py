@@ -301,6 +301,53 @@ def generate(
     console.print(table)
 
 
+@app.command("parse-prompts")
+def parse_prompts(
+    config: ConfigOption,
+    sources: Annotated[
+        Path,
+        typer.Option(
+            "--sources",
+            help="JSONL of benchmark prompts (task_id, text; reviewed spans optional).",
+            exists=True,
+            dir_okay=False,
+        ),
+    ],
+    run_dir: Annotated[Path, typer.Option("--run-dir", help="New directory for the predictions.")],
+    set_: SetOption = None,
+    adapter: Annotated[
+        Path | None,
+        typer.Option("--adapter", "-a", help="Directory holding the trained adapter."),
+    ] = None,
+) -> None:
+    """Run the parser on benchmark prompts; score and align read the predictions unchanged."""
+    experiment = _load(config, set_)
+
+    from pstparser.inference.parse_prompts import parse_prompts as run
+    from pstparser.models import BackendError
+
+    try:
+        outcome = run(experiment, sources, run_dir, adapter)
+    except BackendError as exc:
+        error_console.print(f"[bold red]Backend error:[/] {exc}")
+        raise typer.Exit(code=1) from exc
+    except FileExistsError as exc:
+        error_console.print(f"[bold red]Output already exists:[/] {exc}")
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        error_console.print(f"[bold red]Invalid input:[/] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    table = Table(title="Parsing complete", show_header=False, box=None)
+    table.add_column(style="cyan")
+    table.add_column()
+    table.add_row("predictions", str(outcome.records))
+    table.add_row("predictions file", str(outcome.predictions_path))
+    table.add_row("index map", str(outcome.id_map_path))
+    table.add_row("manifest", str(outcome.manifest_path))
+    console.print(table)
+
+
 @app.command("score")
 def score(
     config: ConfigOption,

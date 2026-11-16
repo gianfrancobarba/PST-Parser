@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -61,8 +62,31 @@ def render(
     envelope: Annotated[
         bool, typer.Option(help="Also write E (envelope-json-v1) after T and H-gold.")
     ] = False,
+    condition: Annotated[
+        str, typer.Option(help="Label of the hierarchical variant: H-gold, or H-auto.")
+    ] = "H-gold",
+    traditional: Annotated[
+        bool, typer.Option(help="Write T before the hierarchical variant.")
+    ] = True,
+    tasks: Annotated[
+        Path | None,
+        typer.Option(help="S_parse document: render only its tasks, verified by hash."),
+    ] = None,
 ) -> None:
-    """Render reviewed canonical JSONL annotations into T/H-gold (and E) JSONL."""
+    """Render reviewed canonical JSONL annotations into T/H-gold (and E) JSONL.
+
+    With ``--condition H-auto`` the hierarchical variant of parsed spans is
+    labelled H-auto (M19); ``--no-traditional`` leaves T out, so that it can be
+    joined with the gold rendering of the same tasks; ``--tasks`` keeps only
+    the tasks of an S_parse document.
+    """
+    if condition not in {"H-gold", "H-auto"}:
+        raise ValueError("condition must be H-gold or H-auto")
+    selected: set[str] | None = None
+    if tasks is not None:
+        from pstparser.empirical.auto import load_s_parse
+
+        selected = set(load_s_parse(_read_document(tasks)))
     variants: list[dict[str, Any]] = []
     seen: set[str] = set()
     for row in _rows(source):
@@ -75,9 +99,20 @@ def render(
         if canonical.task_id in seen:
             raise ValueError("duplicate canonical task")
         seen.add(canonical.task_id)
-        variants.extend(v.as_dict() for v in render_prompt_variants(canonical))
+        if selected is not None and canonical.task_id not in selected:
+            continue
+        plain, hierarchical = render_prompt_variants(canonical)
+        if condition == "H-auto":
+            from pstparser.empirical.auto import as_hauto
+
+            hierarchical = as_hauto(hierarchical)
+        if traditional:
+            variants.append(plain.as_dict())
+        variants.append(hierarchical.as_dict())
         if envelope:
             variants.append(render_envelope_variant(canonical).as_dict())
+    if selected is not None and not selected <= seen:
+        raise ValueError("the S_parse document lists tasks absent from the source")
     if not variants:
         raise ValueError("empty corpus")
     _write_rows(destination, variants)
@@ -1849,3 +1884,155 @@ def thesis_tables(
     for kind, reason in outputs.skipped.items():
         typer.echo(f"skipped {kind}: {reason}", err=True)
     typer.echo(f"{len(written)} files in {out}")
+
+
+@app.command("auto-annotate")
+def auto_annotate_command(
+    predictions: Annotated[Path, typer.Argument(help="predictions.jsonl of parse-prompts.")],
+    id_map: Annotated[Path, typer.Argument(help="id-map.json of the same parse-prompts run.")],
+    sources: Annotated[Path, typer.Argument(help="Source prompts (task_id, text) JSONL.")],
+    policy: Annotated[str, typer.Option(help="auto-strict-v1 (primary) or auto-attach-v1.")],
+    out: Annotated[Path, typer.Option(help="New H-auto canonical JSONL.")],
+    failures: Annotated[Path, typer.Option(help="New JSONL of the parser failures.")],
+    s_parse: Annotated[Path, typer.Option(help="New S_parse document (s-parse-v1).")],
+) -> None:
+    """Convert parser predictions into H-auto spans; write S_parse before any generation.
+
+    The conversion reads the source text and the raw prediction only, never the
+    gold target stored beside the prediction.
+    """
+    from pstparser.empirical.auto import auto_annotate
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    directory = out.parent
+    if failures.parent != directory or s_parse.parent != directory:
+        raise ValueError("the three outputs belong in one directory")
+    ensure_stage_outputs(
+        directory, "empirical-auto-annotate", [out.name, failures.name, s_parse.name]
+    )
+    conversion = auto_annotate(
+        _json_lines(predictions),
+        _read_document(id_map),
+        _rows(sources),
+        policy=policy,
+        inputs={
+            "predictions_sha256": digest_file(predictions),
+            "id_map_sha256": digest_file(id_map),
+            "sources_sha256": digest_file(sources),
+        },
+    )
+    _write_rows(
+        out,
+        [
+            {
+                "task_id": prompt.task_id,
+                "text": prompt.text,
+                "annotation_version": prompt.annotation_version,
+                "annotations": [asdict(span) for span in prompt.annotations],
+            }
+            for prompt in conversion.canonical
+        ],
+    )
+    _write_rows(failures, list(conversion.failures))
+    _write_document(s_parse, conversion.s_parse)
+    write_manifest(
+        {
+            "stage": "empirical-auto-annotate",
+            "policy": policy,
+            **conversion.s_parse["inputs"],
+            "canonical_sha256": digest_file(out),
+            "failures_sha256": digest_file(failures),
+            "s_parse_sha256": digest_file(s_parse),
+            "s_parse_tasks_sha256": conversion.s_parse["tasks_sha256"],
+            "source": source_snapshot(),
+        },
+        directory,
+    )
+    document = conversion.s_parse
+    typer.echo(
+        f"{document['converted']}/{document['n']} converted; "
+        f"failure rate {document['failure_rate']:.4f}; S_parse {document['tasks_sha256']}"
+    )
+
+
+@app.command("hauto-ledgers")
+def hauto_ledgers_command(
+    outcomes: Annotated[Path, typer.Argument(help="Outcome ledger with T and H-auto rows.")],
+    s_parse: Annotated[Path, typer.Option(help="S_parse document of the strict conversion.")],
+    failures: Annotated[Path, typer.Option(help="Parser failures of the same conversion.")],
+    directory: Annotated[Path, typer.Option(help="New directory for the two ledgers.")],
+) -> None:
+    """Write the ledgers of the two H3 estimates: on S_parse, and end-to-end."""
+    from pstparser.empirical.analysis import write_outcomes
+    from pstparser.empirical.auto import hauto_ledgers, load_s_parse
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    names = ["outcomes-s-parse.jsonl", "outcomes-end-to-end.jsonl"]
+    ensure_stage_outputs(directory, "empirical-hauto-ledgers", names)
+    primary, end_to_end = hauto_ledgers(
+        read_outcomes(outcomes), load_s_parse(_read_document(s_parse)), _json_lines(failures)
+    )
+    write_outcomes(primary, directory / names[0])
+    write_outcomes(end_to_end, directory / names[1])
+    write_manifest(
+        {
+            "stage": "empirical-hauto-ledgers",
+            "outcomes_sha256": digest_file(outcomes),
+            "s_parse_sha256": digest_file(s_parse),
+            "failures_sha256": digest_file(failures),
+            "s_parse_ledger_sha256": digest_file(directory / names[0]),
+            "end_to_end_ledger_sha256": digest_file(directory / names[1]),
+            "source": source_snapshot(),
+        },
+        directory,
+    )
+    typer.echo(f"{len(primary)} and {len(end_to_end)} records in {directory}")
+
+
+@app.command("parser-gate")
+def parser_gate_command(
+    s_parse: Annotated[Path, typer.Argument(help="S_parse of auto-strict-v1 on S_gold.")],
+    score: Annotated[Path, typer.Argument(help="score results.json of the same predictions.")],
+    thresholds: Annotated[
+        Path, typer.Option(help="Frozen thresholds: max_strict_failure, min_macro_f1.")
+    ],
+    out: Annotated[Path, typer.Option(help="New gate report.")],
+) -> None:
+    """Decide the parser gate (00 T-7) before any H-auto generation."""
+    from pstparser.empirical.auto import parser_gate
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    ensure_stage_outputs(out.parent, "empirical-parser-gate", [out.name])
+    report = parser_gate(_read_document(s_parse), _read_document(score), _read_document(thresholds))
+    report["inputs"] = {
+        "s_parse_sha256": digest_file(s_parse),
+        "score_sha256": digest_file(score),
+        "thresholds_sha256": digest_file(thresholds),
+    }
+    _write_document(out, report)
+    write_manifest(
+        {
+            "stage": "empirical-parser-gate",
+            **report["inputs"],
+            "gate_sha256": digest_file(out),
+            "status": report["status"],
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"parser gate: {report['status']}; H3 {report['h3']}")
