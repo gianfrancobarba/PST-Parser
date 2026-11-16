@@ -1087,3 +1087,157 @@ def check(
     if not calibrated:
         raise ValueError("oracle calibration failed; no candidate outcomes produced")
     typer.echo(str(directory / "outcomes.jsonl"))
+
+
+@app.command("calibrate-security")
+def calibrate_security(
+    codeql: Annotated[Path, typer.Option(help="Frozen settings of the analyser.")],
+    bundle_dir: Annotated[Path, typer.Option(help="Local copy of the unpacked bundle.")],
+    cards: Annotated[Path, typer.Option(help="Scenario cards, with the controls next to them.")],
+    directory: Annotated[Path, typer.Option(help="New directory for analyses and report.")],
+    bundle_archive: Annotated[
+        Path | None, typer.Option(help="Bundle archive, to check its hash.")
+    ] = None,
+    secure_samples: Annotated[
+        Path | None, typer.Option(help="Secure code samples folder of the pinned dataset.")
+    ] = None,
+    workers: Annotated[int, typer.Option(help="Programs analysed at the same time.")] = 1,
+) -> None:
+    """Analyse the controls of every family with the exact settings of the collection.
+
+    Writes ``calibration.json`` with what each control received and the state
+    observed for each family, next to the state the cards declare.
+    """
+    from pstparser.empirical import codeql as oracle
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    config = oracle.read_config(codeql, bundle_dir, bundle_archive)
+    scenario_cards = oracle.read_cards(cards)
+    controls = oracle.read_controls(cards, secure_samples)
+    ensure_stage_outputs(directory, "empirical-calibrate-security", ["calibration.json"])
+    version = oracle.codeql_version(config)
+    report = oracle.calibrate(config, scenario_cards, controls, directory, workers=workers)
+    _write_document(directory / "calibration.json", report)
+    write_manifest(
+        {
+            "stage": "empirical-calibrate-security",
+            "codeql": config.as_dict(),
+            "codeql_version": version,
+            "bundle_archive_verified": bundle_archive is not None,
+            "secure_samples_included": secure_samples is not None,
+            "controls": len(controls),
+            "totals": report["totals"],
+            "mismatches": report["mismatches"],
+            "configuration_sha256": digest_file(codeql),
+            "cards_sha256": digest_file(cards),
+            "calibration_sha256": digest_file(directory / "calibration.json"),
+            "source": source_snapshot(),
+        },
+        directory,
+    )
+    detected, vulnerable = report["totals"]["vulnerable_detected_by_target_rules"]
+    typer.echo(
+        f"{len(controls)} controls; target queries report {detected} of {vulnerable} "
+        f"vulnerable controls; {directory / 'calibration.json'}"
+    )
+    if report["mismatches"]:
+        typer.echo(f"families whose observed state differs: {', '.join(report['mismatches'])}")
+        raise typer.Exit(1)
+
+
+@app.command("check-security")
+def check_security(
+    generations: Path,
+    codeql: Annotated[Path, typer.Option(help="Frozen settings of the analyser.")],
+    bundle_dir: Annotated[Path, typer.Option(help="Local copy of the unpacked bundle.")],
+    cards: Annotated[Path, typer.Option(help="Scenario cards.")],
+    id_map: Annotated[Path, typer.Option(help="Identifier map giving the family of each task.")],
+    measure: Annotated[str, typer.Option(help="general or targeted.")],
+    directory: Annotated[Path, typer.Option(help="New directory for the outcomes.")],
+    programs: Annotated[
+        Path, typer.Option(help="Folder of the per-program analyses, shared by the measures.")
+    ],
+    analysis_id: Annotated[str, typer.Option(help="Identifier written in every outcome.")],
+    order_seed: Annotated[int, typer.Option(help="Seed of the order of the analyses.")],
+    sensitivity: Annotated[
+        bool,
+        typer.Option(help="Targeted measure: add the families with documented false positives."),
+    ] = False,
+    workers: Annotated[int, typer.Option(help="Programs analysed at the same time.")] = 1,
+) -> None:
+    """Judge LLMSecEval generations with CodeQL, one database per program.
+
+    The general measure counts any alert of the default suite; the targeted
+    one counts the queries of the weakness of the scenario, on the calibrated
+    families only. Each measure gets its own outcomes and analysis identifier.
+    """
+    from pstparser.empirical import codeql as oracle
+    from pstparser.empirical.analysis import write_outcomes
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    if measure not in oracle.MEASURES:
+        raise ValueError(f"measure must be one of {', '.join(oracle.MEASURES)}")
+    if sensitivity and measure != "targeted":
+        raise ValueError("--sensitivity applies to the targeted measure only")
+    config = oracle.read_config(codeql, bundle_dir)
+    scenario_cards = oracle.read_cards(cards)
+    families = {row["task_id"]: row["family_id"] for row in _read_document(id_map)["records"]}
+    rows = _json_lines(generations)
+    unknown = sorted({row["task_id"] for row in rows} - set(families))
+    if unknown or not rows:
+        raise ValueError(f"generations for tasks outside the identifier map: {unknown[:5]}")
+    _require_complete(rows)
+    without_card = sorted({families[row["task_id"]] for row in rows} - set(scenario_cards))
+    if without_card:
+        raise ValueError(f"families without a scenario card: {without_card[:5]}")
+    ensure_stage_outputs(directory, "empirical-check-security", ["outcomes.jsonl", "details.jsonl"])
+    version = oracle.codeql_version(config)
+    states = (oracle.CALIBRATED, oracle.CALIBRATED_FP) if sensitivity else (oracle.CALIBRATED,)
+    result = oracle.evaluate_generations(
+        config,
+        scenario_cards,
+        rows,
+        families,
+        directory,
+        measure=measure,  # type: ignore[arg-type]
+        analysis_id=analysis_id,
+        order_seed=order_seed,
+        workers=workers,
+        programs=programs,
+        states=states,
+    )
+    write_outcomes(result["outcomes"], directory / "outcomes.jsonl")
+    _write_rows(directory / "details.jsonl", result["details"])
+    write_manifest(
+        {
+            "stage": "empirical-check-security",
+            "analysis_id": analysis_id,
+            "codeql": config.as_dict(),
+            "codeql_version": version,
+            "family_states": list(states) if measure == "targeted" else None,
+            **result["summary"],
+            "generations_sha256": digest_file(generations),
+            "configuration_sha256": digest_file(codeql),
+            "cards_sha256": digest_file(cards),
+            "id_map_sha256": digest_file(id_map),
+            "outcomes_sha256": digest_file(directory / "outcomes.jsonl"),
+            "details_sha256": digest_file(directory / "details.jsonl"),
+            "source": source_snapshot(),
+        },
+        directory,
+    )
+    summary = result["summary"]
+    typer.echo(
+        f"{summary['generations']} generations, {summary['analysed']} analysed, "
+        f"states {summary['states']}; {directory / 'outcomes.jsonl'}"
+    )

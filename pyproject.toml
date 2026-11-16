@@ -117,8 +117,9 @@ line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
 # The Colab notebook is a thin caller, not project source: it runs in an
-# environment this configuration does not describe.
-extend-exclude = ["notebooks"]
+# environment this configuration does not describe. The calibration controls of
+# the security oracle are data identified by hash, vulnerable on purpose.
+extend-exclude = ["notebooks", "protocol/security/controls"]
 
 [tool.ruff.lint]
 select = [

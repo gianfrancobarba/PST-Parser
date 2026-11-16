@@ -1,0 +1,331 @@
+# Scenario cards of the security oracle: target queries, calibration state and
+# controls of every family. States are checked by the calibration command.
+version: scenario-cards-v1
+query_map: qmap-v1
+dataset_revision: 39e97f046dbb2c4c604d31b86f2a4d3d27827388
+families:
+  - family_id: 20-IIV-1
+    cwe: CWE-20
+    target_rules: [py/incomplete-hostname-regexp]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__20-IIV-1__regex.py", sha256: 140ca744d5f412206231fedc9c307151a9e2e3c6a7062f4b7f9a1ed2e461f302}
+      safe:
+        - {path: "controls/S2__20-IIV-1__regex.py", sha256: d1de0cd0cec61476a3082c5943b237e2cde7e107979cea6b77c757e894035a57}
+    secure_samples:
+      - {path: "cwe-20/CWE-20_IIV-1a.py", sha256: 75ee1cdd2fd3c5fa67f92420f4d549b7ae6d93c6887cb7205b21a8628799ce49}
+      - {path: "cwe-20/CWE-20_IIV-1b.py", sha256: 7d3fe6a66dc471dff97bcebb67f8b35285c098beb78e22dfe364a383fd1d0bc5}
+      - {path: "cwe-20/CWE-20_IIV-1c.py", sha256: 76672f065321b07f8c4fd28fbf0d2da717219ffdbf71e1b6afc353bec024e3fc}
+  - family_id: 20-IIV-2
+    cwe: CWE-20
+    target_rules: [py/incomplete-url-substring-sanitization]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__20-IIV-2__substring.py", sha256: d32bdc9c881255a102e0ad3959e2cef74ff9f59ce6bcbe2d87702a8d0026c57c}
+      safe:
+        - {path: "controls/S2__20-IIV-2__netloc.py", sha256: 1d886991cf2b4fea86f6b9bf197fd41f03329c3579c9e441405ebf875ba6f646}
+    secure_samples:
+      - {path: "cwe-20/CWE-20_IIV-2a.py", sha256: f5e41307d4f99bf919d440f27d47e2d4e9151fa4c682d611435ca4fba69e127d}
+      - {path: "cwe-20/CWE-20_IIV-2b.py", sha256: b962131db4d50a1f9c79babbd6e669ea67b8bd65e7b49a7b37176009f1d9c933}
+      - {path: "cwe-20/CWE-20_IIV-2c.py", sha256: 417f3a3ef3540bb06e5736b75e044fd4b89245be577288bf10efe33e6f3939f8}
+  - family_id: 22-ILP-1
+    cwe: CWE-22
+    target_rules: [py/path-injection]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__22-ILP-1__argv.py", sha256: bbd9d64c6fffdfc4789826f10ef7e45270c3f2c71e718bf7a9715bc98f5c1b24}
+        - {path: "controls/V__22-ILP-1__web.py", sha256: 6a56763cfe2fe032c12884e7f46a0c594d785420ac67dcd23d27e41a6e4a7590}
+      safe:
+        - {path: "controls/S2__22-ILP-1__argv.py", sha256: ceecb8991a48e39d5afab6d206fa879114c16296d3d5030f525f089fda7dc9f6}
+    secure_samples:
+      - {path: "cwe-22/CWE-22_ILP-1a.py", sha256: 1c17e819d8ae7921860b73d6e1053247748674712a505b25480fa7b979d15f38}
+      - {path: "cwe-22/CWE-22_ILP-1b.py", sha256: 16873f488b7eb62866f6aa9707eea29aec9bc64f93ffa3816359a29ca029ce0a}
+      - {path: "cwe-22/CWE-22_ILP-1c.py", sha256: b60ab4543f90a5250bda6fb3efd0354e8bfb8f6c6bae1473bb048d65d344de8c}
+  - family_id: 22-ILP-2
+    cwe: CWE-22
+    target_rules: [py/path-injection]
+    state: calibrated-with-false-positives
+    controls:
+      vulnerable:
+        - {path: "controls/V__22-ILP-2__web.py", sha256: 1de3397fce6ceba096afe79fa6938a10c5382faa1dfabd8babe1e0f41fe45173}
+      safe:
+        - {path: "controls/S2__22-ILP-2__senddir.py", sha256: d6cdb3981bd46a6075720703c9898e68180889141e231639f85059631cbd992d}
+    secure_samples:
+      - {path: "cwe-22/CWE-22_ILP-2a.py", sha256: f501aa4e281d4bdb8ed405b7705facaa89e29c93709f9d50a63aae274013313a}
+      - {path: "cwe-22/CWE-22_ILP-2b.py", sha256: 1b6781bbd57ccdd05100e62556dec005e68bbdf3b33aef1d845acbd4288ed602}
+      - {path: "cwe-22/CWE-22_ILP-2c.py", sha256: 4763acf4257a5b7871679160d770bcee30427fb05d7d91192a8b19580105309c}
+  - family_id: 22-ILP-3
+    cwe: CWE-22
+    target_rules: [py/tarslip, py/tarslip-extended]
+    state: excluded
+    controls:
+      vulnerable:
+        - {path: "controls/V__22-ILP-3__tar.py", sha256: 5522e97b324a0d8e4ee1ef02998a5d48c35ac73ca26c667b1808ef83c8969f2b}
+      safe:
+        - {path: "controls/S2__22-ILP-3__filter.py", sha256: 2b9273c06b6b8ad21e2273d33603aff9073e1af7dff700d02a6b47cc6a8c9c12}
+    secure_samples:
+      - {path: "cwe-22/CWE-22_ILP-3a.py", sha256: da971df4faa3af5129aa84e0455959c9f06853b741f2ccc5f7525299c3733cc4}
+      - {path: "cwe-22/CWE-22_ILP-3b.py", sha256: 379feb708d83039593bd6288e2cd64dbf08a24fea6a96a9904184765cdc8beb3}
+      - {path: "cwe-22/CWE-22_ILP-3c.py", sha256: d3059207e7d01ca4e96e077a7e81ab1e3baa1308a34ca256ce032cccbfd05eb9}
+  - family_id: 78-INS-1
+    cwe: CWE-78
+    target_rules: [py/command-line-injection, py/shell-command-constructed-from-input]
+    state: calibrated-with-false-positives
+    controls:
+      vulnerable:
+        - {path: "controls/V__78-INS-1__argv.py", sha256: 6ffe92519839c6cdbde63f0e307ed131dad2dadcef3e623c2f77ec81fded6de5}
+      safe:
+        - {path: "controls/S2__78-INS-1__list.py", sha256: e09bfbe88472d2ac0518d467d4b6b7349518dc757647e3405d32fedbdc19ff0d}
+    secure_samples:
+      - {path: "cwe-78/CWE-78_INS-1a.py", sha256: fe28dc338b476733b49ab9689056658cfe5bfc84dc2bcfe9e284ae3cf263bde3}
+      - {path: "cwe-78/CWE-78_INS-1b.py", sha256: 72c699e8e30e36fae26ddcc9d717fd9fceb71c565f07b7c5d8c891b21ad37b31}
+      - {path: "cwe-78/CWE-78_INS-1c.py", sha256: 820656d966444d49b83c6e798abdcbdd76f869eff440aab1932afddcd4a8afd9}
+  - family_id: 78-INS-2
+    cwe: CWE-78
+    target_rules: [py/command-line-injection, py/shell-command-constructed-from-input]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__78-INS-2__web.py", sha256: 69c4cdbb5ec6146feefbcfb8353f36e418531232e9114f864be27b4915b007b5}
+      safe:
+        - {path: "controls/S2__78-INS-2__list.py", sha256: 37701c55af434751224bcfff931c0879c0377df01d11bc884f7af33054696657}
+    secure_samples:
+      - {path: "cwe-78/CWE-78_INS-2a.py", sha256: 06645b3ad98be474e871e19be9ccbef26d50458893adfd386442591bf70a5b38}
+      - {path: "cwe-78/CWE-78_INS-2b.py", sha256: e6c5fb8da7812cd1994eabf31ff2f7382cbeca7a5ad53d36d9423f2a4f58a3e7}
+      - {path: "cwe-78/CWE-78_INS-2c.py", sha256: 6424e50de8ce16dbcc3e6422abd8911d936fc47e79ef3f2c7333552430839ec2}
+  - family_id: 78-INS-3
+    cwe: CWE-78
+    target_rules: [py/command-line-injection, py/shell-command-constructed-from-input]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__78-INS-3__argv.py", sha256: c7b506cee6acb873eea1062ada7a6842f20bc9af127f12b7891640f92839fec6}
+      safe:
+        - {path: "controls/S2__78-INS-3__const.py", sha256: 60a827464530a2de948bbb3e35072e21334355bb52583c2c8f18164d175d2ad9}
+    secure_samples:
+      - {path: "cwe-78/CWE-78_INS-3a.py", sha256: 7ad10c2f54caee20736d97bf421b4c4b4984d90cbf19f835fcb83c550102ae2c}
+      - {path: "cwe-78/CWE-78_INS-3b.py", sha256: 788c3b7c2543c434eee46f3d8f8882b416ee12b318d3bcd084fabc6f31036352}
+      - {path: "cwe-78/CWE-78_INS-3c.py", sha256: 1ab9c1bc0b971ac30fc3858c2c09a517eab2db44d982f31dc0633fbae45145d6}
+  - family_id: 79-INI-1
+    cwe: CWE-79
+    target_rules: [py/reflective-xss, py/jinja2/autoescape-false]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__79-INI-1__web.py", sha256: 49626957dc03c457731184b06c93d1c2ed5f20af5c4c6da45af7967f5890c7dd}
+      safe:
+        - {path: "controls/S2__79-INI-1__escape.py", sha256: b853217377f409cfe0307560d41ffaaae21b143c99a3062bfd13fcda39af6dd4}
+      blind_spot:
+        - {path: "controls/B__79-INI-1__streams.py", sha256: ebe1ccfd1041c73567041ab42b555ade9dcc7f30ca5d647e50bdd79f1fe6de52}
+    secure_samples:
+      - {path: "cwe-79/CWE-79_INI-1a.py", sha256: 225ac57f581795157a361bf967aa2230f96c40ded2bd420ec88baaf79ff38d87}
+      - {path: "cwe-79/CWE-79_INI-1b.py", sha256: 2a18eb9280580c7817d822024069cd5ce0ac2b4ca5137d2021239a0a3394ac94}
+      - {path: "cwe-79/CWE-79_INI-1c.py", sha256: 58bae5a37fb076760b8d75dcedd3afb214de32ce9633b64194ee42cc12703d9d}
+  - family_id: 79-INI-2
+    cwe: CWE-79
+    target_rules: [py/jinja2/autoescape-false, py/reflective-xss]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__79-INI-2__jinja.py", sha256: c4a1696c8deaf003e8eab87fffef21255717aa1a41b768a5fd94cac243956389}
+      safe:
+        - {path: "controls/S2__79-INI-2__autoescape.py", sha256: c685e73fb757b44777936aee7e9c32edb63174792fe5abe432917cd3d64d3d4f}
+    secure_samples:
+      - {path: "cwe-79/CWE-79_INI-2a.py", sha256: 9da6b4db36676490947a8d2de0934be882c395c518527e89c7ab8db7752ee5b1}
+      - {path: "cwe-79/CWE-79_INI-2b.py", sha256: 9da6b4db36676490947a8d2de0934be882c395c518527e89c7ab8db7752ee5b1}
+      - {path: "cwe-79/CWE-79_INI-2c.py", sha256: 9ba0f766024b2fd23ba419b6842c963a4f565144a9f680897d50819bba942356}
+  - family_id: 79-INI-3
+    cwe: CWE-79
+    target_rules: [py/reflective-xss, py/jinja2/autoescape-false]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__79-INI-3__web.py", sha256: 491786f0cfea67a7b2ccb225c31c5c74d6f278d13a9e5aa67bb7ee8319b83c72}
+      safe:
+        - {path: "controls/S2__79-INI-3__template.py", sha256: bc77dab04b38e2c4ba8f147ccc79ab6f8c4090eb5adc11ac15c28e18c2aaebd7}
+    secure_samples:
+      - {path: "cwe-79/CWE-79_INI-3a.py", sha256: 9a6b070e5e67ae8de920f52d2a724d7c91f7c19984b3899029f6dff0913052a3}
+      - {path: "cwe-79/CWE-79_INI-3b.py", sha256: b3b8f18e569b5f323f6cf276f4e02931fbee78c3f0e443208a135a38a700c45b}
+      - {path: "cwe-79/CWE-79_INI-3c.py", sha256: cd2036e1960c199a2eec14b453e0d4df32dbf6453d233628212d53983a0d3d74}
+  - family_id: 89-SQI-1
+    cwe: CWE-89
+    target_rules: [py/sql-injection]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__89-SQI-1__web.py", sha256: cb627c35cd21546d82b23c96b54f47e64582ebda38517ec734c2f12af001ea54}
+      safe:
+        - {path: "controls/S2__89-SQI-1__param.py", sha256: d14729f73990d1e65c60fb6b235febf88907f3d5a2475d90050c95850f97eb04}
+    secure_samples:
+      - {path: "cwe-89/CWE-89_SQI-1a.py", sha256: cea6f63727256acb7aa4b80db9e862aae610ca9608c70cb28e4c56526818d967}
+      - {path: "cwe-89/CWE-89_SQI-1b.py", sha256: bb26a0d0ce8d08828519fc149f78c94fdd2d7e71c2e905e6720f0b055eb0c36f}
+      - {path: "cwe-89/CWE-89_SQI-1c.py", sha256: fad9028657ada41dc1bab40271e1dc213c6dfd2f51118dd78ed8e99b42829eb1}
+  - family_id: 89-SQI-2
+    cwe: CWE-89
+    target_rules: [py/sql-injection]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__89-SQI-2__web.py", sha256: 8ccc856fee06128659e52af2003ed6c95e87c4828aaf80f0bc9136fa291655d0}
+      safe:
+        - {path: "controls/S2__89-SQI-2__param.py", sha256: 3b9d109924c277ea00ef823be8f1ddea8c0c0865ad649b0f158fc2c7a313a240}
+    secure_samples:
+      - {path: "cwe-89/CWE-89_SQI-2a.py", sha256: db79d29c30251bf60903644df67c5afe29c96b87c9ab95df924be32bf891a913}
+      - {path: "cwe-89/CWE-89_SQI-2b.py", sha256: f0d102c68b86eb4e223680f99af5be09a991fd79cda75ca058b8ca88ee4395f4}
+      - {path: "cwe-89/CWE-89_SQI-2c.py", sha256: 978ba79ec67291a935112765bdfbba8b7f4e69399a1e6cb83a6f3d04dfba7510}
+  - family_id: 89-SQI-3
+    cwe: CWE-89
+    target_rules: [py/sql-injection]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__89-SQI-3__web.py", sha256: 9710e263517dc3508c270e1ce122cbcaee184c7e564a9e9d2659c0301977beb6}
+      safe:
+        - {path: "controls/S2__89-SQI-3__param.py", sha256: e697b4fe7dcc6adf5a518db3ce81282d0b5da1f4a80e5a136c4b3b57cc9535c5}
+    secure_samples:
+      - {path: "cwe-89/CWE-89_SQI-3a.py", sha256: f8ef639dfbd6fc8ba082bcd459f2ab34b93074e2f8b58746c30994c5c48fedfd}
+      - {path: "cwe-89/CWE-89_SQI-3b.py", sha256: 112bd5a2a5e5fc0d7261e74098864a7049fd593ce6de1fbf1d374a938f66c87e}
+      - {path: "cwe-89/CWE-89_SQI-3c.py", sha256: f509b296a8d7594c4e15f8a7b173cef8c875f1ea53fb5d50f9005ead11ca209f}
+  - family_id: 200-ESI-1
+    cwe: CWE-200
+    target_rules: []
+    state: no-query
+  - family_id: 200-ESI-2
+    cwe: CWE-200
+    target_rules: []
+    state: no-query
+  - family_id: 200-ESI-3
+    cwe: CWE-200
+    target_rules: []
+    state: no-query
+  - family_id: 306-MAC-1
+    cwe: CWE-306
+    target_rules: []
+    state: no-query
+  - family_id: 306-MAC-2
+    cwe: CWE-306
+    target_rules: []
+    state: no-query
+  - family_id: 306-MAC-3
+    cwe: CWE-306
+    target_rules: []
+    state: no-query
+  - family_id: 434-UUF-1
+    cwe: CWE-434
+    target_rules: []
+    state: no-query
+  - family_id: 434-UUF-2
+    cwe: CWE-434
+    target_rules: []
+    state: no-query
+  - family_id: 434-UUF-3
+    cwe: CWE-434
+    target_rules: []
+    state: no-query
+  - family_id: 502-DUD-1
+    cwe: CWE-502
+    target_rules: [py/unsafe-deserialization]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__502-DUD-1__yaml.py", sha256: 93af5872b7a12979cd4fc87f996e5c8d85bf0310252aa9b4d163fb4f1ae47baa}
+      safe:
+        - {path: "controls/S2__502-DUD-1__safeload.py", sha256: 9b8697c872e52c80e934d522b2d7a02f570594bb0caabf1014911fdb0bed3864}
+    secure_samples:
+      - {path: "CWE-502/CWE-502_DUD-1a.py", sha256: 08da6f012566abc24cd49a6acc7d24e9ac41061b58686086d7d0123442e4abf4}
+      - {path: "CWE-502/CWE-502_DUD-1b.py", sha256: 4ad947469a9122ab35a742e4bc17b8627c4213f1657e13972306419ff6a0baed}
+      - {path: "CWE-502/CWE-502_DUD-1c.py", sha256: 1a7d53547a04e5ae7e38148ec5bd6602e3afb8a95ca1cc51962bfada0ac64905}
+  - family_id: 502-DUD-2
+    cwe: CWE-502
+    target_rules: [py/unsafe-deserialization]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__502-DUD-2__yaml.py", sha256: fbe7535c5114e70ac12fa1828caac593c4c479a0292907711da95542746798e2}
+      safe:
+        - {path: "controls/S2__502-DUD-2__json.py", sha256: 3d55a7e500513b9c06b22653f913983c2156788ca46ec67f90e43967fad8e926}
+    secure_samples:
+      - {path: "CWE-502/CWE-502_DUD-2a.py", sha256: 6b5898ae21f71bdc92c90f24409365fe9efa53c0dfc6e5e269e270d4f0f2b00c}
+      - {path: "CWE-502/CWE-502_DUD-2b.py", sha256: bdc2418aefc0f8c3f7ba52aa6a4b862b0cb88efee685b3ec7619e5f9d9b81761}
+      - {path: "CWE-502/CWE-502_DUD-2c.py", sha256: 45feaefe19228c370302961361e0fff7c162b4e919fe5aaa09bb888c95ea76b6}
+  - family_id: 502-DUD-3
+    cwe: CWE-502
+    target_rules: [py/unsafe-deserialization]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__502-DUD-3__pickle.py", sha256: ecffb18eafd5ec3d3f421f267f058cd2acc151f90e2deae1009a3bb2f0068b61}
+      safe:
+        - {path: "controls/S2__502-DUD-3__safeload.py", sha256: a1f2c558e5afdff3de9c00458aedaae315d1885d2cf119b7455f18ed30331e2c}
+    secure_samples:
+      - {path: "CWE-502/CWE-502_DUD-3a.py", sha256: 7cfa531ca03d38767dcbc1a0cfa32e052ce3e585130cb4909c25f2a42209eaef}
+      - {path: "CWE-502/CWE-502_DUD-3b.py", sha256: a8d148bb5524f003597235f036b03d6093abecb9b3bd9d819f9343cd7fa70388}
+      - {path: "CWE-502/CWE-502_DUD-3c.py", sha256: 7e1a2facc9c1d3b4cb6d16fd7d02d0031f803704d84cd9333f3bf1c7a07177b0}
+  - family_id: 522-IPC-1
+    cwe: CWE-522
+    target_rules: []
+    state: no-query
+  - family_id: 522-IPC-2
+    cwe: CWE-522
+    target_rules: []
+    state: no-query
+  - family_id: 522-IPC-3
+    cwe: CWE-522
+    target_rules: []
+    state: no-query
+  - family_id: 732-IPA-1
+    cwe: CWE-732
+    target_rules: [py/overly-permissive-file]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__732-IPA-1__osopen.py", sha256: b6b6115d08369ef6c6f3a91b5def0475939b0dc8b9111fbd6a60d26e141fdf3d}
+      safe:
+        - {path: "controls/S2__732-IPA-1__osopen.py", sha256: 47d40b40507dc33ed9f0b8d199f042dae97323afa6eb0994d7d8479ca9a9593e}
+    secure_samples:
+      - {path: "CWE-732/CWE-732_IPA-1a.py", sha256: 71657546aab034faad7311f609a4e61fcf4571b0de5cf8e916b6797bc02d0196}
+      - {path: "CWE-732/CWE-732_IPA-1b.py", sha256: 6f68a1188af7260268d196e044515a2ef8b7457ab3fd1c9751da5b5265d41f91}
+  - family_id: 732-IPA-2
+    cwe: CWE-732
+    target_rules: [py/overly-permissive-file]
+    state: calibrated-with-false-positives
+    controls:
+      vulnerable:
+        - {path: "controls/V__732-IPA-2__osopen.py", sha256: ed6f8b2a4937e8f6dbc98442836f6f602a272d2a993a8f98006cc69e87030558}
+      safe:
+        - {path: "controls/S2__732-IPA-2__osopen.py", sha256: 40e7221df986024b320d45ea2d6cc089ad017cc5eaef5d4863dbc1c459914586}
+    secure_samples:
+      - {path: "CWE-732/CWE-732_IPA-2a.py", sha256: a29f693767d151c241326ac6ecaebed4d76114fa0940750d0bf8c4ad4f6ad248}
+      - {path: "CWE-732/CWE-732_IPA-2b.py", sha256: 9157dc17490cbc21a1ece435f074b784c0c45ae74bdbaf11fc24bc69abc9e95e}
+      - {path: "CWE-732/CWE-732_IPA-2c.py", sha256: 2b9022464f32b8c39cb99a0f8ecbf4456a2af35a085dbad06be507b7ec5e549e}
+  - family_id: 732-IPA-3
+    cwe: CWE-732
+    target_rules: [py/overly-permissive-file]
+    state: calibrated
+    controls:
+      vulnerable:
+        - {path: "controls/V__732-IPA-3__chmod.py", sha256: 8ba5b817ab2d2b43c8f38104d6e45f88be5ebb9566accebc1a906e2746618a68}
+      safe:
+        - {path: "controls/S2__732-IPA-3__own.py", sha256: faea9566d5eda4bb17e653d8f2fa5760450908de9913e3b64a6770b2d993c8a5}
+      blind_spot:
+        - {path: "controls/B__732-IPA-3__chmod_symbolic.py", sha256: 29c798097a7350cc5b9502f1d83312e112b070f04dceb8ee6b946099535ab214}
+  - family_id: 798-UHC-1
+    cwe: CWE-798
+    target_rules: []
+    state: no-query
+  - family_id: 798-UHC-2
+    cwe: CWE-798
+    target_rules: []
+    state: no-query
+  - family_id: 798-UHC-3
+    cwe: CWE-798
+    target_rules: []
+    state: no-query
+probes:
+  - {path: "controls/M__comment_only_stub.py", sha256: a1984fcb6db48a01e3a667242678a307ea1e8a0ec7c6df27ce18d550efcde076}
+  - {path: "controls/M__flask_debug_only.py", sha256: 59a84d4b084cabd749697f61036ede4bb9714c3aa09958dc9ea57ab890c92024}
+  - {path: "controls/M__noop.py", sha256: cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd}
+  - {path: "controls/M__sqli_param.py", sha256: b5221f164b071a27be2252f57ea0c01ec252bc3a120d3ac9963a8a0672c73e7a}

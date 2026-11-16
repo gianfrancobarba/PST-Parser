@@ -1,0 +1,21 @@
+{
+  "format_version": 1,
+  "tool": "codeql",
+  "bundle": {
+    "release": "codeql-bundle-v2.22.1",
+    "file": "codeql-bundle-linux64.tar.zst",
+    "url": "https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.22.1/codeql-bundle-linux64.tar.zst",
+    "note": "The bundle is not redistributed: it is identified by release, file name and SHA-256."
+  },
+  "settings": {
+    "image": "python@sha256:b18992999dbe963a45a8a4da40ac2b1975be1a776d939d098c647482bcad5cba",
+    "bundle_sha256": "355b50aec18f2ac10e9d24364bef94a49b2a893072294f4a83867c7a16affb29",
+    "cli_version": "2.22.1",
+    "pack": "codeql/python-queries@1.6.0",
+    "general_suite": "python-code-scanning",
+    "targeted_suite": "python-security-extended",
+    "targeted_threat_model": "local",
+    "threads": 1,
+    "ram_mb": 2048
+  }
+}

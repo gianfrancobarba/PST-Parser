@@ -7,12 +7,14 @@ from typing import Any
 
 import pytest
 import test_bigcodebench_adapter as bcb
+import test_codeql_oracle as sec
 from typer.testing import CliRunner
 
-from pstparser.empirical import bigcodebench
+from pstparser.empirical import bigcodebench, codeql
 from pstparser.empirical.analysis import read_outcomes
 from pstparser.empirical.bigcodebench import write_harness_dataset
 from pstparser.empirical.cli import app
+from pstparser.empirical.codeql import read_cards
 from pstparser.repro.manifest import digest_directory
 
 
@@ -24,6 +26,11 @@ def parquet(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 @pytest.fixture
 def nltk_dir(tmp_path: Path) -> Path:
     return bcb.nltk_data(tmp_path)
+
+
+@pytest.fixture
+def bundle(tmp_path: Path) -> Path:
+    return sec.fake_bundle(tmp_path)
 
 
 # ------------------------------------------------------------------ check-bigcodebench
@@ -202,3 +209,183 @@ def test_command_refuses_an_incomplete_or_repeated_journal(
 
 
 # ------------------------------------------------- check-security, calibrate-security
+
+
+@pytest.fixture
+def analyser(monkeypatch: pytest.MonkeyPatch) -> sec.FakeAnalyzer:
+    analyzer = sec.FakeAnalyzer()
+    monkeypatch.setattr(codeql, "analyze_program", analyzer)
+    monkeypatch.setattr(codeql, "codeql_version", lambda config: {"version": "2.22.1"})
+    return analyzer
+
+
+def security_command(tmp_path: Path, bundle: Path, measure: str, *extra: str) -> list[str]:
+    journal = tmp_path / "generations.jsonl"
+    if not journal.exists():
+        rows = [{**g, "task_id": g["task_id"].replace("LSE-", "LSE-00")} for g in sec.planned()]
+        # Tasks of three known families of the sample.
+        tasks = {"LSE-001": "LSE-141", "LSE-002": "LSE-107", "LSE-003": "LSE-039"}
+        for row in rows:
+            row["task_id"] = tasks[row["task_id"]]
+        journal.write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+        )
+    return [
+        "check-security",
+        str(journal),
+        "--codeql",
+        str(sec.SETTINGS),
+        "--bundle-dir",
+        str(bundle),
+        "--cards",
+        str(sec.CARDS),
+        "--id-map",
+        str(sec.ID_MAP),
+        "--measure",
+        measure,
+        "--directory",
+        str(tmp_path / measure),
+        "--programs",
+        str(tmp_path / "programs"),
+        "--analysis-id",
+        f"pilot-{measure}",
+        "--order-seed",
+        "7",
+        *extra,
+    ]
+
+
+def test_check_command_writes_ledger_details_and_manifest(
+    tmp_path: Path, bundle: Path, analyser: sec.FakeAnalyzer
+) -> None:
+    records = {r["task_id"]: r for r in json.loads(sec.ID_MAP.read_text("utf-8"))["records"]}
+    families = [records[task]["family_id"] for task in ("LSE-141", "LSE-107", "LSE-039")]
+    cards = read_cards(sec.CARDS)
+    # One calibrated SQL family, one command family with false positives, one without query.
+    assert [cards[f].state for f in families] == [
+        "calibrated",
+        "calibrated-with-false-positives",
+        "no-query",
+    ]
+    assert families == ["89-SQI-1", "78-INS-1", "200-ESI-3"]
+
+    result = CliRunner().invoke(app, security_command(tmp_path, bundle, "general"))
+
+    assert result.exit_code == 0, result.output
+    assert "6 generations, 5 analysed" in result.output
+    outcomes = read_outcomes(tmp_path / "general" / "outcomes.jsonl")
+    assert len(outcomes) == 6 and {o.analysis_id for o in outcomes} == {"pilot-general"}
+    manifest = json.loads(
+        (tmp_path / "general" / "empirical-check-security_manifest.json").read_text("utf-8")
+    )
+    assert manifest["measure"] == "general" and manifest["family_states"] is None
+    assert manifest["codeql"]["cli_version"] == "2.22.1" and manifest["order_seed"] == 7
+    assert manifest["oracle_version"].endswith("python-code-scanning/remote/usability-rules-v1")
+    assert manifest["cards_sha256"] == hashlib.sha256(sec.CARDS.read_bytes()).hexdigest()
+    assert (
+        manifest["outcomes_sha256"]
+        == hashlib.sha256((tmp_path / "general" / "outcomes.jsonl").read_bytes()).hexdigest()
+    )
+
+    targeted = CliRunner().invoke(app, security_command(tmp_path, bundle, "targeted"))
+    assert targeted.exit_code == 0, targeted.output
+    assert len(read_outcomes(tmp_path / "targeted" / "outcomes.jsonl")) == 2
+    wider = security_command(tmp_path, bundle, "targeted", "--sensitivity")
+    wider[wider.index("--directory") + 1] = str(tmp_path / "targeted-fp")
+    assert CliRunner().invoke(app, wider).exit_code == 0
+    assert len(read_outcomes(tmp_path / "targeted-fp" / "outcomes.jsonl")) == 4
+    manifest = json.loads(
+        (tmp_path / "targeted-fp" / "empirical-check-security_manifest.json").read_text("utf-8")
+    )
+    assert manifest["family_states"] == ["calibrated", "calibrated-with-false-positives"]
+
+    again = CliRunner().invoke(app, security_command(tmp_path, bundle, "general"))
+    assert again.exit_code != 0 and isinstance(again.exception, FileExistsError)
+
+
+@pytest.mark.parametrize(
+    "measure,extra,message",
+    [
+        ("bandit", (), "measure must be one of"),
+        ("general", ("--sensitivity",), "applies to the targeted measure only"),
+    ],
+)
+def test_check_command_refuses_unknown_measures(
+    tmp_path: Path,
+    bundle: Path,
+    analyser: sec.FakeAnalyzer,
+    measure: str,
+    extra: tuple[str, ...],
+    message: str,
+) -> None:
+    result = CliRunner().invoke(app, security_command(tmp_path, bundle, measure, *extra))
+
+    assert result.exit_code != 0 and message in str(result.exception)
+    assert analyser.order == [] and not (tmp_path / measure).exists()
+
+
+def test_check_command_refuses_tasks_outside_the_identifier_map(
+    tmp_path: Path, bundle: Path, analyser: sec.FakeAnalyzer
+) -> None:
+    arguments = security_command(tmp_path, bundle, "general")
+    journal = Path(arguments[1])
+    journal.write_text(
+        json.dumps(sec.generation("LSE-999", "T", sec.fenced(sec.SAFE_SQL))) + "\n",
+        encoding="utf-8",
+    )
+
+    result = CliRunner().invoke(app, arguments)
+
+    assert result.exit_code != 0
+    assert "outside the identifier map: ['LSE-999']" in str(result.exception)
+    assert analyser.order == []
+
+
+def test_calibration_command_reports_and_fails_on_a_mismatch(
+    tmp_path: Path, bundle: Path, analyser: sec.FakeAnalyzer
+) -> None:
+    # The fake analyser reports nothing for the real controls: every family
+    # with controls is observed as excluded, which the command must not hide.
+    arguments = [
+        "calibrate-security",
+        "--codeql",
+        str(sec.SETTINGS),
+        "--bundle-dir",
+        str(bundle),
+        "--cards",
+        str(sec.CARDS),
+        "--directory",
+        str(tmp_path / "calibration"),
+    ]
+
+    result = CliRunner().invoke(app, arguments)
+
+    assert result.exit_code == 1
+    assert "47 controls; target queries report 0 of 21 vulnerable controls" in result.output
+    assert "families whose observed state differs" in result.output
+    report = json.loads((tmp_path / "calibration" / "calibration.json").read_text("utf-8"))
+    assert len(report["controls"]) == 47
+    assert len(report["mismatches"]) == 19
+    manifest = json.loads(
+        (tmp_path / "calibration" / "empirical-calibrate-security_manifest.json").read_text("utf-8")
+    )
+    assert manifest["controls"] == 47 and manifest["secure_samples_included"] is False
+    assert (
+        manifest["calibration_sha256"]
+        == hashlib.sha256((tmp_path / "calibration" / "calibration.json").read_bytes()).hexdigest()
+    )
+
+
+def test_check_command_refuses_an_incomplete_journal(
+    tmp_path: Path, bundle: Path, analyser: sec.FakeAnalyzer
+) -> None:
+    arguments = security_command(tmp_path, bundle, "general")
+    journal = Path(arguments[1])
+    lines = [line for line in journal.read_text(encoding="utf-8").split("\n") if line]
+    journal.write_text("".join(line + "\n" for line in lines[:-1]), encoding="utf-8")
+
+    result = CliRunner().invoke(app, arguments)
+
+    assert result.exit_code != 0
+    assert "each condition and replicate exactly once" in str(result.exception)
+    assert analyser.order == [] and not (tmp_path / "general").exists()
