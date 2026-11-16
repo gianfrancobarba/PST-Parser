@@ -17,7 +17,13 @@ from typing import Any, Literal
 
 import numpy as np
 
-from pstparser.empirical.inference import midp_mcnemar, sign_flip_test
+from pstparser.empirical.inference import (
+    cluster_t_interval,
+    midp_mcnemar,
+    newcombe_interval,
+    sign_flip_test,
+    tango_interval,
+)
 
 Endpoint = Literal["functional", "security"]
 Outcome = Literal["pass", "fail", "V", "N", "I", "U", "missing"]
@@ -114,6 +120,12 @@ class PairedReport:
     signflip_unit: str | None = None
     ledger_conditions: tuple[str, ...] | None = None
     ignored_records: dict[str, int] | None = None
+    tango_ci: tuple[float, float] | None = None
+    tango_ci_90: tuple[float, float] | None = None
+    newcombe_ci: tuple[float, float] | None = None
+    cr1_se: float | None = None
+    cr1_df: int | None = None
+    cr1_ci: tuple[float, float] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a serialisable report, including explicit null estimates.
@@ -349,6 +361,12 @@ def analyze_paired(
     mid-p McNemar test (``midp_p``; the exact test stays as a sensitivity
     analysis); with families or replicates, the studentized sign-flip of whole
     families, or of tasks without families (``signflip_*``), seeded by ``seed``.
+
+    Primary intervals (paired-v2): Tango's score interval at ``confidence`` and
+    at 90% (``tango_ci``, ``tango_ci_90``) for one greedy pair per task, with
+    Newcombe's method 10 as a sensitivity (``newcombe_ci``); the CR1 interval
+    with t(G - 1) (``cr1_*``) with families or replicates. A mid-p decision that
+    disagrees with Tango about zero is kept and declared in ``warnings``.
     """
     if type(bootstrap_samples) is not int or bootstrap_samples < 2:
         raise ValueError("bootstrap_samples must be an integer >= 2")
@@ -458,13 +476,22 @@ def analyze_paired(
         warnings.append("No complete tasks; primary estimate and inference are unavailable.")
     midp = None
     flip = None
+    tango = tango_90 = newcombe = None
+    cluster = None
     if table is not None:
         midp = midp_mcnemar(table["baseline_only"], table["treatment_only"])
+        b, c = table["baseline_only"], table["treatment_only"]
+        tango = tango_interval(b, c, len(estimates), confidence)
+        tango_90 = tango_interval(b, c, len(estimates), 0.90)
+        newcombe = newcombe_interval(table, confidence)
+        if (midp <= 1 - confidence) != (tango[0] > 0 or tango[1] < 0):
+            warnings.append("Mid-p and Tango disagree about zero; the mid-p decision is primary.")
     if clustered or len(design.replicate_ids) != 1:
         warnings.append("McNemar omitted: repeated observations or predeclared family clustering.")
         units = {e.family_id if clustered else e.task_id for e in estimates}
         if len(units) >= 2:
             flip = sign_flip_test(estimates, by_family=clustered, seed=seed)
+            cluster = cluster_t_interval(estimates, by_family=clustered, confidence=confidence)
     return PairedReport(
         analysis_id=design.analysis_id,
         endpoint=design.endpoint,
@@ -499,6 +526,12 @@ def analyze_paired(
             if ledger_conditions is not None
             else None
         ),
+        tango_ci=tango,
+        tango_ci_90=tango_90,
+        newcombe_ci=newcombe,
+        cr1_se=cluster.standard_error if cluster is not None else None,
+        cr1_df=cluster.degrees_of_freedom if cluster is not None else None,
+        cr1_ci=cluster.interval if cluster is not None else None,
     )
 
 

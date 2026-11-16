@@ -489,7 +489,10 @@ HF_MODEL = {"backend": "hf", "name": "fake/model", "revision": SHA, "chat_templa
         ({**V2, "format_version": 3}, "format_version must be 2"),
         ({**V2, "format_version": 1}, "format_version must be 2"),
         ({"format_version": 2, "user_template": WRAPPER}, "configuration requires exactly"),
-        ({**V2, "assistant_prefill": "x"}, "configuration requires exactly"),
+        # S-PREFILL (S15): the prefill is a version 2 key, refused in version 1.
+        ({"assistant_prefill": "x"}, "configuration requires exactly"),
+        ({**V2, "assistant_prefill": ""}, "non-empty string or null"),
+        ({**V2, "assistant_prefill": 3}, "non-empty string or null"),
         ({**V2, "conditions": ["T"]}, "at least two distinct"),
         ({**V2, "conditions": ["T", "T"]}, "at least two distinct"),
         ({**V2, "conditions": ["T", "E"]}, "exactly the configured conditions"),
@@ -565,3 +568,74 @@ def test_peak_vram_is_recorded_per_request_on_a_gpu(harness, monkeypatch) -> Non
 def test_no_peak_vram_field_without_a_gpu(harness) -> None:
     assert harness.run(**V2).exit_code == 0
     assert all("peak_vram_bytes" not in r for r in harness.journal())
+
+
+# --- S-PREFILL (M04, P1) ---------------------------------------------------------------------
+
+PREFILL = "```python\n"
+
+
+def recording_generate(seen: list[bytes]) -> Callable[..., torch.Tensor]:
+    def generate(self: FakeModel, input_ids: torch.Tensor, **kwargs: Any) -> torch.Tensor:
+        seen.append(bytes(int(value) for value in input_ids[0]))
+        self.calls.append(kwargs)
+        return torch.cat([input_ids, torch.tensor([[1, 2]])], dim=-1)
+
+    return generate
+
+
+def test_the_prefill_follows_the_generation_prompt_identically_in_every_condition(
+    harness, monkeypatch
+) -> None:
+    seen: list[bytes] = []
+    monkeypatch.setattr(FakeModel, "generate", recording_generate(seen))
+    result = harness.run(**V2, assistant_prefill=PREFILL)
+    assert result.exit_code == 0, result.exception
+    records = harness.journal()
+    assert len(seen) == len(records) == 4
+    expected = {(rendering(wrapped(row["text"])) + PREFILL).encode("utf-8") for row in harness.rows}
+    assert set(seen) == expected
+    for record in records:
+        # The journal keeps what the model generated, without the prefill.
+        assert record["raw_output"] == "generated code"
+        assert record["input_tokens"] == len(
+            (rendering(wrapped(record["text"])) + PREFILL).encode("utf-8")
+        )
+    configuration = harness.manifest()["configuration"]
+    assert configuration["assistant_prefill"] == PREFILL
+    assert configuration["assistant_prefill_sha256"] == sha256(PREFILL)
+
+
+def test_the_prefill_counts_in_the_token_budget_preflight(harness) -> None:
+    longest = max(len(rendering(wrapped(row["text"])).encode("utf-8")) for row in harness.rows)
+    model = {
+        "backend": "hf",
+        "name": "fake/model",
+        "revision": SHA,
+        "max_seq_length": longest + 8,
+        "load_in_4bit": False,
+        "dtype": "bfloat16",
+        "chat_template": "native",
+    }
+    plain = harness.run("plain", model=model, **V2)
+    assert plain.exit_code == 0, plain.exception
+    refused = harness.run("prefilled", model=model, **V2, assistant_prefill=PREFILL)
+    assert isinstance(refused.exception, ValueError)
+    assert "no truncation performed" in str(refused.exception)
+    assert not (harness.root / "prefilled").exists()
+
+
+def test_without_a_prefill_the_frozen_configuration_is_unchanged(harness, monkeypatch) -> None:
+    seen: list[bytes] = []
+    monkeypatch.setattr(FakeModel, "generate", recording_generate(seen))
+    assert harness.run(**V2).exit_code == 0
+    configuration = harness.manifest()["configuration"]
+    assert "assistant_prefill" not in configuration
+    assert "assistant_prefill_sha256" not in configuration
+    assert set(seen) == {rendering(wrapped(row["text"])).encode("utf-8") for row in harness.rows}
+    # A null prefill is the primary analysis: same messages, recorded as null.
+    seen.clear()
+    assert harness.run("null", **V2, assistant_prefill=None).exit_code == 0
+    assert harness.manifest("null")["configuration"]["assistant_prefill"] is None
+    assert "assistant_prefill_sha256" not in harness.manifest("null")["configuration"]
+    assert set(seen) == {rendering(wrapped(row["text"])).encode("utf-8") for row in harness.rows}

@@ -1,0 +1,6 @@
+{
+  "format": "contamination-config-v1",
+  "n": 10,
+  "threshold": 0.5,
+  "tokenizer": "Qwen/Qwen2.5-Coder-7B-Instruct@c03e6d358207e414f1eca0bb1891e29f1db0e242"
+}

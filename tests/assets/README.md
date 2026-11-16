@@ -48,3 +48,18 @@ assertions; it exists so that configurations referencing a prompt file validate.
 | `valid.yaml` | Composes both fragments and validates successfully |
 | `invalid.yaml` | Violates a field constraint and must be rejected |
 | `circular_a.yaml`, `circular_b.yaml` | Mutually extending files, must be rejected |
+
+## `ratesci_pairbinci.json`
+
+Reference intervals for a paired difference of proportions, used by
+`tests/unit/test_intervals.py`. Sixteen 2×2 tables (edge cases with no or
+one-sided discordance, and tables of 800 tasks), each at 95% and 90%, computed
+once with R 4.5.1 and the CRAN package `ratesci` 1.1.1:
+
+- Tango's score interval: `pairbinci(x, level, contrast = "RD", method = "Score",
+  skew = FALSE, bcf = FALSE, cc = FALSE, precis = 10)`;
+- Newcombe's method 10: `pairbinci(x, level, contrast = "RD", method = "MOVER_newc",
+  moverbase = "wilson", precis = 10)`.
+
+`x` is `c(both_pass, treatment_only, baseline_only, both_fail)`, so the difference
+is treatment minus baseline, as in the analysis.

@@ -271,6 +271,22 @@ def decoding_parameters(config: InferenceConfig) -> dict[str, Any]:
     return values
 
 
+def prefill_token_ids(tokenizer: Any, assistant_prefill: str) -> list[int]:
+    """Token ids of a shared assistant prefill, without special tokens.
+
+    Raises:
+        ValueError: If the prefill is empty or tokenizes to nothing.
+    """
+    if not assistant_prefill:
+        raise ValueError("assistant_prefill must be a non-empty string")
+    ids = [
+        int(value) for value in tokenizer(assistant_prefill, add_special_tokens=False)["input_ids"]
+    ]
+    if not ids:
+        raise ValueError("assistant_prefill tokenizes to no token")
+    return ids
+
+
 def generate_messages(
     model: Any,
     tokenizer: Any,
@@ -279,6 +295,7 @@ def generate_messages(
     *,
     logits_processors: Any = None,
     max_seq_length: int | None = None,
+    assistant_prefill: str | None = None,
 ) -> GeneratedText:
     """Generate from explicit messages after checking the entire token budget.
 
@@ -292,6 +309,11 @@ def generate_messages(
     replaces every field left at the library default with the value published
     in the model's own ``generation_config`` (a repetition penalty, a sampling
     temperature). Only the special token ids still come from the model.
+
+    ``assistant_prefill`` (S-PREFILL sensitivity only) is tokenized on its own,
+    without special tokens, and appended after the assistant generation
+    prompt; it counts in the token budget and is not part of the returned
+    text, which holds only what the model generated.
     """
     from transformers import GenerationConfig
 
@@ -301,7 +323,13 @@ def generate_messages(
         add_generation_prompt=True,
         return_tensors="pt",
         truncation=False,
-    ).to(model_device(model))
+    )
+    if assistant_prefill is not None:
+        prefill = torch.tensor(
+            [prefill_token_ids(tokenizer, assistant_prefill)], dtype=inputs.dtype
+        )
+        inputs = torch.cat([inputs, prefill], dim=-1)
+    inputs = inputs.to(model_device(model))
 
     input_tokens = int(inputs.shape[-1])
     validate_token_budget(model, tokenizer, input_tokens, config.max_new_tokens, max_seq_length)

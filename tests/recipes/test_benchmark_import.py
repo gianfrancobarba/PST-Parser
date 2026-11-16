@@ -139,3 +139,27 @@ def test_repeated_prompt_ids_get_distinct_internal_ids(dataset: Path) -> None:
     assert rows["LSE-096"]["filename"].endswith("_scenario_copilot_0.py")
     assert rows["LSE-097"]["filename"].endswith("_scenario_copilot_1.py")
     assert len({row["prompt_id"] for row in rows.values()}) == 148
+
+
+# 03 B15: Jaccard >= 0.8 on the word tokens of instruct_prompt, 8 groups and 17 tasks.
+NEAR_DUPLICATE_GROUPS = [
+    {349, 351, 353},
+    {130, 131},
+    {330, 333},
+    {423, 426},
+    {736, 738},
+    {894, 895},
+    {1097, 1099},
+    {1120, 1121},
+]
+
+
+def test_near_duplicate_groups_are_the_eight_of_the_plan(parquet: Path) -> None:
+    from pstparser.empirical.contamination import near_duplicate_groups
+
+    records = load_bigcodebench(parquet, BCB_REVISION, "v0.1.4")
+    groups = near_duplicate_groups({record.task_id: record.text for record in records})
+
+    found = [{int(task.split("/")[1]) for task in group} for group in groups]
+    assert sorted(map(sorted, found)) == sorted(map(sorted, NEAR_DUPLICATE_GROUPS))
+    assert sum(len(group) for group in groups) == 17

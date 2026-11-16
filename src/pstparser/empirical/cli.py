@@ -862,6 +862,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     from pstparser.inference.generate import (
         decoding_parameters,
         generate_messages,
+        prefill_token_ids,
         validate_token_budget,
     )
     from pstparser.models.loader import (
@@ -887,13 +888,21 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     }
     # A configuration without format_version is version 1 and keeps its closed
     # key set; the keys added since are admitted only by declaring version 2.
+    # assistant_prefill (S-PREFILL, 00 T-3) is the one optional key of version 2.
     versioned = "format_version" in config
     if versioned:
         if config["format_version"] != 2:
             raise ValueError("format_version must be 2 when present")
         allowed |= {"format_version", "user_template", "conditions"}
-    if set(config) != allowed:
+    if set(config) - {"assistant_prefill"} != allowed or (
+        "assistant_prefill" in config and not versioned
+    ):
         raise ValueError(f"configuration requires exactly: {sorted(allowed)}")
+    assistant_prefill = config.get("assistant_prefill")
+    if assistant_prefill is not None and (
+        not isinstance(assistant_prefill, str) or not assistant_prefill
+    ):
+        raise ValueError("assistant_prefill must be a non-empty string or null")
     user_template: str | None = None
     if versioned:
         user_template = config["user_template"]
@@ -953,6 +962,9 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         raise ValueError("final runs require the published conversation template")
     # Check BOTH variants for ALL tasks before generating the first condition.
     template_checked: set[str] = set()
+    prefill_tokens = (
+        len(prefill_token_ids(tokenizer, assistant_prefill)) if assistant_prefill is not None else 0
+    )
     for variant in rendered:
         messages = chat_messages(config["system_prompt"], user_template, variant.text)
         if snapshot is not None and variant.condition not in template_checked:
@@ -967,7 +979,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         validate_token_budget(
             model,
             tokenizer,
-            len(tokens),
+            len(tokens) + prefill_tokens,
             inference.max_new_tokens,
             model_config.max_seq_length,
         )
@@ -977,6 +989,12 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         "variant_file_sha256": digest_file(variants),
         "system_prompt_sha256": digest_text(config["system_prompt"]),
         "user_template_sha256": digest_text(user_template) if user_template is not None else None,
+        # Present only with a prefill, so the fingerprint of every other journal is unchanged.
+        **(
+            {"assistant_prefill_sha256": digest_text(assistant_prefill)}
+            if assistant_prefill is not None
+            else {}
+        ),
         "decoding": decoding_parameters(inference),
         "runtime": runtime,
         "environment": environment(),
@@ -992,6 +1010,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
             messages,
             inference,
             max_seq_length=model_config.max_seq_length,
+            assistant_prefill=assistant_prefill,
         )
         record = {
             "user_message_sha256": digest_text(messages[1]["content"]),
@@ -1382,3 +1401,263 @@ def check_security(
         f"{summary['generations']} generations, {summary['analysed']} analysed, "
         f"states {summary['states']}; {directory / 'outcomes.jsonl'}"
     )
+
+
+def _load_tokenizer(snapshot: Path) -> Any:
+    """Load the generator's tokenizer from a local snapshot, without the network."""
+    from transformers import AutoTokenizer
+
+    return AutoTokenizer.from_pretrained(str(snapshot), local_files_only=True)
+
+
+@app.command()
+def covariates(
+    canonical: Path,
+    variants: Path,
+    rule: Annotated[str, typer.Option(help="Draft rule of the benchmark (judgement units).")],
+    generate_config: Annotated[
+        Path, typer.Option(help="Generate configuration: system message and wrapper.")
+    ],
+    tokenizer_snapshot: Annotated[
+        Path, typer.Option(help="Local snapshot of the generator at the frozen revision.")
+    ],
+    out: Annotated[Path, typer.Option(help="New covariates file (JSON Lines).")],
+) -> None:
+    """Compute the frozen prompt covariates (M13, M25) before any generation.
+
+    Token lengths count the whole model input (system message, wrapper and
+    request, with the generation prompt) with the generator's tokenizer.
+    """
+    from pstparser.empirical.covariates import COVARIATES_VERSION, covariate_table
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    config = json.loads(generate_config.read_text(encoding="utf-8"))
+    system = config["system_prompt"]
+    template = config.get("user_template")
+    if template is not None:
+        validate_user_template(template)
+    prompts = [
+        CanonicalPrompt(
+            row["task_id"],
+            row["text"],
+            tuple(SpanAnnotation(**span) for span in row["annotations"]),
+            row["annotation_version"],
+        )
+        for row in _rows(canonical)
+    ]
+    rendered = [PromptVariant(**row) for row in _rows(variants)]
+    ensure_stage_outputs(out.parent, "empirical-covariates", [out.name])
+    tokenizer = _load_tokenizer(tokenizer_snapshot)
+
+    def count_tokens(text: str) -> int:
+        tokens = tokenizer.apply_chat_template(
+            chat_messages(system, template, text),
+            tokenize=True,
+            add_generation_prompt=True,
+            truncation=False,
+        )
+        return len(tokens)
+
+    rows = covariate_table(prompts, rendered, count_tokens, rule)
+    _write_rows(out, rows)
+    write_manifest(
+        {
+            "stage": "empirical-covariates",
+            "covariates_version": COVARIATES_VERSION,
+            "rule": rule,
+            "rows": len(rows),
+            "canonical_sha256": digest_file(canonical),
+            "variants_sha256": digest_file(variants),
+            "generate_config_sha256": digest_file(generate_config),
+            "tokenizer_files_sha256": {
+                name: digest_file(tokenizer_snapshot / name)
+                for name in ("tokenizer.json", "tokenizer_config.json")
+                if (tokenizer_snapshot / name).is_file()
+            },
+            "covariates_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(rows)} tasks in {out}")
+
+
+@app.command()
+def contamination(
+    generations: Path,
+    sanitized: Path,
+    dataset: Path,
+    config: Annotated[Path, typer.Option(help="Frozen contamination configuration.")],
+    tokenizer_snapshot: Annotated[
+        Path, typer.Option(help="Local snapshot of the generator at the frozen revision.")
+    ],
+    out: Annotated[Path, typer.Option(help="New overlap file (JSON Lines).")],
+) -> None:
+    """Measure how much of each reference solution the oracle's programs reproduce.
+
+    GENERATIONS is a journal, SANITIZED the programs given to the harness
+    (``request_id``, ``sanitized``), DATASET the harness dataset that holds the
+    reference solutions. Analysis only: run after the oracle, never before.
+    """
+    from pstparser.empirical.bigcodebench import read_harness_dataset
+    from pstparser.empirical.contamination import contamination_rows, load_contamination_config
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    frozen = load_contamination_config(config)
+    journal = _json_lines(generations)
+    programs = {row["request_id"]: row["sanitized"] for row in _json_lines(sanitized)}
+    if set(programs) != {row["request_id"] for row in journal} or len(programs) != len(journal):
+        raise ValueError("the sanitized programs must cover the journal's requests once")
+    solutions = {row["task_id"]: row["canonical_solution"] for row in read_harness_dataset(dataset)}
+    ensure_stage_outputs(out.parent, "empirical-contamination", [out.name])
+    tokenizer = _load_tokenizer(tokenizer_snapshot)
+
+    def tokenize(text: str) -> list[int]:
+        return list(tokenizer(text, add_special_tokens=False)["input_ids"])
+
+    rows = contamination_rows(
+        [
+            {
+                "task_id": row["task_id"],
+                "condition": row["condition"],
+                "replicate_id": row["replicate_id"],
+                "program": programs[row["request_id"]],
+            }
+            for row in journal
+        ],
+        solutions,
+        tokenize,
+        frozen,
+    )
+    _write_rows(out, rows)
+    write_manifest(
+        {
+            "stage": "empirical-contamination",
+            "config": {"n": frozen.n, "threshold": frozen.threshold, "tokenizer": frozen.tokenizer},
+            "config_sha256": digest_file(config),
+            "generations_sha256": digest_file(generations),
+            "sanitized_sha256": digest_file(sanitized),
+            "dataset_sha256": digest_file(dataset),
+            "overlap_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(rows)} programs in {out}")
+
+
+@app.command("near-duplicates")
+def near_duplicates(
+    sources: Path,
+    out: Annotated[Path, typer.Option(help="New file of near-duplicate groups (JSON).")],
+    threshold: Annotated[float, typer.Option(help="Jaccard threshold (03 B15).")] = 0.8,
+) -> None:
+    """Group BigCodeBench prompts that are near duplicates (S-NEARDUP clusters)."""
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.empirical.contamination import NEAR_DUPLICATE_RULE, near_duplicate_groups
+    from pstparser.repro.manifest import digest_file, source_snapshot, write_manifest
+
+    records = read_sources(sources)
+    groups = near_duplicate_groups({r.task_id: r.text for r in records}, threshold)
+    _write_document(
+        out,
+        {
+            "format_version": 1,
+            "rule": NEAR_DUPLICATE_RULE,
+            "threshold": threshold,
+            "tasks": len(records),
+            "groups": groups,
+        },
+    )
+    write_manifest(
+        {
+            "stage": "empirical-near-duplicates",
+            "sources_sha256": digest_file(sources),
+            "groups_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(groups)} groups, {sum(map(len, groups))} tasks in {out}")
+
+
+@app.command()
+def agreement(
+    sources: Path,
+    first: Path,
+    second: Path,
+    rule: Annotated[str, typer.Option(help="Draft rule of the benchmark (judgement units).")],
+    out: Annotated[Path, typer.Option(help="New agreement report (JSON).")],
+) -> None:
+    """Character kappa and boundary F1 of two annotation files of the same tasks.
+
+    The primary measures count only the judgement units; the measures on every
+    non-whitespace character are descriptive.
+    """
+    from pstparser.empirical import annotations
+    from pstparser.empirical.agreement import (
+        AGREEMENT_VERSION,
+        AgreementItem,
+        boundary_f1,
+        char_kappa,
+    )
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.empirical.covariates import JUDGEMENT_UNITS_RULE, judgement_mask
+    from pstparser.repro.manifest import digest_file, source_snapshot, write_manifest
+
+    texts = {record.task_id: record for record in read_sources(sources)}
+    left = {row.task_id: row for row in annotations.load_annotations(first)}
+    right = {row.task_id: row for row in annotations.load_annotations(second)}
+    if set(left) != set(right) or not set(left) <= set(texts):
+        raise ValueError("both files must annotate the same tasks of the sources")
+    for task in left:
+        if {left[task].source_sha256, right[task].source_sha256} != {texts[task].source_sha256}:
+            raise ValueError(f"{task}: an annotation does not belong to this source")
+    tasks = sorted(left)
+    judged = [
+        AgreementItem(
+            task,
+            texts[task].text,
+            left[task].spans,
+            right[task].spans,
+            judgement_mask(texts[task].text, rule),
+        )
+        for task in tasks
+    ]
+    every = [AgreementItem(i.task_id, i.text, i.first, i.second) for i in judged]
+    _write_document(
+        out,
+        {
+            "agreement_version": AGREEMENT_VERSION,
+            "judgement_units_rule": JUDGEMENT_UNITS_RULE,
+            "tasks": len(tasks),
+            "judgement_units": {
+                "char_kappa": char_kappa(judged),
+                "boundary_f1": boundary_f1(judged),
+            },
+            "all_characters": {"char_kappa": char_kappa(every), "boundary_f1": boundary_f1(every)},
+            "per_task_judgement_kappa": {item.task_id: char_kappa([item]) for item in judged},
+        },
+    )
+    write_manifest(
+        {
+            "stage": "empirical-agreement",
+            "sources_sha256": digest_file(sources),
+            "first_sha256": digest_file(first),
+            "second_sha256": digest_file(second),
+            "report_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(str(out))

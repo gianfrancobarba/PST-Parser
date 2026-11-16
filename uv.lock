@@ -1829,6 +1829,8 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rich" },
     { name = "scikit-learn" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
+    { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12' or (extra == 'extra-9-pstparser-cpu' and extra == 'extra-9-pstparser-cu128')" },
     { name = "typer" },
 ]
 
@@ -1896,6 +1898,7 @@ requires-dist = [
     { name = "rich", specifier = ">=13.9" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8" },
     { name = "scikit-learn", specifier = ">=1.5" },
+    { name = "scipy", specifier = ">=1.11" },
     { name = "torch", marker = "extra == 'cpu'", specifier = ">=2.5", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "pstparser", extra = "cpu" } },
     { name = "torch", marker = "extra == 'cu128'", specifier = ">=2.5", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "pstparser", extra = "cu128" } },
     { name = "torchvision", marker = "extra == 'cpu'", specifier = ">=0.20", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "pstparser", extra = "cpu" } },
