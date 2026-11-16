@@ -20,7 +20,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Final, Literal
 
+from pstparser.empirical.analysis import Outcome, OutcomeRecord
 from pstparser.empirical.benchmarks import BIGCODEBENCH_PINS
+from pstparser.empirical.extraction import extraction_statuses
 from pstparser.repro.manifest import digest_directory, digest_file
 
 #: Columns of the dataset file read by the harness, in the order they are written.
@@ -648,4 +650,602 @@ def merge_calibrations(calibrations: Sequence[Mapping[str, Any]]) -> dict[str, A
             }
             for calibration in calibrations
         ],
+    }
+
+
+# --------------------------------------------------------------------------- evaluation
+
+SANITIZE_POLICY: Final = "bigcodebench-sanitize"
+PROMPT_AS_DATA_RULE: Final = "prompt-as-data-v1"
+JSON_RESPONSE_RULE: Final = "json-response-v1"
+RAW_FILE: Final = "raw.jsonl"
+SANITIZED_FILE: Final = "sanitized.jsonl"
+PASS_AT_K_FILE: Final = "samples_pass_at_k.json"
+
+#: Program run inside the harness image: the official sanitize, called directly.
+SANITIZE_DRIVER: Final = (
+    "import json\n"
+    "from bigcodebench.sanitize import sanitize\n"
+    "with open('/app/raw.jsonl', encoding='utf-8', newline='\\n') as source, "
+    "open('/app/sanitized.jsonl', 'x', encoding='utf-8', newline='\\n') as target:\n"
+    "    for line in source:\n"
+    "        row = json.loads(line)\n"
+    "        code = sanitize(row['raw_output'], row['entry_point'])\n"
+    "        record = {'request_id': row['request_id'], 'sanitized': code}\n"
+    "        target.write(json.dumps(record, ensure_ascii=False) + '\\n')\n"
+)
+
+#: Keys of the hierarchical prompt and of the envelope control.
+_PROMPT_KEYS: Final = ("main_instruction", "phrase", "position", "prompt")
+_PST_KEYS_IN_TEXT: Final = re.compile(r'"(main_instruction|context|position|phrase)"\s*:')
+_KEY_IN_TEXT: Final = re.compile(
+    r'"(main_instruction|phrase|position|prompt)"\s*:|\[\s*["\'](main_instruction|phrase|position|prompt)["\']\s*\]'
+)
+_SYNTAX: Final = re.compile(r"SyntaxError|IndentationError|invalid syntax|unexpected indent")
+_IMPORT: Final = re.compile(r"No module named|cannot import")
+
+
+@dataclass(frozen=True)
+class SampleResult:
+    """What one harness run reported for one exported program."""
+
+    request_id: str
+    status: str
+    details: Mapping[str, str]
+
+
+@dataclass(frozen=True)
+class Resolved:
+    """Final status of one program over the runs, with the flaky flag."""
+
+    request_id: str
+    status: str
+    flaky: bool
+    statuses: tuple[str, ...]
+    details: Mapping[str, str]
+
+
+def sanitize_in_image(
+    config: HarnessConfig,
+    generations: Sequence[Mapping[str, Any]],
+    entry_points: Mapping[str, str],
+    work_dir: Path,
+) -> dict[str, str]:
+    """Extract code with the official ``sanitize`` of the pinned image.
+
+    The function of the harness is called as it is, offline, on the raw output
+    and the entry point of the task; nothing is reimplemented or repaired here.
+    Returns the sanitized code by request.
+    """
+    work_dir = Path(work_dir)
+    work_dir.mkdir(parents=True, exist_ok=False)
+    with (work_dir / RAW_FILE).open("x", encoding="utf-8", newline="\n") as handle:
+        for generation in generations:
+            row = {
+                "request_id": generation["request_id"],
+                "raw_output": generation["raw_output"],
+                "entry_point": entry_points[generation["task_id"]],
+            }
+            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    command = [
+        "docker",
+        "run",
+        "--rm",
+        "--pull",
+        "never",
+        "--network",
+        "none",
+        "--mount",
+        f"type=bind,source={work_dir.resolve()},target=/app",
+        "--entrypoint",
+        "python3",
+        config.image,
+        "-c",
+        SANITIZE_DRIVER,
+    ]
+    with (work_dir / LOG_FILE).open("xb") as log:
+        completed = subprocess.run(
+            command,
+            stdin=subprocess.DEVNULL,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            timeout=60 * 60,
+            check=False,
+        )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"sanitize exited with {completed.returncode}; see {work_dir / LOG_FILE}"
+        )
+    lines = (work_dir / SANITIZED_FILE).read_bytes().decode("utf-8").split("\n")
+    rows = [json.loads(line) for line in lines if line]
+    expected = [generation["request_id"] for generation in generations]
+    if [row["request_id"] for row in rows] != expected:
+        raise ValueError("sanitize did not return exactly the submitted outputs, in order")
+    return {row["request_id"]: row["sanitized"] for row in rows}
+
+
+def _sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _order_key(seed: int, label: str, request_id: str) -> str:
+    return _sha256(f"{seed}|{label}|{request_id}")
+
+
+def export_samples(
+    generations: Sequence[Mapping[str, Any]],
+    sanitized: Mapping[str, str],
+    *,
+    order_seed: int,
+    run_label: str,
+) -> tuple[list[dict[str, str]], list[dict[str, Any]]]:
+    """Mix every condition in one sample file, in a seeded order of its own.
+
+    All conditions of a task are judged in the same run, under the same load.
+    The order of the lines is ``SHA-256(seed | run label | request)``, so two
+    runs see two different orders. An output cut at its token budget and an
+    empty extraction are not executable: they are left out and stay failures.
+
+    Returns the lines of the sample file and, for each line, the mapping
+    ``(line, task, position among the samples of the task)`` to the request.
+    """
+    by_id = {generation["request_id"]: generation for generation in generations}
+    if len(by_id) != len(generations) or set(sanitized) != set(by_id):
+        raise ValueError("generations and sanitized outputs must cover the same requests once")
+    executable = [
+        request
+        for request, generation in by_id.items()
+        if generation["finish_reason"] != "length" and sanitized[request].strip()
+    ]
+    ordered = sorted(
+        executable, key=lambda request: (_order_key(order_seed, run_label, request), request)
+    )
+    rows: list[dict[str, str]] = []
+    mapping: list[dict[str, Any]] = []
+    position: dict[str, int] = {}
+    for line, request in enumerate(ordered):
+        generation = by_id[request]
+        task = generation["task_id"]
+        rows.append({"task_id": task, "solution": sanitized[request]})
+        mapping.append(
+            {
+                "line": line,
+                "task_id": task,
+                "position": position.get(task, 0),
+                "condition": generation["condition"],
+                "replicate_id": generation["replicate_id"],
+                "request_id": request,
+                "solution_sha256": _sha256(sanitized[request]),
+            }
+        )
+        position[task] = position.get(task, 0) + 1
+    return rows, mapping
+
+
+def parse_results(
+    results_json: Path,
+    mapping: Sequence[Mapping[str, Any]],
+    samples: Sequence[Mapping[str, str]],
+    code_prompts: Mapping[str, str],
+    *,
+    calibrated: bool = True,
+) -> list[SampleResult]:
+    """Reassociate harness results with the exported programs, fail-closed.
+
+    A result is taken by task and position and accepted only if the program the
+    harness reports is the exported one (with the starting code in front when
+    calibrated). A row the harness did not report is ``missing``, never a
+    failure.
+
+    Raises:
+        ValueError: If the harness reports another program for a position.
+    """
+    reported = json.loads(Path(results_json).read_bytes().decode("utf-8"))["eval"]
+    results: list[SampleResult] = []
+    for row in mapping:
+        task, request = row["task_id"], row["request_id"]
+        entries = reported.get(task, [])
+        if row["position"] >= len(entries):
+            results.append(SampleResult(request, "missing", {"reason": "row_absent"}))
+            continue
+        entry = entries[row["position"]]
+        solution = samples[row["line"]]["solution"]
+        ran = code_prompts[task] + "\n    pass\n" + solution if calibrated else solution
+        if _sha256(solution) != row["solution_sha256"] or entry["solution"] != ran:
+            raise ValueError(f"{task} position {row['position']}: the harness ran another program")
+        if entry["status"] not in {"pass", "fail", "timeout"}:
+            raise ValueError(f"{task}: unknown harness status {entry['status']!r}")
+        details = {str(key): str(value) for key, value in (entry.get("details") or {}).items()}
+        results.append(SampleResult(request, entry["status"], details))
+    return results
+
+
+def _passed(status: str) -> bool:
+    return status == "pass"
+
+
+def compare_runs(first: Sequence[SampleResult], second: Sequence[SampleResult]) -> list[str]:
+    """Requests whose pass/fail outcome differs between two runs of the same programs."""
+    left = {result.request_id: result for result in first}
+    right = {result.request_id: result for result in second}
+    if set(left) != set(right) or len(left) != len(first) or len(right) != len(second):
+        raise ValueError("the two runs do not hold the same programs")
+    return sorted(
+        request
+        for request in left
+        if "missing" not in {left[request].status, right[request].status}
+        and _passed(left[request].status) != _passed(right[request].status)
+    )
+
+
+def resolve_majority(
+    first: Sequence[SampleResult],
+    second: Sequence[SampleResult],
+    third: Sequence[SampleResult] | None = None,
+) -> list[Resolved]:
+    """Settle each program: agreement of two runs, or the majority of three.
+
+    A timeout counts as a failure. Where the first two runs disagree a third
+    run is required and the program is flagged ``flaky``. A program missing
+    from a run it was part of stays ``missing``.
+
+    Raises:
+        ValueError: If two runs disagree and no third run settles the program.
+    """
+    discordant = set(compare_runs(first, second))
+    extra = {result.request_id: result for result in third or ()}
+    if not set(extra) >= discordant:
+        raise ValueError("a third run is required for the programs on which two runs disagree")
+    second_by_id = {result.request_id: result for result in second}
+    resolved: list[Resolved] = []
+    for one in first:
+        runs = [one, second_by_id[one.request_id]]
+        if one.request_id in discordant:
+            runs.append(extra[one.request_id])
+        statuses = tuple(run.status for run in runs)
+        if "missing" in statuses:
+            status, shown = "missing", {"reason": "row_absent"}
+        else:
+            passes = sum(1 for value in statuses if _passed(value))
+            if passes * 2 > len(statuses):
+                status, shown = "pass", {}
+            else:
+                # Details of the earliest run in which the program did not pass.
+                failed = next(run for run in runs if not _passed(run.status))
+                status, shown = failed.status, dict(failed.details)
+        resolved.append(
+            Resolved(one.request_id, status, one.request_id in discordant, statuses, shown)
+        )
+    return resolved
+
+
+def _defines(code: str, name: str) -> bool:
+    """Whether the code defines ``name`` at top level.
+
+    Text that does not parse (prose, or code with a syntax error) is searched
+    for a definition line instead, so that a syntax error in a real attempt is
+    not mistaken for missing code.
+    """
+    try:
+        tree = ast.parse(code)
+    except (SyntaxError, ValueError):
+        pattern = rf"^(?:async\s+)?def\s+{re.escape(name)}\s*\(|^class\s+{re.escape(name)}\b"
+        return re.search(pattern, code, re.MULTILINE) is not None
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            if node.name == name:
+                return True
+        elif isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == name for target in node.targets
+        ):
+            return True
+    return False
+
+
+def is_json_response(raw_output: str) -> bool:
+    """Rule ``json-response-v1``: the answer is, or repeats, a JSON prompt.
+
+    True when the raw output starts with ``{`` or ``[``, or holds at least two
+    different keys of the hierarchical prompt in key position.
+    """
+    if raw_output.lstrip()[:1] in {"{", "["}:
+        return True
+    return len(set(_PST_KEYS_IN_TEXT.findall(raw_output))) >= 2
+
+
+def is_prompt_as_data(code: str) -> bool:
+    """Rule ``prompt-as-data-v1``: the program handles the prompt as its input data.
+
+    True when the extracted code uses a key of the hierarchical prompt or of
+    the envelope (``main_instruction``, ``phrase``, ``position``, ``prompt``)
+    as a dictionary key or as a subscript, or passes text holding such a key to
+    a ``loads`` call. Code that does not parse is searched as text.
+    """
+    try:
+        tree = ast.parse(code)
+    except (SyntaxError, ValueError):
+        return _KEY_IN_TEXT.search(code) is not None
+    for node in ast.walk(tree):
+        keys: list[ast.expr | None] = []
+        if isinstance(node, ast.Dict):
+            keys = list(node.keys)
+        elif isinstance(node, ast.Subscript):
+            keys = [node.slice]
+        elif (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute | ast.Name)
+            and (node.func.attr if isinstance(node.func, ast.Attribute) else node.func.id)
+            == "loads"
+        ):
+            for argument in node.args:
+                if (
+                    isinstance(argument, ast.Constant)
+                    and isinstance(argument.value, str)
+                    and _KEY_IN_TEXT.search(argument.value)
+                ):
+                    return True
+        for key in keys:
+            if isinstance(key, ast.Constant) and key.value in _PROMPT_KEYS:
+                return True
+    return False
+
+
+def categorize(
+    generation: Mapping[str, Any],
+    sanitized: str,
+    entry_point: str,
+    status: str,
+    details: Mapping[str, str],
+) -> str:
+    """Name the outcome of one program: ``pass``, or the first failure category.
+
+    The categories are exclusive and tried in a fixed order: form of the answer
+    first (``truncated``, empty extraction as ``no_code``, ``json_response``,
+    ``prompt_as_data``, code without the entry point as ``no_code``), then what
+    the harness observed (``timeout``, ``syntax_or_compile_error``,
+    ``import_error``, ``module_level_exception``, ``assertion_failure``,
+    ``test_exception``). A timeout and a cut output are failures.
+    """
+    if generation["finish_reason"] == "length":
+        return "truncated"
+    if not sanitized.strip():
+        return "no_code"
+    if status == "pass":
+        return "pass"
+    # An answer in JSON never defines the entry point: it is counted as a JSON
+    # answer, not as missing code, so that the two can be told apart.
+    if is_json_response(generation["raw_output"]):
+        return "json_response"
+    if is_prompt_as_data(sanitized):
+        return "prompt_as_data"
+    if not _defines(sanitized, entry_point):
+        return "no_code"
+    if status == "timeout":
+        return "timeout"
+    if "ALL" in details:
+        message = details["ALL"]
+        if _SYNTAX.search(message):
+            return "syntax_or_compile_error"
+        if _IMPORT.search(message):
+            return "import_error"
+        return "module_level_exception"
+    traces = [trace for trace in details.values() if trace.strip()]
+    if not traces:
+        return "fail_no_detail"
+    if all("AssertionError" in trace.strip().splitlines()[-1] for trace in traces):
+        return "assertion_failure"
+    return "test_exception"
+
+
+def to_outcomes(
+    generations: Sequence[Mapping[str, Any]],
+    sanitized: Mapping[str, str],
+    entry_points: Mapping[str, str],
+    resolved: Sequence[Resolved],
+    analysis_id: str,
+) -> tuple[list[OutcomeRecord], list[dict[str, Any]]]:
+    """Turn the settled runs into one outcome per planned generation.
+
+    Every generation gets a record: executed programs from the runs, a cut
+    output or an empty extraction as failures that were never executed. A
+    program the harness did not report is ``missing`` with its reason.
+
+    Raises:
+        ValueError: If an executable program has no settled result, or a
+            result refers to a program that was not executable.
+    """
+    by_request = {item.request_id: item for item in resolved}
+    outcomes: list[OutcomeRecord] = []
+    details: list[dict[str, Any]] = []
+    used: set[str] = set()
+    for generation in generations:
+        request = generation["request_id"]
+        code = sanitized[request]
+        entry_point = entry_points[generation["task_id"]]
+        executable = generation["finish_reason"] != "length" and bool(code.strip())
+        settled = by_request.get(request)
+        if executable != (settled is not None):
+            raise ValueError(f"{request}: settled results do not match the executable programs")
+        if settled is None:
+            category = categorize(generation, code, entry_point, "fail", {})
+            outcome: Outcome = "fail"
+        elif settled.status == "missing":
+            used.add(request)
+            category, outcome = settled.details["reason"], "missing"
+        else:
+            used.add(request)
+            category = categorize(generation, code, entry_point, settled.status, settled.details)
+            outcome = "pass" if settled.status == "pass" else "fail"
+        outcomes.append(
+            OutcomeRecord(
+                analysis_id=analysis_id,
+                endpoint="functional",
+                task_id=generation["task_id"],
+                condition=generation["condition"],
+                replicate_id=generation["replicate_id"],
+                outcome=outcome,
+                reason=category,
+            )
+        )
+        details.append(
+            {
+                "request_id": request,
+                "task_id": generation["task_id"],
+                "condition": generation["condition"],
+                "replicate_id": generation["replicate_id"],
+                "extraction_policy": SANITIZE_POLICY,
+                "extraction_statuses": extraction_statuses(generation["raw_output"]),
+                "sanitized_sha256": _sha256(code),
+                "sanitized_lines": sum(1 for line in code.split("\n") if line.strip()),
+                "executed": executable,
+                "outcome": outcome,
+                "reason": category,
+                "run_statuses": list(settled.statuses) if settled is not None else [],
+                "flaky": settled.flaky if settled is not None else False,
+                "finish_reason": generation["finish_reason"],
+            }
+        )
+    if used != set(by_request):
+        raise ValueError("a settled result refers to a generation that was not planned")
+    return outcomes, details
+
+
+def harness_prompt_hashes(config: HarnessConfig) -> dict[str, str]:
+    """SHA-256 of every ``instruct_prompt`` as the harness in the image loads it."""
+    config.verify()
+    driver = (
+        "import hashlib, json\n"
+        "from bigcodebench.data import get_bigcodebench\n"
+        "print(json.dumps({task: hashlib.sha256(row['instruct_prompt'].encode('utf-8')).hexdigest()"
+        " for task, row in get_bigcodebench().items()}))\n"
+    )
+    completed = subprocess.run(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--pull",
+            "never",
+            "--network",
+            "none",
+            "--mount",
+            f"type=bind,source={config.dataset_jsonl.resolve().parent},target=/data,readonly",
+            "--env",
+            f"BIGCODEBENCH_OVERRIDE_PATH=/data/{config.dataset_jsonl.name}",
+            "--entrypoint",
+            "python3",
+            config.image,
+            "-c",
+            driver,
+        ],
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        timeout=600,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(f"cannot read the prompts in the image: {completed.stderr[-500:]}")
+    hashes: dict[str, str] = json.loads(completed.stdout.strip().splitlines()[-1])
+    return hashes
+
+
+def evaluate_generations(
+    config: HarnessConfig,
+    generations: Sequence[Mapping[str, Any]],
+    directory: Path,
+    *,
+    analysis_id: str,
+    order_seed: int,
+    runner: Callable[..., HarnessRun] | None = None,
+    sanitizer: Callable[..., dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    """Judge every generation with the official harness: two runs, a third on disagreement.
+
+    Returns the outcomes, the per-generation details and a summary of the
+    runs. A container that exits with an error stops the evaluation: it is an
+    infrastructure failure, not an outcome.
+    """
+    execute = runner if runner is not None else run_harness
+    extract_code = sanitizer if sanitizer is not None else sanitize_in_image
+    dataset = {row["task_id"]: row for row in read_harness_dataset(config.dataset_jsonl)}
+    unknown = sorted({g["task_id"] for g in generations} - set(dataset))
+    if unknown or not generations:
+        raise ValueError(f"generations for tasks outside the dataset: {unknown[:5]}")
+    entry_points = {task: row["entry_point"] for task, row in dataset.items()}
+    code_prompts = {task: row["code_prompt"] for task, row in dataset.items()}
+    directory = Path(directory)
+    sanitized = extract_code(config, generations, entry_points, directory / "sanitize")
+    runs: list[dict[str, Any]] = []
+
+    def one_run(label: str, subset: Sequence[Mapping[str, Any]]) -> list[SampleResult]:
+        rows, mapping = export_samples(
+            subset,
+            {g["request_id"]: sanitized[g["request_id"]] for g in subset},
+            order_seed=order_seed,
+            run_label=label,
+        )
+        if not rows:
+            return []
+        run_dir = directory / label
+        path = write_samples(rows, run_dir)
+        with (run_dir.parent / f"{label}.mapping.jsonl").open(
+            "x", encoding="utf-8", newline="\n"
+        ) as handle:
+            for row in mapping:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+        tasks = sorted({row["task_id"] for row in rows}, key=task_number)
+        run = execute(config, run_dir, task_ids=tasks)
+        _require_success(label, run)
+        results = parse_results(
+            run.results, mapping, rows, code_prompts, calibrated=config.calibrated
+        )
+        summary = run.directory / PASS_AT_K_FILE
+        reference = json.loads(summary.read_bytes().decode("utf-8")) if summary.is_file() else {}
+        runs.append(
+            {
+                "name": label,
+                "programs": len(rows),
+                "tasks": len(tasks),
+                "elapsed_seconds": run.elapsed_seconds,
+                "samples_sha256": digest_file(path),
+                "results_sha256": digest_file(run.results),
+                "log_sha256": digest_file(run.log),
+                "reference_pass_rate": reference.get("gt_pass_rate"),
+                "reference_failed": sorted(reference.get("failed_tasks", []), key=task_number),
+                "statuses": {
+                    status: sum(1 for result in results if result.status == status)
+                    for status in ("pass", "fail", "timeout", "missing")
+                },
+            }
+        )
+        return results
+
+    first = one_run("run-a", generations)
+    second = one_run("run-b", generations)
+    discordant = set(compare_runs(first, second))
+    third: list[SampleResult] | None = None
+    if discordant:
+        by_id = {g["request_id"]: g for g in generations}
+        flaky_tasks = {by_id[request]["task_id"] for request in discordant}
+        # Every condition of a task with a disagreement is run again together.
+        third = one_run("run-c", [g for g in generations if g["task_id"] in flaky_tasks])
+    resolved = resolve_majority(first, second, third)
+    outcomes, details = to_outcomes(generations, sanitized, entry_points, resolved, analysis_id)
+    executed = len(first)
+    return {
+        "outcomes": outcomes,
+        "details": details,
+        "summary": {
+            "extraction_policy": SANITIZE_POLICY,
+            "rules": [JSON_RESPONSE_RULE, PROMPT_AS_DATA_RULE],
+            "order_seed": order_seed,
+            "generations": len(generations),
+            "executed": executed,
+            "discordant": len(discordant),
+            "discordance_rate": len(discordant) / executed if executed else 0.0,
+            "discordance_above_1_percent": bool(executed) and len(discordant) > 0.01 * executed,
+            "flaky_tasks": sorted({d["task_id"] for d in details if d["flaky"]}, key=task_number),
+            "runs": runs,
+        },
     }

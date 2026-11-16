@@ -26,6 +26,27 @@ def _rows(path: Path) -> list[dict[str, Any]]:
     ]
 
 
+def _json_lines(path: Path) -> list[dict[str, Any]]:
+    """Read JSON Lines split on the line feed only.
+
+    A model output may hold other Unicode line separators, which JSON leaves
+    unescaped and ``str.splitlines`` would cut.
+    """
+    return [json.loads(line) for line in path.read_bytes().decode("utf-8").split("\n") if line]
+
+
+def _require_complete(rows: list[dict[str, Any]]) -> None:
+    """Refuse a journal in which a task lacks, or repeats, a condition or a replicate."""
+    cells: dict[str, set[tuple[str, int]]] = {}
+    for row in rows:
+        cells.setdefault(row["task_id"], set()).add((row["condition"], row["replicate_id"]))
+    if (
+        len(rows) != sum(len(cell) for cell in cells.values())
+        or len({frozenset(cell) for cell in cells.values()}) != 1
+    ):
+        raise ValueError("every task needs each condition and replicate exactly once")
+
+
 def _write_rows(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x", encoding="utf-8", newline="\n") as handle:
@@ -241,6 +262,111 @@ def calibrate_bigcodebench(
     )
     if report["unexplained"]:
         raise ValueError(f"unexplained reference failures: {report['unexplained']}")
+
+
+@app.command("check-bigcodebench")
+def check_bigcodebench(
+    generations: Path,
+    parquet: Annotated[Path, typer.Option(help="Pinned parquet file of the dataset.")],
+    revision: Annotated[str, typer.Option(help="Pinned revision of the dataset.")],
+    image: Annotated[str, typer.Option(help="Harness image, as name@sha256:<digest>.")],
+    nltk_dir: Annotated[Path, typer.Option(help="Local nltk data, mounted read-only.")],
+    sample: Annotated[Path, typer.Option(help="Frozen sample the generations must cover.")],
+    exclusions: Annotated[Path, typer.Option(help="Frozen exclusions of the calibration.")],
+    directory: Annotated[Path, typer.Option(help="New directory for runs and outcomes.")],
+    analysis_id: Annotated[str, typer.Option(help="Identifier written in every outcome.")],
+    order_seed: Annotated[int, typer.Option(help="Seed of the order of the sample lines.")],
+    split: Annotated[str, typer.Option(help="BigCodeBench split.")] = "v0.1.4",
+    parallel: Annotated[int, typer.Option(help="Fixed number of harness workers.")] = 8,
+    runs: Annotated[int, typer.Option(help="Independent runs before the majority rule.")] = 2,
+) -> None:
+    """Judge BigCodeBench generations with the official harness, offline.
+
+    Code is extracted by the official sanitize inside the image. Every program
+    runs twice, in two line orders; where the runs disagree it runs a third
+    time and the majority decides, with a flaky flag.
+    """
+    from pstparser.empirical import bigcodebench
+    from pstparser.empirical.analysis import write_outcomes
+    from pstparser.repro.manifest import (
+        digest_directory,
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    if runs != 2:
+        raise ValueError("the frozen rule is two runs, with a third only on disagreement")
+    rows = _json_lines(generations)
+    sample_ids = set(_sample_ids(sample, None))
+    excluded = {row["task_id"] for row in _read_document(exclusions)["excluded"]}
+    tasks = {row["task_id"] for row in rows}
+    if tasks != sample_ids:
+        raise ValueError("the generations do not cover exactly the tasks of the sample")
+    if tasks & excluded:
+        raise ValueError(f"generations for excluded tasks: {sorted(tasks & excluded)[:5]}")
+    _require_complete(rows)
+    ensure_stage_outputs(
+        directory, "empirical-check-bcb", ["outcomes.jsonl", "details.jsonl", "data", "sanitize"]
+    )
+    dataset = directory / "data" / f"BigCodeBench-{split}.jsonl"
+    dataset_sha256 = bigcodebench.write_harness_dataset(parquet, revision, split, dataset)
+    nltk_sha256 = digest_directory(nltk_dir)
+    if nltk_sha256 is None:
+        raise ValueError(f"missing nltk data directory: {nltk_dir}")
+    config = bigcodebench.HarnessConfig(
+        image=image,
+        dataset_jsonl=dataset,
+        dataset_sha256=dataset_sha256,
+        nltk_dir=nltk_dir,
+        nltk_sha256=nltk_sha256,
+        parallel=parallel,
+    )
+    # The exclusions hold for the settings they were calibrated with, no others.
+    calibrated_with = _read_document(exclusions).get("harness") or {}
+    settings = config.as_dict()
+    differing = sorted(
+        key
+        for key in ("image", "dataset_sha256", "nltk_sha256", "parallel", "calibrated", "network")
+        if calibrated_with.get(key) != settings[key]
+    )
+    if differing:
+        raise ValueError(
+            f"harness settings differ from the calibration of the exclusions: {differing}"
+        )
+    environment = {
+        "harness_version": bigcodebench.harness_version(image),
+        "docker": bigcodebench.docker_resources(),
+    }
+    result = bigcodebench.evaluate_generations(
+        config, rows, directory, analysis_id=analysis_id, order_seed=order_seed
+    )
+    write_outcomes(result["outcomes"], directory / "outcomes.jsonl")
+    _write_rows(directory / "details.jsonl", result["details"])
+    write_manifest(
+        {
+            "stage": "empirical-check-bcb",
+            "analysis_id": analysis_id,
+            "harness": config.as_dict(),
+            **environment,
+            **result["summary"],
+            "generations_sha256": digest_file(generations),
+            "sample_sha256": digest_file(sample),
+            "exclusions_sha256": digest_file(exclusions),
+            "outcomes_sha256": digest_file(directory / "outcomes.jsonl"),
+            "details_sha256": digest_file(directory / "details.jsonl"),
+            "source": source_snapshot(),
+        },
+        directory,
+    )
+    summary = result["summary"]
+    typer.echo(
+        f"{summary['generations']} generations, {summary['executed']} executed, "
+        f"{summary['discordant']} discordant; {directory / 'outcomes.jsonl'}"
+    )
+    if summary["discordance_above_1_percent"]:
+        typer.echo("warning: more than 1% of the programs changed outcome between two runs")
 
 
 @app.command("merge-calibrations")
