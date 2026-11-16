@@ -33,6 +33,7 @@ from pstparser.empirical.extraction import (
     extract_fenced_blocks,
     extraction_statuses,
 )
+from pstparser.empirical.retries import RETRY_POLICY, with_retries
 from pstparser.empirical.security import SecurityJudgment
 from pstparser.empirical.usability import (
     MODELABILITY_VERSION,
@@ -575,7 +576,9 @@ def evaluate_generations(
     ``programs`` is the folder of the per-program analyses; passing the same
     folder to both measures analyses every program once.
 
-    A container that could not run is an infrastructure failure: the record is
+    A container that could not run is an infrastructure failure: the program
+    is analysed again in ``<programs>-attempt-<n>`` up to three attempts in
+    all, each logged in ``attempts``; if every attempt fails the record is
     ``missing`` with its reason, never an observed state.
     """
     analyze = analyzer if analyzer is not None else analyze_program
@@ -612,14 +615,44 @@ def evaluate_generations(
         (request for request, item in prepared.items() if item[0] is not None),
         key=lambda request: (_order_key(order_seed, request), request),
     )
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        analyses = dict(
-            zip(
-                to_analyse,
-                pool.map(lambda request: analyze(config, programs / request), to_analyse),
-                strict=True,
-            )
+
+    def root(attempt: int) -> Path:
+        assert programs is not None
+        return (
+            programs if attempt == 1 else programs.with_name(f"{programs.name}-attempt-{attempt}")
         )
+
+    def analyse(request: str) -> tuple[ProgramAnalysis, list[dict[str, Any]], Path]:
+        code = prepared[request][0]
+        assert code is not None
+
+        def attempt(number: int) -> tuple[ProgramAnalysis, Path]:
+            folder = prepare_one(request, code, root(number)) if number > 1 else programs / request
+            return analyze(config, folder), folder
+
+        def failure(result: tuple[ProgramAnalysis, Path]) -> str | None:
+            found = result[0]
+            if not found.infrastructure_failure:
+                return None
+            return f"docker exit {found.docker_exit}, steps {dict(found.steps)}"
+
+        (found, folder), attempts = with_retries(attempt, failure)
+        return found, attempts, folder
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = dict(zip(to_analyse, pool.map(analyse, to_analyse), strict=True))
+    analyses = {request: item[0] for request, item in results.items()}
+    folders = {request: item[2] for request, item in results.items()}
+    attempt_log = [
+        {
+            "stage": "codeql",
+            "request_id": request,
+            **entry,
+            "directory": root(entry["attempt"]).name,
+        }
+        for request in to_analyse
+        for entry in results[request][1]
+    ]
     outcomes: list[OutcomeRecord] = []
     details: list[dict[str, Any]] = []
     for generation in selected:
@@ -631,7 +664,7 @@ def evaluate_generations(
         failure = analysis is not None and analysis.infrastructure_failure
         if analysis is not None and not failure and analysis.completed(measure):
             sarif = parse_sarif(
-                programs / request / f"{measure}.sarif", program_name(request), config
+                folders[request] / f"{measure}.sarif", program_name(request), config
             )
         elif analysis is not None and not failure:
             # The database or the suite failed: an analysis without alerts or health.
@@ -689,7 +722,10 @@ def evaluate_generations(
     return {
         "outcomes": outcomes,
         "details": details,
+        "attempts": attempt_log,
         "summary": {
+            "retry_policy": RETRY_POLICY,
+            "retried_programs": len({e["request_id"] for e in attempt_log if e["attempt"] > 1}),
             "measure": measure,
             "oracle_version": config.oracle_version(measure),
             "order_seed": order_seed,

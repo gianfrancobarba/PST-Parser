@@ -316,7 +316,9 @@ def check_bigcodebench(
         raise ValueError(f"generations for excluded tasks: {sorted(tasks & excluded)[:5]}")
     _require_complete(rows)
     ensure_stage_outputs(
-        directory, "empirical-check-bcb", ["outcomes.jsonl", "details.jsonl", "data", "sanitize"]
+        directory,
+        "empirical-check-bcb",
+        ["outcomes.jsonl", "details.jsonl", "attempts.jsonl", "data", "sanitize"],
     )
     dataset = directory / "data" / f"BigCodeBench-{split}.jsonl"
     dataset_sha256 = bigcodebench.write_harness_dataset(parquet, revision, split, dataset)
@@ -352,6 +354,7 @@ def check_bigcodebench(
     )
     write_outcomes(result["outcomes"], directory / "outcomes.jsonl")
     _write_rows(directory / "details.jsonl", result["details"])
+    _write_rows(directory / "attempts.jsonl", result["attempts"])
     write_manifest(
         {
             "stage": "empirical-check-bcb",
@@ -364,6 +367,7 @@ def check_bigcodebench(
             "exclusions_sha256": digest_file(exclusions),
             "outcomes_sha256": digest_file(directory / "outcomes.jsonl"),
             "details_sha256": digest_file(directory / "details.jsonl"),
+            "attempts_sha256": digest_file(directory / "attempts.jsonl"),
             "source": source_snapshot(),
         },
         directory,
@@ -858,6 +862,8 @@ def _peak_vram_bytes() -> int:
 def generate(variants: Path, configuration: Path, directory: Path) -> None:
     """Generate/resume only an explicitly configured, revision-pinned experiment."""
     # Imports remain local: rendering and analysis do not load torch/models.
+    import uuid
+
     from pstparser.config import InferenceConfig, ModelConfig
     from pstparser.inference.generate import (
         decoding_parameters,
@@ -1000,6 +1006,17 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         "environment": environment(),
     }
 
+    # Identity of this process (M18): a resume in another session leaves a second
+    # session_id in the journal; the environment itself must not change (S03).
+    devices = frozen["environment"].get("accelerator", {}).get("devices") or []
+    session = {
+        "session_id": uuid.uuid4().hex,
+        "gpu_name": devices[0] if devices else None,
+        "environment_digest": digest_text(
+            json.dumps(frozen["environment"], sort_keys=True, ensure_ascii=False)
+        ),
+    }
+
     def complete(request: Any) -> dict[str, Any]:
         seed_everything(request["seed"])
         messages = chat_messages(config["system_prompt"], user_template, request["text"])
@@ -1022,7 +1039,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         }
         if measured:
             record["peak_vram_bytes"] = _peak_vram_bytes()
-        return record
+        return {**record, **session}
 
     records = run_journal(requests, frozen, directory, complete)
     typer.echo(f"{len(records)} recorded completions; {directory}")
@@ -1189,7 +1206,8 @@ def check(
     from dataclasses import asdict
 
     from pstparser.empirical.analysis import write_outcomes
-    from pstparser.empirical.sandbox import SandboxConfig, run_python_check
+    from pstparser.empirical.retries import MAX_ATTEMPTS, RETRY_POLICY, with_retries
+    from pstparser.empirical.sandbox import ExecutionResult, SandboxConfig, run_python_check
     from pstparser.empirical.workflow import (
         FunctionalOracle,
         calibrate_oracles,
@@ -1197,6 +1215,7 @@ def check(
     )
     from pstparser.repro.manifest import (
         digest_file,
+        digest_text,
         ensure_stage_outputs,
         source_snapshot,
         write_manifest,
@@ -1209,6 +1228,7 @@ def check(
             "outcomes.jsonl",
             "details.jsonl",
             "calibration.json",
+            "attempts.jsonl",
         ],
     )
     config = SandboxConfig(image)
@@ -1217,8 +1237,21 @@ def check(
     if not generated or {r["task_id"] for r in generated} != {o.task_id for o in trusted}:
         raise ValueError("generation and oracle task sets must be identical and non-empty")
 
+    attempt_log: list[dict[str, Any]] = []
+
+    def failure(result: ExecutionResult) -> str | None:
+        if result.status != "infrastructure_error":
+            return None
+        return result.detail[-500:] or "infrastructure_error"
+
     def execute(code: str, harness: str) -> Any:
-        return run_python_check(code, harness, config)
+        # Only infrastructure errors are retried; a failed or timed-out program is final.
+        result, attempts = with_retries(lambda _: run_python_check(code, harness, config), failure)
+        attempt_log.extend(
+            {"code_sha256": digest_text(code), "harness_sha256": digest_text(harness), **attempt}
+            for attempt in attempts
+        )
+        return result
 
     calibration = calibrate_oracles(trusted, execute)
     with (directory / "calibration.json").open("x", encoding="utf-8") as handle:
@@ -1230,13 +1263,17 @@ def check(
         )
         write_outcomes(outcomes, directory / "outcomes.jsonl")
         _write_rows(directory / "details.jsonl", details)
+    _write_rows(directory / "attempts.jsonl", attempt_log)
     write_manifest(
         {
             "stage": "empirical-check",
             "analysis_id": analysis_id,
             "calibrated": calibrated,
             "sandbox": asdict(config),
-            "retry_count": 0,
+            "retry_count": sum(1 for attempt in attempt_log if attempt["attempt"] > 1),
+            "retry_policy": RETRY_POLICY,
+            "max_attempts": MAX_ATTEMPTS,
+            "attempts_sha256": digest_file(directory / "attempts.jsonl"),
             "generations_sha256": digest_file(generations),
             "oracles_sha256": digest_file(oracles),
             "outcomes_sha256": digest_file(directory / "outcomes.jsonl"),
@@ -1360,7 +1397,9 @@ def check_security(
     without_card = sorted({families[row["task_id"]] for row in rows} - set(scenario_cards))
     if without_card:
         raise ValueError(f"families without a scenario card: {without_card[:5]}")
-    ensure_stage_outputs(directory, "empirical-check-security", ["outcomes.jsonl", "details.jsonl"])
+    ensure_stage_outputs(
+        directory, "empirical-check-security", ["outcomes.jsonl", "details.jsonl", "attempts.jsonl"]
+    )
     version = oracle.codeql_version(config)
     states = (oracle.CALIBRATED, oracle.CALIBRATED_FP) if sensitivity else (oracle.CALIBRATED,)
     result = oracle.evaluate_generations(
@@ -1378,6 +1417,7 @@ def check_security(
     )
     write_outcomes(result["outcomes"], directory / "outcomes.jsonl")
     _write_rows(directory / "details.jsonl", result["details"])
+    _write_rows(directory / "attempts.jsonl", result["attempts"])
     write_manifest(
         {
             "stage": "empirical-check-security",
@@ -1392,6 +1432,7 @@ def check_security(
             "id_map_sha256": digest_file(id_map),
             "outcomes_sha256": digest_file(directory / "outcomes.jsonl"),
             "details_sha256": digest_file(directory / "details.jsonl"),
+            "attempts_sha256": digest_file(directory / "attempts.jsonl"),
             "source": source_snapshot(),
         },
         directory,

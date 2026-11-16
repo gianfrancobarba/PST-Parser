@@ -682,3 +682,112 @@ def test_generations_for_an_unknown_task_are_refused(config: HarnessConfig, tmp_
             runner=FakeHarness(),
             sanitizer=fake_sanitize,
         )
+
+
+# ----------------------------------------------------------------- infrastructure retries (M18)
+
+
+class BrokenHarness(FakeHarness):
+    """A harness whose container exits with an error the first ``failures`` times of a run."""
+
+    def __init__(self, failures: dict[str, int]) -> None:
+        """Remember how many attempts of each run fail."""
+        super().__init__()
+        self.failures = dict(failures)
+
+    def __call__(self, config: HarnessConfig, run_dir: Path, **options: Any) -> HarnessRun:
+        label = run_dir.name.split("-attempt-")[0]
+        if self.failures.get(label, 0) > 0:
+            self.failures[label] -= 1
+            self.calls.append((run_dir.name, list(options["task_ids"])))
+            (run_dir / "log.txt").write_text("killed\n", encoding="utf-8")
+            return HarnessRun(run_dir, ("docker", "run", IMAGE), 137, 0.5)
+        return super().__call__(config, run_dir, **options)
+
+
+def stable() -> list[dict[str, Any]]:
+    return [g for g in planned() if "FLAKY" not in g["raw_output"]]
+
+
+def test_a_failed_container_is_retried_in_a_new_directory_and_logged(
+    config: HarnessConfig, tmp_path: Path
+) -> None:
+    harness = BrokenHarness({"run-a": 2})
+
+    result = evaluate_generations(
+        config,
+        stable(),
+        tmp_path / "check",
+        analysis_id="a",
+        order_seed=7,
+        runner=harness,
+        sanitizer=fake_sanitize,
+    )
+
+    assert [name for name, _ in harness.calls] == [
+        "run-a",
+        "run-a-attempt-2",
+        "run-a-attempt-3",
+        "run-b",
+    ]
+    assert [(a["run"], a["attempt"], a["status"]) for a in result["attempts"]] == [
+        ("run-a", 1, "infrastructure_error"),
+        ("run-a", 2, "infrastructure_error"),
+        ("run-a", 3, "ok"),
+        ("run-b", 1, "ok"),
+    ]
+    assert result["attempts"][0]["detail"] == "exit code 137"
+    assert result["attempts"][2]["directory"] == "run-a-attempt-3"
+    # The same programs are given to every attempt, and the outcomes are those of a clean run.
+    samples = [
+        (tmp_path / "check" / name / "samples.jsonl").read_bytes()
+        for name in ("run-a", "run-a-attempt-2", "run-a-attempt-3")
+    ]
+    assert samples[0] == samples[1] == samples[2]
+    assert all(o.outcome != "missing" for o in result["outcomes"])
+    assert result["summary"]["runs"][0]["attempts"] == 3
+    assert result["summary"]["retried_runs"] == 2
+
+
+def test_three_failed_attempts_make_the_programs_missing(
+    config: HarnessConfig, tmp_path: Path
+) -> None:
+    harness = BrokenHarness({"run-b": 3})
+
+    result = evaluate_generations(
+        config,
+        stable(),
+        tmp_path / "check",
+        analysis_id="a",
+        order_seed=7,
+        runner=harness,
+        sanitizer=fake_sanitize,
+    )
+
+    executed = {d["request_id"] for d in result["details"] if d["executed"]}
+    for outcome, detail in zip(result["outcomes"], result["details"], strict=True):
+        if detail["request_id"] in executed:
+            assert (outcome.outcome, outcome.reason) == ("missing", "harness_unavailable")
+        else:  # never executed: still observed failures of the model
+            assert outcome.outcome == "fail"
+    assert [a["status"] for a in result["attempts"] if a["run"] == "run-b"] == [
+        "infrastructure_error"
+    ] * 3
+    assert len(result["attempts"]) == 4
+
+
+def test_failures_of_the_programs_are_never_retried(config: HarnessConfig, tmp_path: Path) -> None:
+    harness = FakeHarness()
+
+    result = evaluate_generations(
+        config,
+        stable(),
+        tmp_path / "check",
+        analysis_id="a",
+        order_seed=7,
+        runner=harness,
+        sanitizer=fake_sanitize,
+    )
+
+    assert any(o.outcome == "fail" and o.reason == "assertion_failure" for o in result["outcomes"])
+    assert [(a["run"], a["attempt"]) for a in result["attempts"]] == [("run-a", 1), ("run-b", 1)]

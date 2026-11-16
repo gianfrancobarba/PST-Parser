@@ -23,6 +23,7 @@ from typing import Any, Final, Literal
 from pstparser.empirical.analysis import Outcome, OutcomeRecord
 from pstparser.empirical.benchmarks import BIGCODEBENCH_PINS
 from pstparser.empirical.extraction import extraction_statuses
+from pstparser.empirical.retries import RETRY_POLICY, exhausted, with_retries
 from pstparser.repro.manifest import digest_directory, digest_file
 
 #: Columns of the dataset file read by the harness, in the order they are written.
@@ -904,7 +905,8 @@ def resolve_majority(
             runs.append(extra[one.request_id])
         statuses = tuple(run.status for run in runs)
         if "missing" in statuses:
-            status, shown = "missing", {"reason": "row_absent"}
+            absent = next(run for run in runs if run.status == "missing")
+            status, shown = "missing", {"reason": absent.details.get("reason", "row_absent")}
         else:
             passes = sum(1 for value in statuses if _passed(value))
             if passes * 2 > len(statuses):
@@ -1162,9 +1164,12 @@ def evaluate_generations(
 ) -> dict[str, Any]:
     """Judge every generation with the official harness: two runs, a third on disagreement.
 
-    Returns the outcomes, the per-generation details and a summary of the
-    runs. A container that exits with an error stops the evaluation: it is an
-    infrastructure failure, not an outcome.
+    Returns the outcomes, the per-generation details, a summary of the runs
+    and the log of every harness attempt. A run whose container exits with an
+    error is an infrastructure failure, not an outcome: it is repeated in a new
+    directory (``<run>-attempt-<n>``) up to three attempts in all; if every
+    attempt fails, the programs of that run are ``missing`` with the reason
+    ``harness_unavailable`` (03 §3.5.4).
     """
     execute = runner if runner is not None else run_harness
     extract_code = sanitizer if sanitizer is not None else sanitize_in_image
@@ -1177,6 +1182,7 @@ def evaluate_generations(
     directory = Path(directory)
     sanitized = extract_code(config, generations, entry_points, directory / "sanitize")
     runs: list[dict[str, Any]] = []
+    attempt_log: list[dict[str, Any]] = []
 
     def one_run(label: str, subset: Sequence[Mapping[str, Any]]) -> list[SampleResult]:
         rows, mapping = export_samples(
@@ -1195,8 +1201,42 @@ def evaluate_generations(
             for row in mapping:
                 handle.write(json.dumps(row, ensure_ascii=False) + "\n")
         tasks = sorted({row["task_id"] for row in rows}, key=task_number)
-        run = execute(config, run_dir, task_ids=tasks)
-        _require_success(label, run)
+
+        def attempt(number: int) -> HarnessRun:
+            target = run_dir if number == 1 else directory / f"{label}-attempt-{number}"
+            if number > 1:
+                write_samples(rows, target)
+            return execute(config, target, task_ids=tasks)
+
+        def failure(result: HarnessRun) -> str | None:
+            return None if result.exit_code == 0 else f"exit code {result.exit_code}"
+
+        run, attempts = with_retries(attempt, failure)
+        attempt_log.extend(
+            {
+                "stage": "harness",
+                "run": label,
+                **entry,
+                "directory": label
+                if entry["attempt"] == 1
+                else f"{label}-attempt-{entry['attempt']}",
+            }
+            for entry in attempts
+        )
+        if exhausted(attempts):
+            results = [
+                SampleResult(row["request_id"], "missing", {"reason": "harness_unavailable"})
+                for row in mapping
+            ]
+            runs.append(
+                {
+                    "name": label,
+                    "programs": len(rows),
+                    "tasks": len(tasks),
+                    "attempts": len(attempts),
+                }
+            )
+            return results
         results = parse_results(
             run.results, mapping, rows, code_prompts, calibrated=config.calibrated
         )
@@ -1217,6 +1257,7 @@ def evaluate_generations(
                     status: sum(1 for result in results if result.status == status)
                     for status in ("pass", "fail", "timeout", "missing")
                 },
+                "attempts": len(attempts),
             }
         )
         return results
@@ -1236,7 +1277,10 @@ def evaluate_generations(
     return {
         "outcomes": outcomes,
         "details": details,
+        "attempts": attempt_log,
         "summary": {
+            "retry_policy": RETRY_POLICY,
+            "retried_runs": sum(1 for entry in attempt_log if entry["attempt"] > 1),
             "extraction_policy": SANITIZE_POLICY,
             "rules": [JSON_RESPONSE_RULE, PROMPT_AS_DATA_RULE],
             "order_seed": order_seed,

@@ -639,3 +639,37 @@ def test_without_a_prefill_the_frozen_configuration_is_unchanged(harness, monkey
     assert harness.manifest("null")["configuration"]["assistant_prefill"] is None
     assert "assistant_prefill_sha256" not in harness.manifest("null")["configuration"]
     assert set(seen) == {rendering(wrapped(row["text"])).encode("utf-8") for row in harness.rows}
+
+
+# --- Session identity (M18) ------------------------------------------------------------------
+
+
+def test_every_completion_records_its_session_and_a_resume_adds_a_second_one(
+    harness, monkeypatch
+) -> None:
+    calls = {"count": 0}
+    original = FakeModel.generate
+
+    def interrupted(self: FakeModel, input_ids: torch.Tensor, **kwargs: Any) -> torch.Tensor:
+        calls["count"] += 1
+        if calls["count"] == 3:
+            raise RuntimeError("session ended")
+        return original(self, input_ids, **kwargs)
+
+    monkeypatch.setattr(FakeModel, "generate", interrupted)
+    first = harness.run(**V2)
+    assert isinstance(first.exception, RuntimeError)
+    assert len(harness.journal()) == 2
+    resumed = harness.run(**V2)
+    assert resumed.exit_code == 0, resumed.exception
+    records = harness.journal()
+    assert len(records) == 4
+    sessions = [record["session_id"] for record in records]
+    assert len(set(sessions)) == 2 and sessions[0] == sessions[1] != sessions[2] == sessions[3]
+    assert all(len(session) == 32 for session in sessions)
+    assert {record["gpu_name"] for record in records} == {"NVIDIA A100-SXM4-80GB"}
+    assert len({record["environment_digest"] for record in records}) == 1
+    # A resume on another GPU is still refused (S03): the session cannot hide it.
+    harness.gpu = "NVIDIA L4"
+    other = harness.run(**V2)
+    assert isinstance(other.exception, ValueError)

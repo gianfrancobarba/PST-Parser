@@ -939,3 +939,71 @@ def test_calibration_stops_if_a_control_cannot_be_analysed(
 
     with pytest.raises(RuntimeError, match="could not be analysed"):
         calibrate(config, RUN_CARDS, controls, tmp_path, analyzer=FakeAnalyzer(broken={"sqlite3"}))
+
+
+# ----------------------------------------------------------------- infrastructure retries (M18)
+
+
+class FlakyContainer(FakeAnalyzer):
+    """The container fails the first ``failures`` analyses of the programs holding a marker."""
+
+    def __init__(self, marker: str, failures: int) -> None:
+        """Remember the marker and how many attempts fail."""
+        super().__init__()
+        self.marker, self.failures = marker, failures
+
+    def __call__(self, config: CodeQLConfig, directory: Path) -> ProgramAnalysis:
+        source = directory / "src" / program_name(directory.name)
+        if self.marker in source.read_text(encoding="utf-8") and self.failures > 0:
+            self.failures -= 1
+            self.broken = {self.marker}
+        else:
+            self.broken = set()
+        self.order.append(str(directory.parent.name))
+        return super().__call__(config, directory)
+
+
+def test_a_failed_container_is_analysed_again_and_logged(
+    config: CodeQLConfig, tmp_path: Path
+) -> None:
+    analyzer = FlakyContainer("debug=True", 2)
+
+    result = run(config, tmp_path / "g", "general", analyzer)
+
+    by_key = {(o.task_id, o.condition): o for o in result["outcomes"]}
+    assert by_key[("LSE-1", "H-gold")].outcome != "missing"
+    request = generation("LSE-1", "H-gold", "").get("request_id")
+    log = [a for a in result["attempts"] if a["request_id"] == request]
+    assert [(a["attempt"], a["status"], a["directory"]) for a in log] == [
+        (1, "infrastructure_error", "programs"),
+        (2, "infrastructure_error", "programs-attempt-2"),
+        (3, "ok", "programs-attempt-3"),
+    ]
+    # Every other program is analysed once.
+    assert len(result["attempts"]) == len(log) + result["summary"]["analysed"] - 1
+    assert result["summary"]["retried_programs"] == 1
+    # The same program, byte for byte, in each attempt.
+    name = program_name(request)
+    copies = {
+        (tmp_path / "g" / folder / request / "src" / name).read_bytes()
+        for folder in ("programs", "programs-attempt-2", "programs-attempt-3")
+    }
+    assert len(copies) == 1
+
+
+def test_three_failed_analyses_are_missing_and_findings_are_not_retried(
+    config: CodeQLConfig, tmp_path: Path
+) -> None:
+    result = run(config, tmp_path / "g", "general", FakeAnalyzer(broken={"debug=True"}))
+
+    request = generation("LSE-1", "H-gold", "").get("request_id")
+    log = [a for a in result["attempts"] if a["request_id"] == request]
+    assert [a["status"] for a in log] == ["infrastructure_error"] * 3
+    by_key = {(o.task_id, o.condition): o for o in result["outcomes"]}
+    assert (by_key[("LSE-1", "H-gold")].outcome, by_key[("LSE-1", "H-gold")].reason) == (
+        "missing",
+        "codeql_unavailable",
+    )
+    # A vulnerable program is an outcome of the model: one attempt.
+    vulnerable = generation("LSE-1", "T", "").get("request_id")
+    assert [a["attempt"] for a in result["attempts"] if a["request_id"] == vulnerable] == [1]
