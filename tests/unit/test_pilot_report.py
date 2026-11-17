@@ -120,8 +120,8 @@ def functional(rows: list[dict], world: str) -> tuple[list[OutcomeRecord], list[
                 "extraction_policy": "bigcodebench-sanitize",
                 "extraction_statuses": {
                     "python-single-block-v1": "no_code" if key in NOT_SINGLE_BLOCK else "ok",
-                    "python-fenced-blocks-v1": "ok",
-                    "python-longest-block-v1": "ok",
+                    "python-fenced-blocks-v2": "ok",
+                    "python-longest-block-v2": "ok",
                 },
                 "sanitized_lines": 0 if empty else 3,
                 "executed": executed,
@@ -192,7 +192,7 @@ def test_discordant_pairs_are_b_plus_c_of_t_and_h_gold(pilot) -> None:
 
 def test_journal_completeness_resume_rendering_and_budget(pilot) -> None:
     report = report_for(pilot)
-    assert report["report_version"] == "pilot-report-v1"
+    assert report["report_version"] == "pilot-report-v2"
     assert report["endpoint"] == "functional"
     assert report["conditions"] == ["T", "H-gold", "E"]
     assert report["G1_journal_completeness"] == {
@@ -218,10 +218,11 @@ def test_journal_completeness_resume_rendering_and_budget(pilot) -> None:
 def test_truncation_is_per_condition_with_the_budget_rule(pilot) -> None:
     g5 = report_for(pilot)["G5_truncation"]
     assert g5["by_condition"] == {
-        "T": {"requests": 10, "length": 0, "rate": 0.0, "go": True},
-        "H-gold": {"requests": 10, "length": 1, "rate": 0.1, "go": False},
-        "E": {"requests": 10, "length": 1, "rate": 0.1, "go": False},
+        "T": {"requests": 10, "present": False, "go": True},
+        "H-gold": {"requests": 10, "present": True, "go": False},
+        "E": {"requests": 10, "present": True, "go": False},
     }
+    assert g5["length"] == 2 and g5["rate"] == pytest.approx(2 / 30)
     assert g5["threshold"] == 0.02
     assert g5["output_tokens_p99"] == 195 and g5["output_tokens_max"] == 195
     assert g5["max_new_tokens_if_raised"] == 244  # ceil(1.25 * 195)
@@ -237,16 +238,19 @@ def test_extraction_and_prompt_as_data(pilot) -> None:
         "threshold": 0.15,
         "go": True,
         "by_condition": {
-            "T": {"rows": 10, "failures": 1},
-            "H-gold": {"rows": 10, "failures": 0},
-            "E": {"rows": 10, "failures": 0},
+            "T": {"rows": 10, "present": True},
+            "H-gold": {"rows": 10, "present": False},
+            "E": {"rows": 10, "present": False},
         },
         "diagnostic": {"python-single-block-v1": {"failures": 3, "rate": 0.1}},
     }
     assert report["G6b_prompt_as_data"] == {
-        "T": {"rows": 10, "json_response": 0, "prompt_as_data": 0},
-        "H-gold": {"rows": 10, "json_response": 1, "prompt_as_data": 1},
-        "E": {"rows": 10, "json_response": 0, "prompt_as_data": 1},
+        "by_condition": {
+            "T": {"rows": 10, "json_response_present": False, "prompt_as_data_present": False},
+            "H-gold": {"rows": 10, "json_response_present": True, "prompt_as_data_present": True},
+            "E": {"rows": 10, "json_response_present": False, "prompt_as_data_present": True},
+        },
+        "total": {"rows": 30, "json_response": 1, "prompt_as_data": 2},
     }
 
 
@@ -392,7 +396,7 @@ def test_security_report_measures_codeql_operation_only(tmp_path) -> None:
         "threshold": 0.95,
         "go": False,
     }
-    assert report["G6_extraction"]["primary_policy"] == "python-fenced-blocks-v1"
+    assert report["G6_extraction"]["primary_policy"] == "python-fenced-blocks-v2"
     assert report["G6_extraction"]["failures"] == 4
     assert report["G11_resources"]["peak_vram_bytes"] is None
     for key in keys(report):

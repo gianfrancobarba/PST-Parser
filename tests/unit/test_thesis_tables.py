@@ -109,6 +109,11 @@ def fake_run(root: Path) -> Path:
     report = run / "analysis" / "bcb-h1" / "report.json"
     report.parent.mkdir(parents=True)
     report.write_text(json.dumps(functional_report()), encoding="utf-8")
+    # A failed parser gate: H1 alone is confirmatory (C-11).
+    (run / "parser" / "gate").mkdir(parents=True)
+    (run / "parser" / "gate" / "gate.json").write_text(
+        json.dumps(gate("descriptive")), encoding="utf-8"
+    )
     security = [
         OutcomeRecord("sec-general", "security", f"LSE-{i:03d}", condition, 0, state)
         for i, (t_state, h_state) in enumerate(
@@ -194,6 +199,15 @@ def report_with(analysis_id: str, p: float) -> dict[str, Any]:
     }
 
 
+def h3_report(p: float) -> dict[str, Any]:
+    """The S_parse estimate of H3: T vs H-auto, planned on the S_parse of the gate."""
+    return {**report_with("bcb-h3-s-parse", p), "conditions": ["T", "H-auto"]}
+
+
+def gate(h3: str) -> dict[str, Any]:
+    return {"format": "parser-gate-v1", "h3": h3, "s_parse_size": len(PAIRS)}
+
+
 @pytest.mark.parametrize(
     ("h1", "h3", "expected"),
     [
@@ -207,22 +221,24 @@ def report_with(analysis_id: str, p: float) -> dict[str, Any]:
 def test_weighted_holm_decisions_in_the_paired_table(
     h1: float, h3: float, expected: tuple[str, str]
 ) -> None:
-    reports = {"a": report_with("bcb-h1", h1), "b": report_with("bcb-h3", h3)}
-    (main, _) = paired_tables(reports, {"H1": "bcb-h1", "H3": "bcb-h3"})
+    reports = {"a": report_with("bcb-h1", h1), "b": h3_report(h3)}
+    family = {"H1": "bcb-h1", "H3": "bcb-h3-s-parse"}
+    (main, _) = paired_tables(reports, family, gate("confirmatory"))
     decisions = tuple(row[-1] for row in main.rows)
     assert decisions == expected
 
 
 def test_without_h3_the_family_is_h1_at_five_percent() -> None:
-    (main, _) = paired_tables({"a": report_with("bcb-h1", 0.045)}, {"H1": "bcb-h1"})
+    reports = {"a": report_with("bcb-h1", 0.045)}
+    (main, _) = paired_tables(reports, {"H1": "bcb-h1"}, gate("descriptive"))
     assert main.rows[0][-1] == "H1 rejected"
 
 
 def test_the_confirmatory_family_refuses_unknown_names_and_reports() -> None:
     with pytest.raises(ValueError, match="H1"):
-        paired_tables({"a": functional_report()}, {"H2": "bcb-h1"})
+        paired_tables({"a": functional_report()}, {"H2": "bcb-h1"}, gate("descriptive"))
     with pytest.raises(ValueError, match="no report"):
-        paired_tables({"a": functional_report()}, {"H1": "other"})
+        paired_tables({"a": functional_report()}, {"H1": "other"}, gate("descriptive"))
 
 
 def test_security_table_counts_states_per_condition() -> None:

@@ -91,7 +91,10 @@ def test_missing_excludes_whole_task_and_bounds_keep_observed_outcomes():
 
 
 def test_security_unknown_bounds_are_asymmetric_and_findings_survive(tmp_path):
-    design, records = fixture([(["U"], ["N"]), (["I"], ["U"])], endpoint="security")
+    # Security designs carry families: the unit of inference (C-14).
+    design, records = fixture(
+        [(["U"], ["N"]), (["I"], ["U"])], endpoint="security", families=["F1", "F2"]
+    )
     records[2] = replace(records[2], findings=("CWE evidence despite unusable output",))
     report = analyze_paired(design, records, bootstrap_samples=50)
     assert report.delta == 0.5

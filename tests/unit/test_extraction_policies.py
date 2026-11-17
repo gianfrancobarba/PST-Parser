@@ -48,9 +48,10 @@ def test_plain_code_without_any_fence_is_accepted() -> None:
 def test_unclosed_block_is_an_invalid_fence() -> None:
     result = extract_fenced_blocks(f"Sure:\n```python\n{SOLUTION}")
 
-    assert result == ExtractedCode(None, "invalid_fence", FENCED_BLOCKS, None)
-    # Also when an earlier block was complete: nothing is guessed.
-    assert extract_fenced_blocks(f"{fenced(SOLUTION)}\n```python\nx = 1").status == "invalid_fence"
+    assert result == ExtractedCode(None, "invalid_fence", FENCED_BLOCKS, None, open_fence=True)
+    # v2 (R-ORA-08): a complete block before a cut one is kept, and the cut is flagged.
+    kept = extract_fenced_blocks(f"{fenced(SOLUTION)}\n```python\nx = 1")
+    assert (kept.status, kept.blocks, kept.open_fence) == ("ok", 1, True)
 
 
 @pytest.mark.parametrize(
@@ -104,8 +105,8 @@ def test_longest_block_leaves_the_usage_example_out() -> None:
 def test_registry_holds_the_frozen_policies() -> None:
     assert POLICIES == (
         "python-single-block-v1",
-        "python-fenced-blocks-v1",
-        "python-longest-block-v1",
+        "python-fenced-blocks-v2",
+        "python-longest-block-v2",
         "bigcodebench-sanitize",
     )
     raw = f"Text\n{fenced(SOLUTION)}"
@@ -127,8 +128,8 @@ def test_every_local_policy_is_recorded_for_one_output() -> None:
 
     assert extraction_statuses(raw) == {
         "python-single-block-v1": "invalid_fence",
-        "python-fenced-blocks-v1": "ok",
-        "python-longest-block-v1": "ok",
+        "python-fenced-blocks-v2": "ok",
+        "python-longest-block-v2": "ok",
     }
     assert extraction_statuses(SOLUTION) == dict.fromkeys(extraction_statuses(raw), "ok")
 

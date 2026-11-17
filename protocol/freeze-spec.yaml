@@ -10,7 +10,7 @@ preregistration: {registry: OSF, phase1_url: null, phase2_amendment_url: null, e
 pilot: {run_ids: [], report_sha256: null, changelog_sha256: null}
 extraction_policies:
   bigcodebench: bigcodebench-sanitize
-  llmseceval: python-fenced-blocks-v1
+  llmseceval: python-fenced-blocks-v2
   diagnostic: python-single-block-v1
 conditions:
   bigcodebench: [T, H-gold, E]
@@ -91,3 +91,8 @@ items:
   # - protocol/configs/<benchmark>-<greedy|sampled>.json (review_record: ../protocol-freeze.json)
   # - protocol/analysis/plan.md and design-*.json
   # - protocol/rules/prompt-as-data.md
+  # Every other file of the repository is hashed by the freeze itself (protocol-freeze-v2).
+  # TO ADD in the H-auto freeze (F8), before the parser runs on the benchmarks:
+  # - protocol/hauto/gate-thresholds.json (00 T-7)
+  # - the parser configuration and its system prompt (prompts/system_pst.md)
+  # - protocol/hauto/s-parse.json and the score results.json of the same predictions

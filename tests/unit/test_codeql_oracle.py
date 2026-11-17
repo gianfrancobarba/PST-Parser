@@ -118,11 +118,11 @@ def test_unpinned_settings_are_refused(bundle: Path, change: dict[str, Any], mes
 
 def test_each_measure_names_its_own_oracle(config: CodeQLConfig) -> None:
     assert config.oracle_version("general") == (
-        "codeql-2.22.1/python-queries-1.6.0/python-code-scanning/remote/usability-rules-v1"
+        "codeql-2.22.1/python-queries-1.6.0/python-code-scanning/remote/usability-rules-v2"
     )
     assert config.oracle_version("targeted") == (
         "codeql-2.22.1/python-queries-1.6.0/python-security-extended+local/qmap-v1/"
-        "usability-rules-v1/modelability-v1"
+        "usability-rules-v2/modelability-v1"
     )
 
 
@@ -750,7 +750,7 @@ def test_general_measure_judges_every_generation(config: CodeQLConfig, tmp_path:
     assert refused["analysed"] is False and refused["evidence"] == "not analysed"
     assert result["summary"]["states"] == {"V": 2, "N": 1, "I": 3, "U": 0, "missing": 0}
     assert (result["summary"]["generations"], result["summary"]["analysed"]) == (6, 5)
-    assert {d["extraction_policy"] for d in result["details"]} == {"python-fenced-blocks-v1"}
+    assert {d["extraction_policy"] for d in result["details"]} == {"python-fenced-blocks-v2"}
     assert {d["extraction_blocks"] for d in result["details"] if d["analysed"]} == {1}
 
 

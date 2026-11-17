@@ -678,8 +678,11 @@ def evaluate_generations(
             outcome=sarif,
             config=config,
         )
-        state: Outcome = "missing" if failure else judgment.state
-        reason = "codeql_unavailable" if failure else "; ".join(reasons)
+        # I is decided before CodeQL (R-ORA-07): an unusable program stays I even
+        # if the analyser could not run; only a usable one becomes missing.
+        lost = failure and usable
+        state: Outcome = "missing" if lost else judgment.state
+        reason = "codeql_unavailable" if lost else "; ".join(reasons)
         all_alerts = sarif.alerts if sarif is not None else ()
         outcomes.append(
             OutcomeRecord(
@@ -712,6 +715,13 @@ def evaluate_generations(
                 "extraction_policy": FENCED_BLOCKS,
                 "extraction_status": extracted.status,
                 "extraction_blocks": extracted.blocks,
+                "extraction_open_fence": extracted.open_fence,
+                # Lines of code that are neither blank nor comments (07 C4).
+                "loc": sum(
+                    1
+                    for line in (code or "").split("\n")
+                    if line.strip() and not line.strip().startswith("#")
+                ),
                 "extraction_statuses": extraction_statuses(generation["raw_output"]),
                 "finish_reason": generation["finish_reason"],
                 "analysed": analysis is not None,
@@ -850,6 +860,32 @@ def calibrate(
             )
         ),
     }
+
+
+def require_calibration(
+    calibration: Mapping[str, Any], config: CodeQLConfig, cards: Mapping[str, Card]
+) -> None:
+    """Accept the frozen CodeQL calibration only if it backs the cards (R-ORA-10).
+
+    The calibration must have been run with these settings, show no mismatch,
+    and observe for every calibrated family the state its card declares.
+
+    Raises:
+        ValueError: If the settings differ, a mismatch is listed, or a card's
+            state is not the observed one.
+    """
+    if dict(calibration.get("settings", {})) != config.as_dict():
+        raise ValueError("the frozen calibration was run with other analyser settings")
+    if calibration.get("mismatches"):
+        raise ValueError(f"the frozen calibration lists a mismatch: {calibration['mismatches']}")
+    observed = calibration.get("families", {})
+    for family, card in cards.items():
+        if card.state not in {CALIBRATED, CALIBRATED_FP}:
+            continue
+        row = observed.get(family)
+        if row is None or row.get("observed") != card.state:
+            found = None if row is None else row.get("observed")
+            raise ValueError(f"{family}: the card says {card.state}, the calibration {found}")
 
 
 def codeql_version(config: CodeQLConfig) -> dict[str, Any]:

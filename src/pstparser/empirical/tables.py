@@ -29,8 +29,10 @@ from pstparser.empirical.inference import (
     CONFIRMATORY_WEIGHTS,
     cluster_interval_at,
     four_way_reading,
+    tango_interval,
     tost,
     weighted_holm,
+    weighted_holm_levels,
 )
 from pstparser.pst.taxonomy import LEAF_PATHS, split_path
 
@@ -44,6 +46,8 @@ KINDS: Final = (
     "diagnostics",
     "paired",
     "security",
+    "loc",
+    "review",
     "parser",
 )
 SECURITY_STATES: Final = ("V", "N", "I", "U", "missing")
@@ -387,15 +391,65 @@ def _equivalence_interval(report: Mapping[str, Any]) -> tuple[float, float] | No
     return None
 
 
+#: What each confirmatory hypothesis must be (00 A-3, R-STA-01): endpoint,
+#: conditions and, for H3, the S_parse estimate of ``hauto-ledgers``.
+CONFIRMATORY_REPORTS: Final = {
+    "H1": ("functional", ["T", "H-gold"], ""),
+    "H3": ("functional", ["T", "H-auto"], "-s-parse"),
+}
+
+
+def _check_family(
+    by_id: Mapping[str, Mapping[str, Any]],
+    confirmatory: Mapping[str, str],
+    gate: Mapping[str, Any] | None,
+) -> None:
+    """The family follows the parser gate, and each member is the report it must be.
+
+    Raises:
+        ValueError: If the gate report is missing or malformed, H3 is in the
+            family against the gate (or left out of it), or a report has the
+            wrong endpoint, conditions, suffix, test or task count.
+    """
+    if set(confirmatory) - set(CONFIRMATORY_WEIGHTS) or "H1" not in confirmatory:
+        raise ValueError("the confirmatory family is H1 and, optionally, H3")
+    if gate is None or gate.get("format") != "parser-gate-v1":
+        raise ValueError("the confirmatory family needs the parser gate report (parser-gate-v1)")
+    if gate.get("h3") not in {"confirmatory", "descriptive"}:
+        raise ValueError("the parser gate report has no H3 decision")
+    if (gate["h3"] == "confirmatory") != ("H3" in confirmatory):
+        raise ValueError(
+            f"the parser gate makes H3 {gate['h3']}: the family must "
+            f"{'include' if gate['h3'] == 'confirmatory' else 'leave out'} H3"
+        )
+    for hypothesis, identifier in confirmatory.items():
+        if identifier not in by_id:
+            raise ValueError(f"{hypothesis}: no report with analysis_id {identifier!r}")
+        report = by_id[identifier]
+        endpoint, conditions, suffix = CONFIRMATORY_REPORTS[hypothesis]
+        if report["endpoint"] != endpoint or list(report["conditions"]) != conditions:
+            raise ValueError(
+                f"{hypothesis} must be the {endpoint} {' vs '.join(conditions)} report"
+            )
+        if not identifier.endswith(suffix):
+            raise ValueError(f"{hypothesis} must be the analysis whose id ends with {suffix!r}")
+        if report.get("midp_p") is None:
+            raise ValueError(f"{hypothesis}: the primary test is the mid-p of one greedy pair")
+        if hypothesis == "H3" and report["planned_tasks"] != gate.get("s_parse_size"):
+            raise ValueError("H3 must be planned on the S_parse of the parser gate")
+
+
 def paired_tables(
     reports: Mapping[str, Mapping[str, Any]],
     confirmatory: Mapping[str, str] | None = None,
+    gate: Mapping[str, Any] | None = None,
 ) -> tuple[Table, ...]:
     """T-R2, T-R3, T-R5, T-X1: paired estimates, tests, intervals and sensitivity.
 
     ``confirmatory`` maps H1 (and H3, if it stayed in the family) to the
     ``analysis_id`` of its report; their primary p-values are decided with the
-    weighted Holm procedure (0.04 / 0.01, with recycling). Without H3 the
+    weighted Holm procedure (0.04 / 0.01, with recycling). Whether H3 is in the
+    family is read from ``gate``, the report of ``parser-gate``: without H3 the
     family is H1 alone, read at 0.05 (failed parser gate).
 
     Every report also gets the TOST at +/-5 pp on its 90% interval and the
@@ -405,9 +459,9 @@ def paired_tables(
     if len(by_id) != len(reports):
         raise ValueError("two reports share an analysis_id")
     decisions: dict[str, str] = {}
+    levels: dict[str, float] = {}
     if confirmatory:
-        if set(confirmatory) - set(CONFIRMATORY_WEIGHTS) or "H1" not in confirmatory:
-            raise ValueError("the confirmatory family is H1 and, optionally, H3")
+        _check_family(by_id, confirmatory, gate)
         p_values: dict[str, float | None] = {}
         for hypothesis in CONFIRMATORY_WEIGHTS:
             identifier = confirmatory.get(hypothesis)
@@ -420,6 +474,13 @@ def paired_tables(
             if p_values[hypothesis] is None:
                 raise ValueError(f"{hypothesis}: the report has no primary p-value")
         result = weighted_holm(p_values, CONFIRMATORY_WEIGHTS)
+        # The difference of a confirmatory row is read at the level the weighted
+        # Holm assigned it, not at 0.05 (R-STA-02).
+        levels = {
+            confirmatory[name]: level
+            for name, level in weighted_holm_levels(p_values, CONFIRMATORY_WEIGHTS).items()
+            if name in confirmatory and level is not None
+        }
         decisions = {
             confirmatory[name]: f"{name} {decision}"
             for name, decision in result.items()
@@ -438,11 +499,36 @@ def paired_tables(
         equivalence = _equivalence_interval(report)
         primary = _primary_p(report)
         equivalent = tost(equivalence) if equivalence is not None else None
+        level = levels.get(identifier)
         reading = (
-            four_way_reading(primary, equivalence)
+            four_way_reading(primary, equivalence, alpha=level if level is not None else 0.05)
             if primary is not None and equivalence is not None
             else None
         )
+        # Readings at 3 and 10 pp, always reported (06 S7), on the same test and interval.
+        other: list[str | None] = []
+        for margin in (0.03, 0.10):
+            if equivalence is None:
+                other += [None, None]
+                continue
+            other.append("yes" if tost(equivalence, margin) else "no")
+            other.append(
+                four_way_reading(
+                    primary, equivalence, alpha=level if level is not None else 0.05, margin=margin
+                )
+                if primary is not None
+                else None
+            )
+        holm_ci: tuple[float | None, float | None] = (None, None)
+        if level is not None and table:
+            holm_ci = _bounds(
+                tango_interval(
+                    table["baseline_only"],
+                    table["treatment_only"],
+                    report["included_tasks"],
+                    1 - level,
+                )
+            )
         baseline, treatment = report["conditions"]
         main.append(
             (
@@ -466,11 +552,25 @@ def paired_tables(
                 *_bounds(equivalence),
                 None if equivalent is None else "yes" if equivalent else "no",
                 reading,
+                *other,
+                level,
+                *holm_ci,
                 decisions.get(identifier, "exploratory"),
             )
         )
         for key, value in sorted(report["sensitivity"].items()):
             sensitivity.append((identifier, key, _float(value)))
+        family = report.get("family_sensitivity")
+        if family:
+            low, high = family["delta_fam_ci"]
+            sensitivity += [
+                (identifier, "delta_fam", _float(family["delta_fam"])),
+                (identifier, "delta_fam_ci_low", _float(low)),
+                (identifier, "delta_fam_ci_high", _float(high)),
+                (identifier, "delta_fam_differs_2pp", float(family["delta_fam_differs_2pp"])),
+                (identifier, "lofo_min", _float(family["lofo_min"])),
+                (identifier, "lofo_max", _float(family["lofo_max"])),
+            ]
     return (
         Table(
             "paired",
@@ -501,11 +601,102 @@ def paired_tables(
                 "equivalence90_high",
                 "tost_5pp",
                 "reading_5pp",
+                "tost_3pp",
+                "reading_3pp",
+                "tost_10pp",
+                "reading_10pp",
+                "holm_alpha",
+                "holm_ci_low",
+                "holm_ci_high",
                 "decision",
             ),
             tuple(main),
         ),
         Table("paired-sensitivity", ("analysis_id", "bound", "delta"), tuple(sensitivity)),
+    )
+
+
+def loc_tables(details: Sequence[Mapping[str, Any]]) -> tuple[Table, ...]:
+    """LOC and CodeQL findings per 100 LOC by condition (07 C4), usable programs only.
+
+    A form that only writes more code gets more findings of the general
+    measure; the rate per 100 LOC is the prespecified sensitivity.
+    """
+    by_condition: dict[str, list[Mapping[str, Any]]] = {}
+    for row in details:
+        if row.get("usable"):
+            by_condition.setdefault(row["condition"], []).append(row)
+    rows = []
+    for condition in ordered_conditions(set(by_condition)):
+        members = by_condition[condition]
+        loc = sum(int(row["loc"]) for row in members)
+        findings = sum(len(row["alerts"]) for row in members)
+        rows.append(
+            (
+                condition,
+                len(members),
+                loc / len(members),
+                findings,
+                100 * findings / loc if loc else None,
+            )
+        )
+    return (
+        Table(
+            "security-loc",
+            ("condition", "usable_programs", "mean_loc", "findings", "findings_per_100_loc"),
+            tuple(rows),
+        ),
+    )
+
+
+def review_tables(score: Mapping[str, Any]) -> tuple[Table, ...]:
+    """T-R-S4: the blind review (04 §3.10) by condition, with the accuracy of the blind."""
+    rows = []
+    for condition in ordered_conditions(set(score["targeted"]) | set(score["general"])):
+        targeted = score["targeted"].get(condition, {})
+        general = score["general"].get(condition, {})
+        rows.append(
+            (
+                condition,
+                targeted.get("V"),
+                targeted.get("false_positive"),
+                targeted.get("N"),
+                targeted.get("false_negative"),
+                general.get("V"),
+                general.get("false_positive"),
+            )
+        )
+    blind = score["blind"]
+    low, high = _bounds(blind["accuracy_ci95"])
+    return (
+        Table(
+            "review",
+            (
+                "condition",
+                "targeted_V",
+                "targeted_false_positive",
+                "targeted_N",
+                "targeted_false_negative",
+                "general_V",
+                "general_false_positive",
+            ),
+            tuple(rows),
+        ),
+        Table(
+            "review-blind",
+            ("cases", "usability_kappa", "guesses", "correct", "accuracy", "low", "high"),
+            (
+                (
+                    score["cases"],
+                    _float(score["usability_kappa"]),
+                    blind["guesses"],
+                    blind["correct"],
+                    _float(blind["accuracy"]),
+                    low,
+                    high,
+                ),
+            ),
+        ),
     )
 
 

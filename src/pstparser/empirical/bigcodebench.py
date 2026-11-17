@@ -657,8 +657,8 @@ def merge_calibrations(calibrations: Sequence[Mapping[str, Any]]) -> dict[str, A
 # --------------------------------------------------------------------------- evaluation
 
 SANITIZE_POLICY: Final = "bigcodebench-sanitize"
-PROMPT_AS_DATA_RULE: Final = "prompt-as-data-v1"
-JSON_RESPONSE_RULE: Final = "json-response-v1"
+PROMPT_AS_DATA_RULE: Final = "prompt-as-data-v2"
+JSON_RESPONSE_RULE: Final = "json-response-v2"
 RAW_FILE: Final = "raw.jsonl"
 SANITIZED_FILE: Final = "sanitized.jsonl"
 PASS_AT_K_FILE: Final = "samples_pass_at_k.json"
@@ -676,12 +676,16 @@ SANITIZE_DRIVER: Final = (
     "        target.write(json.dumps(record, ensure_ascii=False) + '\\n')\n"
 )
 
-#: Keys of the hierarchical prompt and of the envelope control.
-_PROMPT_KEYS: Final = ("main_instruction", "phrase", "position", "prompt")
-_PST_KEYS_IN_TEXT: Final = re.compile(r'"(main_instruction|context|position|phrase)"\s*:')
-_KEY_IN_TEXT: Final = re.compile(
-    r'"(main_instruction|phrase|position|prompt)"\s*:|\[\s*["\'](main_instruction|phrase|position|prompt)["\']\s*\]'
-)
+#: Keys of the hierarchical prompt (H) and of the envelope control (E): both
+#: renderings have ``prompt`` at the root (R-ORA-04).
+_PROMPT_KEYS: Final = frozenset({"prompt", "main_instruction", "context", "phrase", "position"})
+#: Keys no ordinary program uses: the instruction leaf of the hierarchical prompt.
+_DISTINCTIVE_KEYS: Final = frozenset({"main_instruction"})
+#: Keys directly under ``prompt`` in the hierarchical prompt.
+_TOP_LEAVES: Final = frozenset({"main_instruction", "context", "examples", "reasoning"})
+_FENCE: Final = re.compile(r"^[ \t]*```[^\n]*\n(.*?)^[ \t]*```[ \t]*$", re.DOTALL | re.MULTILINE)
+_KEY_IN_TEXT: Final = re.compile(r"[\"']main_instruction[\"']\s*[\]:]")
+_ENVELOPE_KEY: Final = re.compile(r'"prompt"\s*:')
 _SYNTAX: Final = re.compile(r"SyntaxError|IndentationError|invalid syntax|unexpected indent")
 _IMPORT: Final = re.compile(r"No module named|cannot import")
 
@@ -879,44 +883,64 @@ def compare_runs(first: Sequence[SampleResult], second: Sequence[SampleResult]) 
     )
 
 
+def needs_third_run(first: Sequence[SampleResult], second: Sequence[SampleResult]) -> list[str]:
+    """Programs a third run must settle: a pass/fail disagreement, or one run missing.
+
+    A program missing from both runs stays missing: two outcomes are absent.
+    """
+    left = {result.request_id: result for result in first}
+    right = {result.request_id: result for result in second}
+    one_missing = {
+        request
+        for request in left
+        if request in right
+        and (left[request].status == "missing") != (right[request].status == "missing")
+    }
+    return sorted(set(compare_runs(first, second)) | one_missing)
+
+
 def resolve_majority(
     first: Sequence[SampleResult],
     second: Sequence[SampleResult],
     third: Sequence[SampleResult] | None = None,
 ) -> list[Resolved]:
-    """Settle each program: agreement of two runs, or the majority of three.
+    """Settle each program by the majority of its valid outcomes over two or three runs.
 
-    A timeout counts as a failure. Where the first two runs disagree a third
-    run is required and the program is flagged ``flaky``. A program missing
-    from a run it was part of stays ``missing``.
+    A timeout counts as a failure. Where the first two runs disagree, or where
+    exactly one of them is missing, a third run is required and the program is
+    flagged ``flaky`` (R-ORA-03). A program is ``missing`` only when fewer than
+    two runs gave a valid outcome, or when two valid outcomes split (reason
+    ``no_majority``).
 
     Raises:
-        ValueError: If two runs disagree and no third run settles the program.
+        ValueError: If a program that needs a third run has none.
     """
-    discordant = set(compare_runs(first, second))
+    required = set(needs_third_run(first, second))
     extra = {result.request_id: result for result in third or ()}
-    if not set(extra) >= discordant:
+    if not set(extra) >= required:
         raise ValueError("a third run is required for the programs on which two runs disagree")
     second_by_id = {result.request_id: result for result in second}
     resolved: list[Resolved] = []
     for one in first:
         runs = [one, second_by_id[one.request_id]]
-        if one.request_id in discordant:
+        if one.request_id in required:
             runs.append(extra[one.request_id])
         statuses = tuple(run.status for run in runs)
-        if "missing" in statuses:
+        valid = [run for run in runs if run.status != "missing"]
+        passes = sum(1 for run in valid if _passed(run.status))
+        if len(valid) < 2:
             absent = next(run for run in runs if run.status == "missing")
             status, shown = "missing", {"reason": absent.details.get("reason", "row_absent")}
+        elif passes * 2 > len(valid):
+            status, shown = "pass", {}
+        elif (len(valid) - passes) * 2 > len(valid):
+            # Details of the earliest run in which the program did not pass.
+            failed = next(run for run in valid if not _passed(run.status))
+            status, shown = failed.status, dict(failed.details)
         else:
-            passes = sum(1 for value in statuses if _passed(value))
-            if passes * 2 > len(statuses):
-                status, shown = "pass", {}
-            else:
-                # Details of the earliest run in which the program did not pass.
-                failed = next(run for run in runs if not _passed(run.status))
-                status, shown = failed.status, dict(failed.details)
+            status, shown = "missing", {"reason": "no_majority"}
         resolved.append(
-            Resolved(one.request_id, status, one.request_id in discordant, statuses, shown)
+            Resolved(one.request_id, status, one.request_id in required, statuses, shown)
         )
     return resolved
 
@@ -944,51 +968,129 @@ def _defines(code: str, name: str) -> bool:
     return False
 
 
-def is_json_response(raw_output: str) -> bool:
-    """Rule ``json-response-v1``: the answer is, or repeats, a JSON prompt.
+def _json_keys(value: Any) -> set[str]:
+    """Every dictionary key of a decoded JSON value, at any depth."""
+    if isinstance(value, dict):
+        nested = {key for item in value.values() for key in _json_keys(item)}
+        return {str(key) for key in value} | nested
+    if isinstance(value, list):
+        return {key for item in value for key in _json_keys(item)}
+    return set()
 
-    True when the raw output starts with ``{`` or ``[``, or holds at least two
-    different keys of the hierarchical prompt in key position.
+
+def _embedded_json(text: str) -> list[Any]:
+    """Every JSON object or array that starts somewhere in ``text`` and decodes."""
+    decoder = json.JSONDecoder()
+    found: list[Any] = []
+    for index, character in enumerate(text):
+        if character in "{[":
+            try:
+                value, _ = decoder.raw_decode(text, index)
+            except ValueError:
+                continue
+            if isinstance(value, dict | list):
+                found.append(value)
+    return found
+
+
+def is_json_response(raw_output: str) -> bool:
+    """Rule ``json-response-v2``: the answer is JSON, or carries the JSON prompt.
+
+    True when the whole answer is a JSON object or array, or when a JSON object
+    or array that decodes, inside a fenced block or in the prose, holds a key of
+    the hierarchical prompt or of the envelope (``prompt``, ``main_instruction``,
+    ``context``, ``phrase``, ``position``). Keys merely quoted in prose do not
+    count, so the rule does not depend on the prompt the model was shown.
     """
-    if raw_output.lstrip()[:1] in {"{", "["}:
+    try:
+        whole = json.loads(raw_output.strip())
+    except ValueError:
+        whole = None
+    if isinstance(whole, dict | list):
         return True
-    return len(set(_PST_KEYS_IN_TEXT.findall(raw_output))) >= 2
+    blocks = [match[1] for match in _FENCE.finditer(raw_output)]
+    prose = _FENCE.sub("", raw_output)
+    return any(
+        _json_keys(value) & _PROMPT_KEYS
+        for part in (*blocks, prose)
+        for value in _embedded_json(part)
+    )
+
+
+def _key(node: ast.expr | None) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return None
+
+
+def _is_loads(node: ast.AST) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute | ast.Name)
+        and (node.func.attr if isinstance(node.func, ast.Attribute) else node.func.id) == "loads"
+    )
 
 
 def is_prompt_as_data(code: str) -> bool:
-    """Rule ``prompt-as-data-v1``: the program handles the prompt as its input data.
+    """Rule ``prompt-as-data-v2``: the program handles the prompt as its input data.
 
-    True when the extracted code uses a key of the hierarchical prompt or of
-    the envelope (``main_instruction``, ``phrase``, ``position``, ``prompt``)
-    as a dictionary key or as a subscript, or passes text holding such a key to
-    a ``loads`` call. Code that does not parse is searched as text.
+    True when the extracted code
+    - uses ``main_instruction`` as a dictionary key, a subscript or a ``get`` key;
+    - builds a dictionary with both ``phrase`` and ``position`` (a PST span);
+    - reads ``x["prompt"][leaf]`` with a top-level leaf of the hierarchical prompt;
+    - reads a prompt key (``prompt``, ``context``, ``phrase``, ``position``) from
+      the result of a ``loads`` call, directly or through a name bound to it;
+    - passes text holding ``main_instruction`` or ``"prompt":`` to ``loads``.
+    Ordinary uses of ``prompt`` or ``position`` (an API body, a dataframe
+    column) do not count (R-ORA-05). Code that does not parse is searched as
+    text for ``main_instruction`` in key position.
     """
     try:
         tree = ast.parse(code)
     except (SyntaxError, ValueError):
         return _KEY_IN_TEXT.search(code) is not None
+    loaded = {
+        target.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign) and _is_loads(node.value)
+        for target in node.targets
+        if isinstance(target, ast.Name)
+    }
+
+    def from_loads(node: ast.expr) -> bool:
+        while isinstance(node, ast.Subscript):
+            node = node.value
+        return _is_loads(node) or (isinstance(node, ast.Name) and node.id in loaded)
+
     for node in ast.walk(tree):
-        keys: list[ast.expr | None] = []
         if isinstance(node, ast.Dict):
-            keys = list(node.keys)
+            keys = {_key(key) for key in node.keys}
+            if keys & _DISTINCTIVE_KEYS or {"phrase", "position"} <= keys:
+                return True
         elif isinstance(node, ast.Subscript):
-            keys = [node.slice]
-        elif (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute | ast.Name)
-            and (node.func.attr if isinstance(node.func, ast.Attribute) else node.func.id)
-            == "loads"
-        ):
-            for argument in node.args:
-                if (
-                    isinstance(argument, ast.Constant)
-                    and isinstance(argument.value, str)
-                    and _KEY_IN_TEXT.search(argument.value)
+            key = _key(node.slice)
+            if key in _DISTINCTIVE_KEYS or (key in _PROMPT_KEYS and from_loads(node.value)):
+                return True
+            if (
+                key in _TOP_LEAVES
+                and isinstance(node.value, ast.Subscript)
+                and _key(node.value.slice) == "prompt"
+            ):
+                return True
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute) and node.func.attr == "get" and node.args:
+                key = _key(node.args[0])
+                if key in _DISTINCTIVE_KEYS or (
+                    key in _PROMPT_KEYS and from_loads(node.func.value)
                 ):
                     return True
-        for key in keys:
-            if isinstance(key, ast.Constant) and key.value in _PROMPT_KEYS:
-                return True
+            if _is_loads(node):
+                for argument in node.args:
+                    text = _key(argument)
+                    if text is not None and (
+                        "main_instruction" in text or _ENVELOPE_KEY.search(text)
+                    ):
+                        return True
     return False
 
 
@@ -1161,6 +1263,7 @@ def evaluate_generations(
     order_seed: int,
     runner: Callable[..., HarnessRun] | None = None,
     sanitizer: Callable[..., dict[str, str]] | None = None,
+    accept_discordance: bool = False,
 ) -> dict[str, Any]:
     """Judge every generation with the official harness: two runs, a third on disagreement.
 
@@ -1168,8 +1271,12 @@ def evaluate_generations(
     and the log of every harness attempt. A run whose container exits with an
     error is an infrastructure failure, not an outcome: it is repeated in a new
     directory (``<run>-attempt-<n>``) up to three attempts in all; if every
-    attempt fails, the programs of that run are ``missing`` with the reason
-    ``harness_unavailable`` (03 §3.5.4).
+    attempt fails, the run is repeated task by task and only the programs of a
+    task whose batch still fails are ``missing`` with the reason
+    ``harness_unavailable`` (03 §3.5.4, R-ORA-02). Rows absent with exit code 0
+    and failed references are faults too. With more than 1% of the programs
+    changing outcome between the first two runs the evaluation stops, unless
+    ``accept_discordance`` (recorded in the summary).
     """
     execute = runner if runner is not None else run_harness
     extract_code = sanitizer if sanitizer is not None else sanitize_in_image
@@ -1184,32 +1291,39 @@ def evaluate_generations(
     runs: list[dict[str, Any]] = []
     attempt_log: list[dict[str, Any]] = []
 
-    def one_run(label: str, subset: Sequence[Mapping[str, Any]]) -> list[SampleResult]:
-        rows, mapping = export_samples(
-            subset,
-            {g["request_id"]: sanitized[g["request_id"]] for g in subset},
-            order_seed=order_seed,
-            run_label=label,
-        )
-        if not rows:
-            return []
+    def attempt_batch(
+        label: str, rows: list[dict[str, str]], mapping: list[dict[str, Any]]
+    ) -> tuple[HarnessRun, list[SampleResult] | None, list[dict[str, Any]]]:
+        """One harness run of ``rows`` with retries; results None when every attempt failed."""
         run_dir = directory / label
-        path = write_samples(rows, run_dir)
-        with (run_dir.parent / f"{label}.mapping.jsonl").open(
-            "x", encoding="utf-8", newline="\n"
-        ) as handle:
-            for row in mapping:
-                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
         tasks = sorted({row["task_id"] for row in rows}, key=task_number)
+        parsed: dict[int, list[SampleResult]] = {}
 
         def attempt(number: int) -> HarnessRun:
             target = run_dir if number == 1 else directory / f"{label}-attempt-{number}"
-            if number > 1:
-                write_samples(rows, target)
+            write_samples(rows, target)
             return execute(config, target, task_ids=tasks)
 
         def failure(result: HarnessRun) -> str | None:
-            return None if result.exit_code == 0 else f"exit code {result.exit_code}"
+            # 03 §3.5.4: a crash, rows the harness did not report and a reference
+            # that fails are faults of the run, never outcomes (R-ORA-01).
+            if result.exit_code != 0:
+                return f"exit code {result.exit_code}"
+            results = parse_results(
+                result.results, mapping, rows, code_prompts, calibrated=config.calibrated
+            )
+            absent = sum(1 for item in results if item.status == "missing")
+            if absent:
+                return f"rows absent with exit code 0: {absent}"
+            summary = result.directory / PASS_AT_K_FILE
+            reference = (
+                json.loads(summary.read_bytes().decode("utf-8")) if summary.is_file() else {}
+            )
+            if reference.get("failed_tasks"):
+                failed = sorted(reference["failed_tasks"], key=task_number)
+                return f"reference failed: {failed[:5]}"
+            parsed[id(result)] = results
+            return None
 
         run, attempts = with_retries(attempt, failure)
         attempt_log.extend(
@@ -1223,23 +1337,61 @@ def evaluate_generations(
             }
             for entry in attempts
         )
-        if exhausted(attempts):
-            results = [
-                SampleResult(row["request_id"], "missing", {"reason": "harness_unavailable"})
-                for row in mapping
-            ]
+        return run, None if exhausted(attempts) else parsed[id(run)], attempts
+
+    def one_run(label: str, subset: Sequence[Mapping[str, Any]]) -> list[SampleResult]:
+        rows, mapping = export_samples(
+            subset,
+            {g["request_id"]: sanitized[g["request_id"]] for g in subset},
+            order_seed=order_seed,
+            run_label=label,
+        )
+        if not rows:
+            return []
+        directory.mkdir(parents=True, exist_ok=True)
+        with (directory / f"{label}.mapping.jsonl").open(
+            "x", encoding="utf-8", newline="\n"
+        ) as handle:
+            for row in mapping:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+        tasks = sorted({row["task_id"] for row in rows}, key=task_number)
+        run, results, attempts = attempt_batch(label, rows, mapping)
+        if results is None:
+            # A program that keeps the whole run from finishing costs only its own
+            # task: the run is repeated task by task (R-ORA-02).
+            results = []
+            batches = 0
+            for task in tasks:
+                lines = [i for i, row in enumerate(rows) if row["task_id"] == task]
+                batch_rows = [rows[i] for i in lines]
+                renumber = {old: new for new, old in enumerate(lines)}
+                batch_mapping = [
+                    {**row, "line": renumber[row["line"]]}
+                    for row in mapping
+                    if row["task_id"] == task
+                ]
+                _, batch, _ = attempt_batch(
+                    f"{label}-task-{task_number(task)}", batch_rows, batch_mapping
+                )
+                batches += 1
+                results += batch or [
+                    SampleResult(row["request_id"], "missing", {"reason": "harness_unavailable"})
+                    for row in batch_mapping
+                ]
             runs.append(
                 {
                     "name": label,
                     "programs": len(rows),
                     "tasks": len(tasks),
                     "attempts": len(attempts),
+                    "batches_by_task": batches,
+                    "statuses": {
+                        status: sum(1 for result in results if result.status == status)
+                        for status in ("pass", "fail", "timeout", "missing")
+                    },
                 }
             )
             return results
-        results = parse_results(
-            run.results, mapping, rows, code_prompts, calibrated=config.calibrated
-        )
         summary = run.directory / PASS_AT_K_FILE
         reference = json.loads(summary.read_bytes().decode("utf-8")) if summary.is_file() else {}
         runs.append(
@@ -1248,7 +1400,7 @@ def evaluate_generations(
                 "programs": len(rows),
                 "tasks": len(tasks),
                 "elapsed_seconds": run.elapsed_seconds,
-                "samples_sha256": digest_file(path),
+                "samples_sha256": digest_file(run.directory / SAMPLES_FILE),
                 "results_sha256": digest_file(run.results),
                 "log_sha256": digest_file(run.log),
                 "reference_pass_rate": reference.get("gt_pass_rate"),
@@ -1265,15 +1417,23 @@ def evaluate_generations(
     first = one_run("run-a", generations)
     second = one_run("run-b", generations)
     discordant = set(compare_runs(first, second))
+    unsettled = set(needs_third_run(first, second))
+    executed = len(first)
+    above = bool(executed) and len(discordant) > 0.01 * executed
+    if above and not accept_discordance:
+        # 03 §3.5.3 point 5: the environment is not stable enough to judge (R-ORA-01).
+        raise ValueError(
+            f"{len(discordant)} of {executed} programs changed outcome between two runs "
+            "(more than 1%): stop and check the environment, or accept it explicitly"
+        )
     third: list[SampleResult] | None = None
-    if discordant:
+    if unsettled:
         by_id = {g["request_id"]: g for g in generations}
-        flaky_tasks = {by_id[request]["task_id"] for request in discordant}
+        flaky_tasks = {by_id[request]["task_id"] for request in unsettled}
         # Every condition of a task with a disagreement is run again together.
         third = one_run("run-c", [g for g in generations if g["task_id"] in flaky_tasks])
     resolved = resolve_majority(first, second, third)
     outcomes, details = to_outcomes(generations, sanitized, entry_points, resolved, analysis_id)
-    executed = len(first)
     return {
         "outcomes": outcomes,
         "details": details,
@@ -1288,7 +1448,9 @@ def evaluate_generations(
             "executed": executed,
             "discordant": len(discordant),
             "discordance_rate": len(discordant) / executed if executed else 0.0,
-            "discordance_above_1_percent": bool(executed) and len(discordant) > 0.01 * executed,
+            "discordance_above_1_percent": above,
+            "discordance_accepted": above and accept_discordance,
+            "third_run_programs": len(unsettled),
             "flaky_tasks": sorted({d["task_id"] for d in details if d["flaky"]}, key=task_number),
             "runs": runs,
         },

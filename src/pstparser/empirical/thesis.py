@@ -84,7 +84,7 @@ class Outputs:
             self.tables.append((kind, replace(table, name=name)))
 
 
-def write(outputs: Outputs, out: Path) -> list[Path]:
+def write(outputs: Outputs, out: Path, frozen: Mapping[str, Any] | None = None) -> list[Path]:
     """Write every table (CSV, LaTeX) and figure (PDF, PNG) and the stage manifest.
 
     Raises:
@@ -127,6 +127,7 @@ def write(outputs: Outputs, out: Path) -> list[Path]:
             "inputs": dict(provenance.inputs),
             "outputs": {path.name: digest_file(path) for path in written},
             "skipped": outputs.skipped,
+            **dict(frozen or {"purpose": "exploratory", "freeze_sha256": None}),
             "source": snapshot,
         },
         out,
@@ -161,6 +162,7 @@ def build_tables(
     freeze: Path | None = None,
     reports: Sequence[Path] = (),
     confirmatory: Mapping[str, str] | None = None,
+    gate: Path | None = None,
     outcomes: Sequence[Path] = (),
     score: Path | None = None,
     prefix: str | None = None,
@@ -196,11 +198,22 @@ def build_tables(
         outputs.add(kind, tab.diagnostics_tables(rows, checked), prefix)
     elif kind == "paired":
         need(reports, "--report")
-        outputs.add(kind, tab.paired_tables(_reports(outputs, reports), confirmatory), prefix)
+        gate_report = read_json(outputs.read(gate)) if gate is not None else None
+        outputs.add(
+            kind, tab.paired_tables(_reports(outputs, reports), confirmatory, gate_report), prefix
+        )
     elif kind == "security":
         need(outcomes, "--outcomes")
         records = [record for path in outcomes for record in read_outcomes(outputs.read(path))]
         outputs.add(kind, tab.security_tables(records), prefix)
+    elif kind == "loc":
+        need(details, "--details")
+        assert details is not None
+        outputs.add(kind, tab.loc_tables(read_jsonl(outputs.read(details))), prefix)
+    elif kind == "review":
+        need(score, "--score")
+        assert score is not None
+        outputs.add(kind, tab.review_tables(read_json(outputs.read(score))), prefix)
     elif kind == "parser":
         need(score, "--score")
         assert score is not None
@@ -244,9 +257,18 @@ def build_figures(
 
 
 def build_thesis(
-    run: Path, protocol: Path, confirmatory: Mapping[str, str] | None = None
+    run: Path,
+    protocol: Path,
+    confirmatory: Mapping[str, str] | None = None,
+    gate: Path | None = None,
 ) -> Outputs:
-    """Every table and figure the files of ``run`` (and ``protocol``) allow."""
+    """Every table and figure the files of ``run`` (and ``protocol``) allow.
+
+    ``gate`` is the parser gate report that decides whether H3 is in the
+    confirmatory family; it defaults to ``parser/gate/gate.json`` of the run.
+    """
+    if gate is None and (run / "parser" / "gate" / "gate.json").is_file():
+        gate = run / "parser" / "gate" / "gate.json"
     outputs = Outputs(run)
     samples = sorted(
         path
@@ -291,7 +313,7 @@ def build_thesis(
         outputs.skipped["tokens"] = outputs.skipped["diagnostics"] = "no generation journal"
     reports = sorted((run / "analysis").glob("*/report.json"))
     if reports:
-        build_tables(outputs, "paired", reports=reports, confirmatory=confirmatory)
+        build_tables(outputs, "paired", reports=reports, confirmatory=confirmatory, gate=gate)
         build_figures(outputs, "forest", reports=reports)
         for report in reports:
             label = report.parent.name
@@ -309,10 +331,17 @@ def build_thesis(
         build_tables(outputs, "security", outcomes=security)
     else:
         outputs.skipped["security"] = "no evaluation/*/codeql-*/outcomes.jsonl"
+    for codeql_details in sorted((run / "evaluation").glob("*/codeql-*/details.jsonl")):
+        label = f"{codeql_details.parent.parent.name}-{codeql_details.parent.name}"
+        build_tables(outputs, "loc", details=codeql_details, prefix=label)
     score = run / "parser" / "score" / "results.json"
     if score.is_file():
         build_tables(outputs, "parser", score=score)
     else:
         outputs.skipped["parser"] = "no parser/score/results.json"
-    outputs.skipped["review"] = "the blind security review has no file format yet"
+    review = run / "review" / "blind-score.json"
+    if review.is_file():
+        build_tables(outputs, "review", score=review)
+    else:
+        outputs.skipped["review"] = "no review/blind-score.json"
     return outputs

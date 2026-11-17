@@ -6,6 +6,11 @@ reports only technical states (truncation, extraction, responses that treat the
 prompt as data, input tokens), never a success rate. The only paired quantity
 is the number of discordant T/H-gold pairs, b + c, without b - c.
 
+Truncations, empty sanitised programs, ``json_response`` and ``prompt_as_data``
+are failures by construction: counted per condition next to b + c they would
+bound the sign of H-gold - T. Per condition the report says only whether they
+are present; their counts are pooled over all conditions (R-STA-05).
+
 Some criteria cannot be read from a journal and its evaluation (calibration of
 the harness, annotation time, the parser on the pilot prompts); they are listed
 under ``not_computed_here`` with the artefact where they are read.
@@ -23,7 +28,7 @@ from typing import Any, Final
 from pstparser.empirical.analysis import OutcomeRecord
 from pstparser.empirical.contracts import CONDITIONS
 
-REPORT_VERSION: Final = "pilot-report-v1"
+REPORT_VERSION: Final = "pilot-report-v2"
 #: Fragments no key of the report may contain (case-insensitive).
 FORBIDDEN_KEY_FRAGMENTS: Final = (
     "delta",
@@ -42,7 +47,7 @@ BUDGET_MARGIN: Final = 1.25
 DIAGNOSTIC_POLICY: Final = "python-single-block-v1"
 PRIMARY_POLICY: Final = {
     "functional": "bigcodebench-sanitize",
-    "security": "python-fenced-blocks-v1",
+    "security": "python-fenced-blocks-v2",
 }
 NOT_COMPUTED: Final = {
     "G7": "harness calibration: the reference and empty programs of check-bigcodebench "
@@ -131,10 +136,10 @@ def _generation(manifest: Mapping[str, Any], rows: Sequence[Mapping[str, Any]]) 
         cut = sum(1 for row in members if row["finish_reason"] == "length")
         truncation[name] = {
             "requests": len(members),
-            "length": cut,
-            "rate": cut / len(members),
+            "present": cut > 0,
             "go": cut / len(members) <= TRUNCATION_THRESHOLD,
         }
+    cut_total = sum(1 for row in rows if row["finish_reason"] == "length")
     elapsed = [row["elapsed_seconds"] for row in rows if "elapsed_seconds" in row]
     peaks = [row["peak_vram_bytes"] for row in rows if row.get("peak_vram_bytes") is not None]
     overhead: dict[str, Any] | None = None
@@ -172,6 +177,8 @@ def _generation(manifest: Mapping[str, Any], rows: Sequence[Mapping[str, Any]]) 
         },
         "G5_truncation": {
             "by_condition": truncation,
+            "length": cut_total,
+            "rate": cut_total / len(rows),
             "threshold": TRUNCATION_THRESHOLD,
             "output_tokens_p99": output_p99,
             "output_tokens_max": max(row["output_tokens"] for row in rows),
@@ -229,7 +236,7 @@ def _evaluation(
         "by_condition": {
             name: {
                 "rows": len(members),
-                "failures": sum(1 for d in failed if d["condition"] == name),
+                "present": any(d["condition"] == name for d in failed),
             }
             for name, members in groups.items()
         },
@@ -247,12 +254,19 @@ def _evaluation(
     }
     if endpoint == "functional":
         result["G6b_prompt_as_data"] = {
-            name: {
-                "rows": len(members),
-                "json_response": sum(1 for d in members if d["reason"] == "json_response"),
-                "prompt_as_data": sum(1 for d in members if d["reason"] == "prompt_as_data"),
-            }
-            for name, members in groups.items()
+            "by_condition": {
+                name: {
+                    "rows": len(members),
+                    "json_response_present": any(d["reason"] == "json_response" for d in members),
+                    "prompt_as_data_present": any(d["reason"] == "prompt_as_data" for d in members),
+                }
+                for name, members in groups.items()
+            },
+            "total": {
+                "rows": len(details),
+                "json_response": sum(1 for d in details if d["reason"] == "json_response"),
+                "prompt_as_data": sum(1 for d in details if d["reason"] == "prompt_as_data"),
+            },
         }
         executed = [d for d in details if d["executed"]]
         discordant = sum(

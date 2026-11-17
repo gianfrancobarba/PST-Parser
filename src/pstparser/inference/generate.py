@@ -344,7 +344,11 @@ def generate_messages(
 
     started = perf_counter()
     with torch.no_grad():
-        outputs = model.generate(input_ids=inputs, **keywords)
+        # One request at a time, never padded: the mask is all ones. Passing it
+        # explicitly changes no output and removes the pad = eos ambiguity (Q-08).
+        outputs = model.generate(
+            input_ids=inputs, attention_mask=torch.ones_like(inputs), **keywords
+        )
 
     generated = outputs[0][inputs.shape[-1] :]
     eos = getattr(getattr(model, "generation_config", None), "eos_token_id", None)

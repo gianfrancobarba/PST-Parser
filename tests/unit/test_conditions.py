@@ -313,7 +313,9 @@ def design(pair=("T", "H-gold")) -> AnalysisDesign:
     )
 
 
-@pytest.mark.parametrize("pair", [("T", "H-gold"), ("T", "E"), ("E", "H-gold")])
+# Only the pairs with T: the one missing cell is in T, so filtering the ledger by hand
+# keeps the same complete tasks (C-13: every contrast drops the tasks with a missing arm).
+@pytest.mark.parametrize("pair", [("T", "H-gold"), ("T", "E")])
 def test_a_pair_from_a_three_condition_ledger_equals_a_ledger_filtered_by_hand(pair) -> None:
     full = analyze_paired(
         design(pair), ledger(), bootstrap_samples=200, ledger_conditions=("T", "H-gold", "E")
@@ -337,8 +339,10 @@ def test_the_known_contrasts_of_the_fixture() -> None:
         "both_pass": 1,
     }
     assert h1.delta == pytest.approx(0.4)
+    # The task with T missing leaves every contrast of the ledger (C-13, R-STA-03).
     envelope = analyze_paired(design(("E", "H-gold")), ledger(), **options)
-    assert envelope.included_tasks == 6 and envelope.delta == pytest.approx(2 / 6)
+    assert envelope.included_tasks == 5 and envelope.delta == pytest.approx(2 / 5)
+    assert envelope.excluded_tasks == {"5": ["T/0: harness_unavailable"]}
 
 
 def test_without_ledger_conditions_extra_rows_are_still_refused() -> None:

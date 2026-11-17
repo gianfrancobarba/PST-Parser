@@ -129,6 +129,7 @@ class Harness:
         self.model: FakeModel | None = None
         self.tokenizer: FakeTokenizer | None = None
         self.gpu = "NVIDIA A100-SXM4-80GB"
+        self.driver = "550.54"
         self.variants = tmp_path / "variants.jsonl"
         rows = []
         self.rows = rows
@@ -146,7 +147,7 @@ class Harness:
         monkeypatch.setattr(
             manifest_module,
             "accelerator",
-            lambda: {"available": True, "devices": [self.gpu], "driver": "550.54"},
+            lambda: {"available": True, "devices": [self.gpu], "driver": self.driver},
         )
 
     def snapshot_path(self) -> Path:
@@ -188,6 +189,7 @@ class Harness:
             "dataset_revision": "test-dataset",
             "purpose": "pilot",
             "review_record": "review.md",
+            "gpu": "NVIDIA A100-SXM4-80GB",
         }
         document.update(changes)
         # A final run needs a verified protocol freeze listing its inputs (S17):
@@ -210,6 +212,31 @@ class Harness:
         (self.root / "protocol").mkdir(exist_ok=True)
         target = self.root / "protocol" / "protocol-freeze.json"
         target.unlink(missing_ok=True)
+        # H-gold of a final run comes from a listed rendering of frozen gold (C-10).
+        gold = self.root / "annotations.jsonl"
+        gold.write_text('{"status": "frozen"}\n', encoding="utf-8", newline="\n")
+        record = self.root / "variants.jsonl.render.json"
+        record.unlink(missing_ok=True)
+        hashes = sorted(row["prompt_hash"] for row in self.rows if row["condition"] == "H-gold")
+        record.write_text(
+            json.dumps(
+                {
+                    "gold_status": "frozen",
+                    "annotations_sha256": hashlib.sha256(gold.read_bytes()).hexdigest(),
+                    "h_gold_prompt_hashes": hashes,
+                }
+            ),
+            encoding="utf-8",
+        )
+        # The expected model files (C-17, Q-02 b), unless a test wrote its own.
+        model = self.root / "protocol" / "model.json"
+        if not model.exists():
+            files = {"tokenizer_config.json": "t" * 64, "model.safetensors": "w" * 64}
+            model.write_text(
+                json.dumps({"name": "fake/model", "revision": SHA, "files": files}),
+                encoding="utf-8",
+            )
+        items = [*items, "annotations.jsonl", "variants.jsonl.render.json", "protocol/model.json"]
         meta = {"protocol_version": "test-1.0.0", "frozen_by": "test"}
         return write_freeze(build_freeze(self.root, items, meta), target)
 
@@ -280,7 +307,9 @@ def test_journal_plan_records_the_environment(harness) -> None:
     for package in ("transformers", "torch", "tokenizers", "huggingface_hub"):
         assert environment["packages"][package] == metadata.version(package)
     assert environment["accelerator"]["devices"] == ["NVIDIA A100-SXM4-80GB"]
-    assert environment["accelerator"]["driver"] == "550.54"
+    # Q-03 (b): the driver is recorded per completion, outside the frozen plan.
+    assert "driver" not in environment["accelerator"]
+    assert {record["gpu_driver"] for record in harness.journal()} == {"550.54"}
     assert environment["python"] == ".".join(str(part) for part in sys.version_info[:3])
 
 
@@ -316,7 +345,7 @@ def test_final_run_is_refused_with_the_unsloth_backend(harness) -> None:
     model = {"backend": "unsloth", "name": "fake/model", "revision": SHA}
     result = harness.run(purpose="final", model=model)
     assert isinstance(result.exception, ValueError)
-    assert "snapshot of the requested revision" in str(result.exception)
+    assert "hf backend" in str(result.exception)
     assert harness.model is None
 
 
@@ -349,13 +378,13 @@ def test_resume_is_idempotent_on_the_same_environment(harness) -> None:
 
 def test_resume_on_a_different_gpu_is_refused(harness) -> None:
     assert harness.run().exit_code == 0
-    before = harness.journal()
+    before, loaded = harness.journal(), harness.model
     harness.gpu = "NVIDIA L4"
     result = harness.run()
     assert isinstance(result.exception, ValueError)
-    assert "resume refused" in str(result.exception)
+    assert "declared GPU" in str(result.exception)
     assert harness.journal() == before
-    assert harness.model.calls == []
+    assert harness.model is loaded  # refused before the model is loaded again
 
 
 def tokenised(harness: Harness) -> Counter[str]:
@@ -727,3 +756,121 @@ def test_a_pilot_run_keeps_a_plain_review_record(harness) -> None:
     result = harness.run()
     assert result.exit_code == 0, result.exception
     assert harness.manifest()["configuration"]["review_record"] == "review.md"
+
+
+# R-GEN-03 (C-02): a pilot measures the same treatment as the final runs, so a
+# v1 configuration without a backend may no longer fall back to the optimised
+# loader and the Llama template.
+@pytest.mark.parametrize("purpose", ["pilot", "final"])
+def test_a_v1_configuration_without_backend_is_refused_before_loading(harness, purpose) -> None:
+    result = harness.run(purpose=purpose, model={"name": "fake/model", "revision": SHA})
+    assert isinstance(result.exception, ValueError)
+    assert "hf backend" in str(result.exception)
+    assert harness.model is None
+    assert not (harness.root / "out").exists()
+
+
+def test_a_pilot_with_the_unsloth_backend_is_refused_before_loading(harness) -> None:
+    model = {"backend": "unsloth", "name": "fake/model", "revision": SHA, "chat_template": "chatml"}
+    result = harness.run(purpose="pilot", model=model)
+    assert isinstance(result.exception, ValueError)
+    assert "hf backend" in str(result.exception)
+    assert harness.model is None
+
+
+# --- One declared GPU (C-01, R-PIA-02) and resume rule (Q-03 b) -----------------------------
+
+
+def test_a_configuration_must_declare_its_gpu(harness) -> None:
+    for changes in ({}, V2):
+        path = harness.configuration(**changes)
+        document = json.loads(path.read_text(encoding="utf-8"))
+        document.pop("gpu", None)
+        path.write_text(json.dumps(document), encoding="utf-8")
+        result = CliRunner().invoke(
+            app, ["generate", str(harness.variants), str(path), str(harness.root / "out")]
+        )
+        assert isinstance(result.exception, ValueError)
+        assert "gpu" in str(result.exception)
+        assert harness.model is None
+
+
+@pytest.mark.parametrize("purpose", ["pilot", "final"])
+def test_a_run_on_a_gpu_other_than_the_declared_one_is_refused_before_loading(
+    harness, purpose
+) -> None:
+    harness.gpu = "NVIDIA L4"
+    result = harness.run(purpose=purpose, gpu="NVIDIA A100-SXM4-40GB")
+    assert isinstance(result.exception, ValueError)
+    assert "declared GPU" in str(result.exception)
+    assert harness.model is None
+    assert not (harness.root / "out").exists()
+
+
+def test_a_run_on_the_declared_gpu_records_it(harness) -> None:
+    harness.gpu = "NVIDIA L4"
+    result = harness.run(gpu="NVIDIA L4")
+    assert result.exit_code == 0, result.exception
+    assert harness.manifest()["configuration"]["gpu"] == "NVIDIA L4"
+    assert {record["gpu_name"] for record in harness.journal()} == {"NVIDIA L4"}
+
+
+def test_a_resume_after_a_kernel_or_driver_update_is_accepted(harness, monkeypatch) -> None:
+    calls = {"count": 0}
+    original = FakeModel.generate
+
+    def interrupted(self: FakeModel, input_ids: torch.Tensor, **kwargs: Any) -> torch.Tensor:
+        calls["count"] += 1
+        if calls["count"] == 3:
+            raise RuntimeError("session ended")
+        return original(self, input_ids, **kwargs)
+
+    monkeypatch.setattr(FakeModel, "generate", interrupted)
+    assert isinstance(harness.run().exception, RuntimeError)
+    harness.driver = "560.10"
+    monkeypatch.setattr(manifest_module.platform, "platform", lambda: "Linux-6.9-colab")
+    resumed = harness.run()
+    assert resumed.exit_code == 0, resumed.exception
+    records = harness.journal()
+    assert [record["gpu_driver"] for record in records] == ["550.54"] * 2 + ["560.10"] * 2
+    assert records[-1]["platform"] == "Linux-6.9-colab"
+    assert len({record["environment_digest"] for record in records}) == 1
+    environment = harness.manifest()["configuration"]["environment"]
+    assert "platform" not in environment and "driver" not in environment["accelerator"]
+
+
+# --- Expected model files (C-17, R-GEN-02, Q-02 b) ----------------------------------------------
+
+
+def test_a_final_run_with_a_file_digest_other_than_the_frozen_one_is_refused(harness) -> None:
+    (harness.root / "protocol").mkdir(exist_ok=True)
+    files = {"tokenizer_config.json": "t" * 64, "model.safetensors": "0" * 64}
+    (harness.root / "protocol" / "model.json").write_text(
+        json.dumps({"name": "fake/model", "revision": SHA, "files": files}), encoding="utf-8"
+    )
+    result = harness.run(purpose="final")
+    assert isinstance(result.exception, ValueError)
+    assert "model.safetensors" in str(result.exception)
+    assert harness.model is None
+
+
+def test_a_final_run_needs_the_expected_model_files_in_the_freeze(harness) -> None:
+    (harness.root / "protocol").mkdir(exist_ok=True)
+    files = {"tokenizer_config.json": "t" * 64}  # the weight shard is not listed
+    (harness.root / "protocol" / "model.json").write_text(
+        json.dumps({"name": "fake/model", "revision": SHA, "files": files}), encoding="utf-8"
+    )
+    result = harness.run(purpose="final")
+    assert isinstance(result.exception, ValueError)
+    assert "model.safetensors" in str(result.exception)
+
+
+def test_model_digests_writes_every_file_of_the_snapshot(harness) -> None:
+    out = harness.root / "digests" / "model.json"
+    result = CliRunner().invoke(
+        app, ["model-digests", "--name", "fake/model", "--revision", SHA, "--out", str(out)]
+    )
+    assert result.exit_code == 0, result.exception
+    document = json.loads(out.read_text(encoding="utf-8"))
+    assert document["revision"] == SHA
+    assert document["files"] == {"model.safetensors": "w" * 64, "tokenizer_config.json": "t" * 64}

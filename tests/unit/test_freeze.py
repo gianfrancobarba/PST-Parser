@@ -56,7 +56,7 @@ def test_a_fresh_freeze_verifies_and_lists_every_hash(repo: Path) -> None:
     assert document["items"] == {name: digest_file(repo / name) for name in sorted(ITEMS)}
     assert document["environment"]["uv_lock_sha256"] == digest_file(repo / "uv.lock")
     assert (document["format"], document["frozen_at"], document["protocol_version"]) == (
-        "protocol-freeze-v1",
+        "protocol-freeze-v2",
         WHEN,
         "downstream-1.0.0",
     )

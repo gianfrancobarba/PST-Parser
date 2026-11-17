@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
+from scipy import stats
 
 from pstparser.empirical.inference import (
     cluster_t_interval,
@@ -126,6 +127,7 @@ class PairedReport:
     cr1_se: float | None = None
     cr1_df: int | None = None
     cr1_ci: tuple[float, float] | None = None
+    family_sensitivity: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a serialisable report, including explicit null estimates.
@@ -137,7 +139,51 @@ class PairedReport:
         report = asdict(self)
         if self.ledger_conditions is None:
             del report["ledger_conditions"], report["ignored_records"]
+        if self.family_sensitivity is None:
+            del report["family_sensitivity"]
         return report
+
+
+def family_sensitivity(
+    estimates: Sequence[TaskEstimate], confidence: float = 0.95
+) -> dict[str, Any] | None:
+    """Prespecified family sensitivity of a clustered estimate (06 §3.1.2, 07 K2).
+
+    ``delta_fam`` is the equally weighted mean of the family means, with a
+    t(G - 1) interval; it is flagged when it differs from the task-weighted
+    estimate by more than 2 pp. ``leave_one_family_out`` gives the task-weighted
+    estimate without each family in turn, with its minimum and maximum.
+    Returns None with fewer than three families (no interval without one).
+    """
+    groups: dict[str, list[float]] = {}
+    for estimate in estimates:
+        groups.setdefault(str(estimate.family_id), []).append(estimate.difference)
+    if len(groups) < 3:
+        return None
+    means = [math.fsum(values) / len(values) for values in groups.values()]
+    centre = math.fsum(means) / len(means)
+    spread = math.sqrt(math.fsum((m - centre) ** 2 for m in means) / (len(means) - 1))
+    half = (
+        float(stats.t.ppf(1 - (1 - confidence) / 2, len(means) - 1))
+        * spread
+        / math.sqrt(len(means))
+    )
+    every = [value for values in groups.values() for value in values]
+    weighted = math.fsum(every) / len(every)
+    without = {
+        family: math.fsum(v for other, values in groups.items() if other != family for v in values)
+        / sum(len(values) for other, values in groups.items() if other != family)
+        for family in sorted(groups)
+    }
+    return {
+        "families": len(groups),
+        "delta_fam": centre,
+        "delta_fam_ci": (centre - half, centre + half),
+        "delta_fam_differs_2pp": abs(centre - weighted) > 0.02,
+        "leave_one_family_out": without,
+        "lofo_min": min(without.values()),
+        "lofo_max": max(without.values()),
+    }
 
 
 def _identifier(value: object, label: str) -> None:
@@ -150,6 +196,7 @@ def _join(
     records: Sequence[OutcomeRecord],
     ledger_conditions: Sequence[str] | None = None,
     ignored: Counter[str] | None = None,
+    others: dict[tuple[str, str, int], OutcomeRecord] | None = None,
 ) -> dict[tuple[str, str, int], OutcomeRecord]:
     _identifier(design.analysis_id, "analysis_id")
     if design.endpoint not in ("functional", "security"):
@@ -175,6 +222,9 @@ def _join(
             _identifier(task.family_id, "family_id")
     if len({t.family_id is None for t in design.tasks}) != 1:
         raise ValueError("Family IDs must be supplied for all tasks or none")
+    if design.endpoint == "security" and design.tasks[0].family_id is None:
+        # The unit of inference of the security endpoint is the family (00 A-2, R-STA-04).
+        raise ValueError("security designs need family IDs: the unit of inference is the family")
     if (
         not design.replicate_ids
         or len(set(design.replicate_ids)) != len(design.replicate_ids)
@@ -195,7 +245,7 @@ def _join(
     planned_cells = {
         (task.task_id, replicate) for task in design.tasks for replicate in design.replicate_ids
     }
-    seen_other: set[tuple[str, str, int]] = set()
+    seen_other: dict[tuple[str, str, int], OutcomeRecord] = {}
     joined: dict[tuple[str, str, int], OutcomeRecord] = {}
     for record in records:
         if record.analysis_id != design.analysis_id or record.endpoint != design.endpoint:
@@ -204,19 +254,15 @@ def _join(
             raise ValueError("Record replicate_id must be an integer")
         key = (record.task_id, record.condition, record.replicate_id)
         if record.condition in other_arms:
-            # A declared arm outside the pair: checked as part of the plan,
-            # then left out explicitly and counted.
+            # A declared arm outside the pair: validated like the pair (R-STA-03),
+            # then left out of the estimate and counted.
             if (record.task_id, record.replicate_id) not in planned_cells:
                 raise ValueError(f"Unexpected record key: {key}")
             if key in seen_other:
                 raise ValueError(f"Duplicate record key: {key}")
-            seen_other.add(key)
-            if ignored is not None:
-                ignored[record.condition] += 1
-            continue
-        if key not in expected:
+        elif key not in expected:
             raise ValueError(f"Unexpected record key: {key}")
-        if key in joined:
+        elif key in joined:
             raise ValueError(f"Duplicate record key: {key}")
         if record.outcome not in allowed:
             raise ValueError(f"Invalid {design.endpoint} outcome: {record.outcome}")
@@ -228,10 +274,22 @@ def _join(
             not isinstance(finding, str) for finding in record.findings
         ):
             raise ValueError("findings must be a sequence of strings")
+        if record.condition in other_arms:
+            seen_other[key] = record
+            if ignored is not None:
+                ignored[record.condition] += 1
+            continue
         joined[key] = record
     absent = expected - joined.keys()
+    absent |= {
+        (task, condition, replicate)
+        for task, replicate in planned_cells
+        for condition in other_arms
+    } - seen_other.keys()
     if absent:
         raise ValueError(f"Absent planned records (use explicit missing): {sorted(absent)}")
+    if others is not None:
+        others.update(seen_other)
     return joined
 
 
@@ -343,6 +401,8 @@ def analyze_paired(
     seed: int = 42,
     confidence: float = 0.95,
     ledger_conditions: Sequence[str] | None = None,
+    details: Sequence[Mapping[str, Any]] | None = None,
+    near_duplicate_groups: Sequence[Sequence[str]] | None = None,
 ) -> PairedReport:
     """Join the entire planned ledger and estimate the paired effect.
 
@@ -375,7 +435,9 @@ def analyze_paired(
     if not math.isfinite(confidence) or not 0 < confidence < 1:
         raise ValueError("confidence must lie in (0, 1)")
     ignored: Counter[str] = Counter()
-    joined = _join(design, records, ledger_conditions, ignored)
+    others: dict[tuple[str, str, int], OutcomeRecord] = {}
+    joined = _join(design, records, ledger_conditions, ignored, others)
+    other_arms = sorted({condition for _, condition, _ in others})
     baseline, treatment = design.conditions
     excluded: dict[str, list[str]] = {}
     estimates: list[TaskEstimate] = []
@@ -385,6 +447,14 @@ def analyze_paired(
             for condition in design.conditions
             for replicate in design.replicate_ids
             if joined[task.task_id, condition, replicate].outcome == "missing"
+        ]
+        # Every contrast of a ledger uses the same complete tasks (06 §3.7.1):
+        # a missing cell in any declared arm excludes the whole task.
+        missing += [
+            f"{condition}/{replicate}: {others[task.task_id, condition, replicate].reason}"
+            for condition in other_arms
+            for replicate in design.replicate_ids
+            if others[task.task_id, condition, replicate].outcome == "missing"
         ]
         if missing:
             excluded[task.task_id] = missing
@@ -415,7 +485,21 @@ def analyze_paired(
             )
         return math.fsum(differences) / len(differences) if differences else None
 
+    neardup: dict[str, float | None] = {}
+    if near_duplicate_groups is not None:
+        # S-NEARDUP (06, R-DAT-02): one task per group of near duplicates, the first
+        # of the design; the others leave the complete tasks.
+        order = {task.task_id: index for index, task in enumerate(design.tasks)}
+        dropped = {
+            task
+            for group in near_duplicate_groups
+            for task in sorted((t for t in group if t in order), key=order.__getitem__)[1:]
+        }
+        kept = [e.difference for e in estimates if e.task_id not in dropped]
+        neardup["s_neardup_one_per_group"] = math.fsum(kept) / len(kept) if kept else None
     sensitivity = {
+        **_flaky_sensitivity(design, joined, estimates, details),
+        **neardup,
         "complete_U_one_both": effect(complete=True, u_t=1, u_h=1),
         "complete_U_lower": effect(complete=True, u_t=1),
         "complete_U_upper": effect(complete=True, u_h=1),
@@ -532,7 +616,53 @@ def analyze_paired(
         cr1_se=cluster.standard_error if cluster is not None else None,
         cr1_df=cluster.degrees_of_freedom if cluster is not None else None,
         cr1_ci=cluster.interval if cluster is not None else None,
+        family_sensitivity=family_sensitivity(estimates, confidence) if clustered else None,
     )
+
+
+def _flaky_sensitivity(
+    design: AnalysisDesign,
+    joined: Mapping[tuple[str, str, int], OutcomeRecord],
+    estimates: Sequence[TaskEstimate],
+    details: Sequence[Mapping[str, Any]] | None,
+) -> dict[str, float | None]:
+    """S-FLAKY (06, 00 V-2): without flaky tasks, and with discordant programs as fails.
+
+    Read from the harness details of the same ledger: ``flaky`` and the
+    ``run_statuses`` of each program. Only for the functional endpoint and only
+    when the details are given; the primary estimate keeps the 2+1 majority.
+    """
+    if details is None or design.endpoint != "functional" or not estimates:
+        return {}
+    by_key = {
+        (row["task_id"], row["condition"], row["replicate_id"]): row
+        for row in details
+        if row["condition"] in design.conditions
+    }
+    flaky = {key[0] for key, row in by_key.items() if row.get("flaky")}
+    kept = [e.difference for e in estimates if e.task_id not in flaky]
+
+    def strict(task: str, condition: str, replicate: int) -> int:
+        row = by_key.get((task, condition, replicate))
+        runs = list(row.get("run_statuses", [])) if row is not None else []
+        first_two = runs[:2]
+        if len(first_two) == 2 and "missing" not in first_two and first_two[0] != first_two[1]:
+            return 0
+        return _value(joined[task, condition, replicate])
+
+    baseline, treatment = design.conditions
+    strict_differences = [
+        math.fsum(
+            strict(e.task_id, treatment, r) - strict(e.task_id, baseline, r)
+            for r in design.replicate_ids
+        )
+        / len(design.replicate_ids)
+        for e in estimates
+    ]
+    return {
+        "s_flaky_excluded": math.fsum(kept) / len(kept) if kept else None,
+        "s_flaky_fail_if_discordant": math.fsum(strict_differences) / len(strict_differences),
+    }
 
 
 def write_outcomes(records: Sequence[OutcomeRecord], destination: str | Path) -> Path:

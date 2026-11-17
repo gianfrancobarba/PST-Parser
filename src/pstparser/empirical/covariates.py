@@ -21,7 +21,10 @@ from pstparser.pst.taxonomy import LEAF_PATHS
 
 COVARIATES_VERSION: Final = "prompt-covariates-v1"
 HAS_CODE_RULE: Final = "has-code-v1"
-JUDGEMENT_UNITS_RULE: Final = "judgement-units-v1"
+JUDGEMENT_UNITS_RULE: Final = "judgement-units-v2"
+#: Unit types of the drafts: the first sentence (leaf fixed by rule G3.1), the
+#: other sentences of the prose (G3) and the sentences of "Note that:" (B6).
+UNIT_TYPES: Final = ("first", "prose", "notes")
 
 # has-code-v1: a fenced block, or a line that starts a function definition.
 _CODE: Final = re.compile(r"```|^[ \t]*def[ \t]+\w+[ \t]*\(", re.MULTILINE)
@@ -61,14 +64,11 @@ def structure(prompt: CanonicalPrompt) -> dict[str, int]:
     }
 
 
-def judgement_regions(text: str, rule: str) -> list[tuple[int, int]]:
-    """Character ranges of the units whose leaf is not fixed by a formula or a marker.
+def unit_regions(text: str, rule: str) -> dict[str, list[tuple[int, int]]]:
+    """Character ranges of the draft units of each type in :data:`UNIT_TYPES`.
 
-    Rule ``judgement-units-v1``: the sentences of the prose of the description,
-    the first one included (kind ``first`` and the ``G3`` judgement units of
-    the draft rules). Fixed sections, the starting code, parameter and example
-    blocks and the "Note that:" section are excluded, as in the rule-based
-    pre-annotation that counted 529 BigCodeBench tasks with a single unit.
+    ``first`` is the first sentence (kind ``first``), ``prose`` the ``G3``
+    judgement units, ``notes`` the ``B6`` judgement units of "Note that:".
 
     Raises:
         ValueError: If ``rule`` is unknown or the text does not fit it.
@@ -76,27 +76,56 @@ def judgement_regions(text: str, rule: str) -> list[tuple[int, int]]:
     if rule not in gold.RULES:
         raise ValueError(f"unknown rule {rule!r}; choose one of {sorted(gold.RULES)}")
     _, propose = gold.RULES[rule]
-    return [
-        (unit.start, unit.end)
-        for unit in propose(text)
-        if unit.kind == "first" or (unit.kind == "judgement" and unit.rule == "G3")
-    ]
+    regions: dict[str, list[tuple[int, int]]] = {name: [] for name in UNIT_TYPES}
+    for unit in propose(text):
+        if unit.kind == "first":
+            regions["first"].append((unit.start, unit.end))
+        elif unit.kind == "judgement" and unit.rule == "G3":
+            regions["prose"].append((unit.start, unit.end))
+        elif unit.kind == "judgement" and unit.rule == "B6":
+            regions["notes"].append((unit.start, unit.end))
+    return regions
+
+
+def judgement_regions(text: str, rule: str) -> list[tuple[int, int]]:
+    """Character ranges of the units whose leaf is decided by the reviewer.
+
+    Rule ``judgement-units-v2`` (R-TRA-01, Q-24): the sentences of the prose of
+    the description after the first one (``G3``) and the sentences of the
+    "Note that:" section (``B6``). The first sentence is left out: rule G3.1
+    fixes its leaf. Fixed sections, the starting code, parameter and example
+    blocks are excluded. A task may have no judgement unit at all.
+
+    Raises:
+        ValueError: If ``rule`` is unknown or the text does not fit it.
+    """
+    regions = unit_regions(text, rule)
+    return sorted(regions["prose"] + regions["notes"])
+
+
+def _mask(text: str, regions: list[tuple[int, int]]) -> tuple[bool, ...]:
+    mask = [False] * len(text)
+    for start, end in regions:
+        mask[start:end] = [True] * (end - start)
+    return tuple(mask)
+
+
+def unit_type_mask(text: str, rule: str, unit_type: str) -> tuple[bool, ...]:
+    """One flag per character: True inside a unit of ``unit_type``."""
+    return _mask(text, unit_regions(text, rule)[unit_type])
 
 
 def judgement_mask(text: str, rule: str) -> tuple[bool, ...]:
     """One flag per character: True inside a judgement region of :func:`judgement_regions`."""
-    mask = [False] * len(text)
-    for start, end in judgement_regions(text, rule):
-        mask[start:end] = [True] * (end - start)
-    return tuple(mask)
+    return _mask(text, judgement_regions(text, rule))
 
 
 def judgement_units(prompt: CanonicalPrompt, rule: str) -> int:
     """Number of gold spans that overlap a judgement region of the source.
 
     Computed from the frozen gold: a reviewer who joins two sentences into one
-    span leaves one unit. On an untouched draft it is the number of sentences
-    of the prose of the description.
+    span leaves one unit. On an untouched draft it is the number of prose
+    sentences after the first one plus the sentences of the notes.
     """
     regions = judgement_regions(prompt.text, rule)
     return sum(

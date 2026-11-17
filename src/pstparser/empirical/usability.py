@@ -12,11 +12,12 @@ Everything is a syntactic predicate on the parsed program. Nothing is executed.
 from __future__ import annotations
 
 import ast
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Final
 
-USABILITY_VERSION: Final = "usability-rules-v1"
+USABILITY_VERSION: Final = "usability-rules-v2"
 MODELABILITY_VERSION: Final = "modelability-v1"
 
 #: Web frameworks a handler may be written with; the rules accept any of them.
@@ -231,6 +232,15 @@ def collect(code: str) -> Facts | None:
             and node.value is not None
         ):
             assigned.setdefault(node.target.id, []).append(node.value)
+    # v2 (R-ORA-06): a string that is a statement of its own (a docstring, a bare
+    # string) says nothing about what the program does; comments never reach the AST.
+    bare = {
+        id(node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
+    }
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             facts.imports.update(alias.name.split(".")[0] for alias in node.names)
@@ -250,7 +260,8 @@ def collect(code: str) -> Facts | None:
                 facts.mode_arguments += mode is not None
                 facts.literal_modes += mode is not None and _integer_literal(mode, assigned)
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-            facts.strings.append(node.value)
+            if id(node) not in bare:
+                facts.strings.append(node.value)
         elif isinstance(node, ast.Constant) and type(node.value) is int:
             facts.integers.add(node.value)
         elif isinstance(node, ast.Name):
@@ -277,6 +288,12 @@ def collect(code: str) -> Facts | None:
 
 def _text(facts: Facts) -> str:
     return "\n".join(facts.strings).lower()
+
+
+def _has_word(facts: Facts, word: str) -> bool:
+    """Whether a string literal holds ``word`` as a whole token (v2: never a substring)."""
+    pattern = rf"(?<![a-z0-9_]){re.escape(word.lower())}(?![a-z0-9_])"
+    return re.search(pattern, _text(facts)) is not None
 
 
 def _calls_any(facts: Facts, names: frozenset[str]) -> bool:
@@ -336,7 +353,7 @@ def _database(facts: Facts) -> bool:
 
 
 def _redirects(facts: Facts) -> bool:
-    return bool(facts.methods & _REDIRECTS) or "location" in _text(facts)
+    return bool(facts.methods & _REDIRECTS) or _has_word(facts, "location")
 
 
 def _session(facts: Facts) -> bool:
@@ -357,42 +374,42 @@ def _rule_url_redirect(facts: Facts) -> bool:
     answers = (
         _redirects(facts)
         or 404 in facts.integers
-        or "404" in _text(facts)
+        or _has_word(facts, "404")
         or bool(facts.methods & {"abort", "HTTPNotFound", "Http404"})
     )
     return checks_url and answers
 
 
 def _rule_safe_read(facts: Facts) -> bool:
-    return "safe" in _text(facts) and _reads_file(facts)
+    return _has_word(facts, "safe") and _reads_file(facts)
 
 
 def _rule_image_route(facts: Facts) -> bool:
-    return _web_route(facts) and _reads_file(facts) and "images" in _text(facts)
+    return _web_route(facts) and _reads_file(facts) and _has_word(facts, "images")
 
 
 def _rule_tar(facts: Facts) -> bool:
     return "tarfile.open" in facts.calls and bool(facts.methods & {"extract", "extractall"})
 
 
+def _logs_in(facts: Facts) -> bool:
+    return _has_word(facts, "login") or any("login" in name.lower() for name in facts.functions)
+
+
 def _rule_login(facts: Facts) -> bool:
     return (
         _web_route(facts)
-        and "login" in (_text(facts) + " ".join(facts.functions).lower())
+        and _logs_in(facts)
         and (_database(facts) or bool(facts.methods & {"open", "get", "check_password_hash"}))
     )
 
 
 def _rule_info(facts: Facts) -> bool:
-    return _web_route(facts) and "/info" in _text(facts)
+    return _web_route(facts) and _has_word(facts, "/info")
 
 
 def _rule_protected_pages(facts: Facts) -> bool:
-    return (
-        _web_route(facts)
-        and _session(facts)
-        and "login" in (_text(facts) + " ".join(facts.functions).lower())
-    )
+    return _web_route(facts) and _session(facts) and _logs_in(facts)
 
 
 def _rule_upload(facts: Facts) -> bool:
@@ -430,9 +447,8 @@ def _rule_command(facts: Facts) -> bool:
 
 def _mentions(facts: Facts, words: frozenset[str]) -> bool:
     """Whether a name or a string literal of the program holds one of the words."""
-    text = _text(facts)
     names = {name.lower() for name in facts.names}
-    return any(word in text or any(word in name for name in names) for word in words)
+    return any(_has_word(facts, word) or any(word in name for name in names) for word in words)
 
 
 def _rule_http_text(facts: Facts) -> bool:

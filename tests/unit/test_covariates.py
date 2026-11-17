@@ -118,13 +118,14 @@ def test_has_code_rule() -> None:
 
 
 def test_judgement_units_are_the_prose_sentences_of_the_description() -> None:
-    # First sentence and the two G3 sentences; the two notes sentences are a marker
-    # section, the fixed sections and the code are formulas.
-    assert judgement_units(canonical(BCB, BCB_RULE), BCB_RULE) == 3
-    # "Add two numbers." only: the parameters and the example are marker blocks.
-    assert judgement_units(canonical(BCB_EXAMPLE, BCB_RULE), BCB_RULE) == 1
-    # LLMSecEval: the four sentences after the fixed opening line ("file.The" is split).
-    assert judgement_units(canonical(LSE, LSE_RULE), LSE_RULE) == 4
+    # judgement-units-v2: the two G3 sentences and the two notes sentences (B6); the
+    # first sentence is fixed by rule G3.1, the fixed sections and the code are formulas.
+    assert judgement_units(canonical(BCB, BCB_RULE), BCB_RULE) == 4
+    # "Add two numbers." only, a first sentence: the parameters and the example are
+    # marker blocks, so no unit is left to judge.
+    assert judgement_units(canonical(BCB_EXAMPLE, BCB_RULE), BCB_RULE) == 0
+    # LLMSecEval: the three sentences after the first one ("file.The" is split).
+    assert judgement_units(canonical(LSE, LSE_RULE), LSE_RULE) == 3
 
 
 def test_judgement_units_follow_the_gold_when_sentences_are_joined() -> None:
@@ -136,16 +137,18 @@ def test_judgement_units_follow_the_gold_when_sentences_are_joined() -> None:
     gold = CanonicalPrompt(
         BCB.task_id, BCB.text, (spans[0], joined, *spans[3:]), draft.annotation_version
     )
-    assert judgement_units(gold, BCB_RULE) == 2
+    # The joined G3 sentences and the two notes.
+    assert judgement_units(gold, BCB_RULE) == 3
 
 
-def test_judgement_mask_covers_only_the_prose_sentences() -> None:
+def test_judgement_mask_covers_the_prose_judgements_and_the_notes() -> None:
     mask = judgement_mask(BCB_TEXT, BCB_RULE)
     covered = "".join(c for c, flag in zip(BCB_TEXT, mask, strict=True) if flag)
     assert covered == (
-        "Compute the sum of a list."
         "It must not modify the input, e.g. by sorting it."
         "The result is scaled by 2.5 afterwards."
+        "Note that: Notes: The title is 'Sum'."
+        "Empty lists never fail."
     )
 
 
@@ -161,7 +164,8 @@ def test_prompt_covariates_by_hand() -> None:
     assert row["log_tokens_T"] == pytest.approx(math.log(t + 10))
     assert (row["n_leaves"], row["n_segments"], row["reorder"]) == (4, 9, 6)
     assert row["has_code"] is True
-    assert row["n_judgement_units"] == 3
+    assert row["n_judgement_units"] == 4
+    assert row["judgement_units_rule"] == "judgement-units-v2"
     assert row["covariates_version"] == "prompt-covariates-v1"
 
 

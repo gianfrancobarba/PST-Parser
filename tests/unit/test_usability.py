@@ -1,4 +1,4 @@
-"""Usability and modellability rules of the security oracle (``usability-rules-v1``)."""
+"""Usability and modellability rules of the security oracle (``usability-rules-v2``)."""
 
 from pathlib import Path
 
@@ -34,7 +34,7 @@ def unsubscribe():
 
 
 def test_versions_are_named() -> None:
-    assert USABILITY_VERSION == "usability-rules-v1"
+    assert USABILITY_VERSION == "usability-rules-v2"
     assert MODELABILITY_VERSION == "modelability-v1"
 
 

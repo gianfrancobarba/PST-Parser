@@ -199,6 +199,33 @@ def weighted_holm(
             return decisions
 
 
+def weighted_holm_levels(
+    p_values: Mapping[str, float | None],
+    weights: Mapping[str, float],
+    alpha: float = 0.05,
+) -> dict[str, float | None]:
+    """The level each hypothesis was finally read at by :func:`weighted_holm`.
+
+    A rejected hypothesis gets the level of the step that rejected it; one that
+    is not rejected gets its level at the last step (after any recycling); a
+    dropped one gets ``None``. ``p <= level`` holds exactly for the rejected
+    ones (R-STA-02: the four-way reading of a confirmatory row uses it).
+    """
+    weighted_holm(p_values, weights, alpha)  # validates the arguments
+    remaining = {name for name, value in p_values.items() if value is not None}
+    levels: dict[str, float | None] = dict.fromkeys(p_values)
+    while remaining:
+        total = math.fsum(weights[name] for name in remaining)
+        step = {name: alpha * (weights[name] / total) for name in remaining}
+        rejected = {name for name in remaining if p_values[name] <= step[name]}  # type: ignore[operator]
+        for name in remaining:
+            levels[name] = step[name]
+        if not rejected:
+            break
+        remaining -= rejected
+    return levels
+
+
 def _check_table(both_pass: int, treatment_only: int, baseline_only: int, both_fail: int) -> int:
     cells = (both_pass, treatment_only, baseline_only, both_fail)
     if any(type(n) is not int or n < 0 for n in cells):

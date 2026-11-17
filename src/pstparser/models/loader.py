@@ -12,6 +12,7 @@ from __future__ import annotations
 import fnmatch
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -93,6 +94,29 @@ def resolve_snapshot(name: str, revision: str, *, hash_weights: bool = False) ->
             raise BackendError(f"cannot hash snapshot file {relative}")
         files[relative] = digest
     return SnapshotIdentity(path=path, sha=path.name, files=files, weights_hashed=hash_weights)
+
+
+def verify_expected_files(snapshot: SnapshotIdentity, expected: Mapping[str, Any]) -> None:
+    """Compare the hashed files of a snapshot with the frozen expected digests (R-GEN-02).
+
+    ``expected`` is ``protocol/model.json``: ``name``, ``revision`` and
+    ``files`` (path in the repository to SHA-256). Every hashed file must be
+    expected with the same digest and every expected file must be present, so
+    a snapshot directory with other contents never passes for the revision.
+
+    Raises:
+        BackendError: If the revision or any file differs.
+    """
+    if expected.get("revision") != snapshot.sha:
+        raise BackendError(f"model.json expects revision {expected.get('revision')}")
+    wanted = dict(expected.get("files", {}))
+    differing = sorted(
+        name
+        for name in set(wanted) | set(snapshot.files)
+        if wanted.get(name) != snapshot.files.get(name)
+    )
+    if differing:
+        raise BackendError(f"model files differ from the frozen digests: {differing[:5]}")
 
 
 def official_chat_template(snapshot: SnapshotIdentity) -> str | None:

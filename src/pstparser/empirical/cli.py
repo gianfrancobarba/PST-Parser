@@ -25,10 +25,60 @@ app = typer.Typer(
 )
 
 
+def _purpose(purpose: str, freeze: Path | None) -> dict[str, Any]:
+    """Purpose of a downstream command and the hash of the verified freeze it ran under.
+
+    A ``final`` purpose requires a protocol freeze that verifies against the
+    repository (R-GEN-01); an ``exploratory`` one records ``None`` when no
+    freeze is given.
+
+    Raises:
+        ValueError: If the purpose is unknown, a final purpose has no freeze,
+            or the freeze does not verify.
+    """
+    if purpose not in {"exploratory", "final"}:
+        raise ValueError("purpose must be exploratory or final")
+    if freeze is None:
+        if purpose == "final":
+            raise ValueError("a final purpose requires --freeze with a verified protocol freeze")
+        return {"purpose": purpose, "freeze_sha256": None}
+    from pstparser.empirical.freeze import verify_freeze
+    from pstparser.repro.manifest import digest_file
+
+    mismatches = verify_freeze(freeze)
+    if mismatches:
+        shown = ", ".join(f"{m.kind} {m.path}" for m in mismatches[:5])
+        raise ValueError(f"the protocol freeze does not verify: {shown}")
+    return {"purpose": purpose, "freeze_sha256": digest_file(freeze)}
+
+
+_PURPOSE_HELP = "exploratory, or final: final requires --freeze (a verified protocol freeze)."
+_FREEZE_HELP = "protocol-freeze.json the command runs under; verified before anything is read."
+
+
 def _rows(path: Path) -> list[dict[str, Any]]:
     """Read JSON Lines split on the line feed only, skipping blank lines."""
     text = path.read_bytes().decode("utf-8")
     return [json.loads(line) for line in text.split("\n") if line.strip()]
+
+
+def _with_prefill(
+    rows: list[dict[str, Any]], generations: Path
+) -> tuple[list[dict[str, Any]], str | None]:
+    """Put the S-PREFILL prefill back in front of every output (Q-25).
+
+    The journal records only the continuation; the prefill is read from the
+    configuration in the manifest next to the journal and prepended, as the
+    start of the assistant turn, before extraction and evaluation.
+    """
+    manifest = generations.parent / "empirical-generate_manifest.json"
+    if not manifest.is_file():
+        return rows, None
+    configuration = json.loads(manifest.read_text(encoding="utf-8")).get("configuration", {})
+    prefill = configuration.get("assistant_prefill")
+    if prefill is None:
+        return rows, None
+    return [{**row, "raw_output": prefill + row["raw_output"]} for row in rows], prefill
 
 
 def _json_lines(path: Path) -> list[dict[str, Any]]:
@@ -79,6 +129,8 @@ def render(
     flat: Annotated[
         bool, typer.Option(help="Also write F (pst-flat-json-v1) after the hierarchical variant.")
     ] = False,
+    purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
+    freeze: Annotated[Path | None, typer.Option(help=_FREEZE_HELP)] = None,
 ) -> None:
     """Render reviewed canonical JSONL annotations into T/H-gold (and E) JSONL.
 
@@ -89,6 +141,7 @@ def render(
     """
     if condition not in {"H-gold", "H-auto"}:
         raise ValueError("condition must be H-gold or H-auto")
+    frozen = _purpose(purpose, freeze)
     selected: set[str] | None = None
     if tasks is not None:
         from pstparser.empirical.auto import load_s_parse
@@ -124,8 +177,44 @@ def render(
         raise ValueError("the S_parse document lists tasks absent from the source")
     if not variants:
         raise ValueError("empty corpus")
+    from pstparser.repro.manifest import digest_file
+
+    # State of the gold the canonical file was joined in (R-TRA-02), read from the
+    # canonicalize manifest when it describes this very file.
+    gold_status: str | None = None
+    annotations_sha256: str | None = None
+    joined = source.parent / "empirical-canonicalize_manifest.json"
+    if joined.is_file():
+        record = json.loads(joined.read_text(encoding="utf-8"))
+        if record.get("canonical_sha256") == digest_file(source):
+            gold_status = record.get("require_status")
+            annotations_sha256 = record.get("annotations_sha256")
+    if frozen["purpose"] == "final" and condition == "H-gold" and gold_status != "frozen":
+        raise ValueError("a final rendering of H-gold requires frozen gold (canonicalize)")
     _write_rows(destination, variants)
-    typer.echo(f"Rendered {len(variants)} variants into {destination}")
+    with Path(f"{destination}.render.json").open("x", encoding="utf-8", newline="\n") as handle:
+        handle.write(
+            json.dumps(
+                {
+                    "format": "render-record-v1",
+                    "variants_sha256": digest_file(destination),
+                    "canonical_sha256": digest_file(source),
+                    "gold_status": gold_status,
+                    "annotations_sha256": annotations_sha256,
+                    "h_gold_prompt_hashes": sorted(
+                        row["prompt_hash"] for row in variants if row["condition"] == "H-gold"
+                    ),
+                    **frozen,
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
+    typer.echo(
+        f"Rendered {len(variants)} variants into {destination} "
+        f"({frozen['purpose']}, freeze {frozen['freeze_sha256']})"
+    )
 
 
 @app.command("import-benchmark")
@@ -331,6 +420,13 @@ def check_bigcodebench(
     split: Annotated[str, typer.Option(help="BigCodeBench split.")] = "v0.1.4",
     parallel: Annotated[int, typer.Option(help="Fixed number of harness workers.")] = 8,
     runs: Annotated[int, typer.Option(help="Independent runs before the majority rule.")] = 2,
+    accept_discordance: Annotated[
+        bool,
+        typer.Option(
+            help="Write the outcomes even if more than 1% of the programs changed outcome "
+            "between two runs (recorded in the manifest)."
+        ),
+    ] = False,
 ) -> None:
     """Judge BigCodeBench generations with the official harness, offline.
 
@@ -359,6 +455,7 @@ def check_bigcodebench(
     if tasks & excluded:
         raise ValueError(f"generations for excluded tasks: {sorted(tasks & excluded)[:5]}")
     _require_complete(rows)
+    rows, prefill = _with_prefill(rows, generations)
     ensure_stage_outputs(
         directory,
         "empirical-check-bcb",
@@ -394,7 +491,12 @@ def check_bigcodebench(
         "docker": bigcodebench.docker_resources(),
     }
     result = bigcodebench.evaluate_generations(
-        config, rows, directory, analysis_id=analysis_id, order_seed=order_seed
+        config,
+        rows,
+        directory,
+        analysis_id=analysis_id,
+        order_seed=order_seed,
+        accept_discordance=accept_discordance,
     )
     write_outcomes(result["outcomes"], directory / "outcomes.jsonl")
     _write_rows(directory / "details.jsonl", result["details"])
@@ -403,6 +505,7 @@ def check_bigcodebench(
         {
             "stage": "empirical-check-bcb",
             "analysis_id": analysis_id,
+            "assistant_prefill_prepended": prefill is not None,
             "harness": config.as_dict(),
             **environment,
             **result["summary"],
@@ -421,8 +524,8 @@ def check_bigcodebench(
         f"{summary['generations']} generations, {summary['executed']} executed, "
         f"{summary['discordant']} discordant; {directory / 'outcomes.jsonl'}"
     )
-    if summary["discordance_above_1_percent"]:
-        typer.echo("warning: more than 1% of the programs changed outcome between two runs")
+    if summary["discordance_accepted"]:
+        typer.echo("accepted: more than 1% of the programs changed outcome between two runs")
 
 
 @app.command("merge-calibrations")
@@ -935,6 +1038,8 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         "dataset_revision",
         "purpose",
         "review_record",
+        # The one GPU of the whole campaign (C-01, R-PIA-02): a run elsewhere is refused.
+        "gpu",
     }
     # A configuration without format_version is version 1 and keeps its closed
     # key set; the keys added since are admitted only by declaring version 2.
@@ -974,7 +1079,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
             raise ValueError("the hf backend keeps the model's own template: use 'native'")
     if config["purpose"] not in {"pilot", "final"}:
         raise ValueError("purpose must be pilot or final")
-    for name in ("protocol_version", "dataset_revision", "system_prompt", "review_record"):
+    for name in ("protocol_version", "dataset_revision", "system_prompt", "review_record", "gpu"):
         if not isinstance(config[name], str) or not config[name].strip():
             raise ValueError(f"missing {name}")
     review = configuration.parent / config["review_record"]
@@ -990,10 +1095,26 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     inference = InferenceConfig(**config["inference"])
     if not re.fullmatch(r"[0-9a-f]{40}", model_config.revision or ""):
         raise ValueError("provide an immutable 40-character model revision")
+    # A pilot measures the treatment of the final runs (R-GEN-03): only the hf
+    # backend loads the requested snapshot and keeps the published template.
+    if model_config.backend != "hf" or model_config.chat_template != "native":
+        raise ValueError("generation requires the hf backend with the 'native' template")
     if inference.structured_output or inference.batch_size != 1:
         raise ValueError("code generation uses unconstrained output, batch_size=1")
     if not inference.do_sample and len(config["replicate_ids"]) != 1:
         raise ValueError("greedy repetitions are not independent samples")
+    # Before anything is loaded: pilot, final runs, determinism and H-auto share
+    # one declared GPU, since greedy outputs may differ across GPUs (R-PIA-02).
+    measured_environment = environment()
+    found = measured_environment.get("accelerator", {}).get("devices") or []
+    if not found or any(device != config["gpu"] for device in found):
+        raise ValueError(f"the run requires the declared GPU {config['gpu']!r}; found {found}")
+    # Q-03 (b): the kernel string and the NVIDIA driver may change between Colab
+    # sessions on the same GPU. They are recorded per completion, not frozen.
+    volatile = {
+        "platform": measured_environment.pop("platform", None),
+        "gpu_driver": measured_environment.get("accelerator", {}).pop("driver", None),
+    }
     rendered = [PromptVariant(**row) for row in _rows(variants)]
     if versioned and {variant.condition for variant in rendered} != set(config["conditions"]):
         raise ValueError("the variants do not hold exactly the configured conditions")
@@ -1010,12 +1131,26 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     )
     if final and (snapshot is None or snapshot.sha != model_config.revision):
         raise ValueError("final runs require the model snapshot of the requested revision")
+    if final:
+        from pstparser.empirical.freeze import default_root, load_freeze
+        from pstparser.models.loader import verify_expected_files
+
+        # The loaded files must be the frozen ones (Q-02 b, R-GEN-02), before loading.
+        expected = default_root(review) / "protocol" / "model.json"
+        listed = set(load_freeze(review)["items"].values())
+        if digest_file(expected) not in listed:
+            raise ValueError("final runs require protocol/model.json in the protocol freeze")
+        assert snapshot is not None
+        try:
+            verify_expected_files(snapshot, _read_document(expected))
+        except Exception as error:
+            raise ValueError(str(error)) from error
     model, tokenizer = load_untuned(model_config)
     runtime = runtime_provenance(model, tokenizer, model_config, snapshot)
     if final and not runtime["revision_verified"]:
         raise ValueError("final runs require a verified model revision")
-    if final and runtime["chat_template_matches_official"] is not True:
-        raise ValueError("final runs require the published conversation template")
+    if runtime["chat_template_matches_official"] is not True:
+        raise ValueError("generation requires the published conversation template")
     # Check BOTH variants for ALL tasks before generating the first condition.
     template_checked: set[str] = set()
     prefill_tokens = (
@@ -1053,7 +1188,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         ),
         "decoding": decoding_parameters(inference),
         "runtime": runtime,
-        "environment": environment(),
+        "environment": measured_environment,
     }
 
     # Identity of this process (M18): a resume in another session leaves a second
@@ -1065,6 +1200,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         "environment_digest": digest_text(
             json.dumps(frozen["environment"], sort_keys=True, ensure_ascii=False)
         ),
+        **volatile,
     }
 
     def complete(request: Any) -> dict[str, Any]:
@@ -1191,6 +1327,278 @@ def pilot_report_command(
     typer.echo(str(out))
 
 
+@app.command("blind-sample")
+def blind_sample(
+    details: Annotated[
+        list[Path], typer.Argument(help="details.jsonl of check-security (both measures).")
+    ],
+    journal: Annotated[Path, typer.Option(help="The security journal (generations.jsonl).")],
+    sources: Annotated[Path, typer.Option(help="LLMSecEval sources: the prompt in its T form.")],
+    seed: Annotated[int, typer.Option(help="Seed of the sample, fixed before opening files.")],
+    out: Annotated[Path, typer.Option(help="New directory: files/, sheet.jsonl, key.jsonl.")],
+) -> None:
+    """Draw the blind review (04 §3.10): programs renamed by hash, one sheet, a separate key.
+
+    Move ``key.jsonl`` out of the reviewer's sight before opening the sheet.
+    """
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.empirical.blind import BLIND_VERSION, SHEET_FIELDS, draw_cases
+    from pstparser.empirical.extraction import extract_fenced_blocks
+    from pstparser.repro.manifest import digest_file, source_snapshot, write_manifest
+
+    if out.exists():
+        raise FileExistsError(f"{out} exists: each draw needs a new directory")
+    rows = [row for path in details for row in _json_lines(path)]
+    cases = draw_cases(rows, seed)
+    outputs = {row["request_id"]: row["raw_output"] for row in _json_lines(journal)}
+    prompts = {record.task_id: record.text for record in read_sources(sources)}
+    (out / "files").mkdir(parents=True)
+    sheet, key = [], []
+    for case in cases:
+        extracted = extract_fenced_blocks(outputs[case["request_id"]])
+        name = f"{case['case_id']}.py" if extracted.code is not None else f"{case['case_id']}.txt"
+        text = extracted.code if extracted.code is not None else outputs[case["request_id"]]
+        with (out / "files" / name).open("x", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        sheet.append(
+            {
+                "case_id": case["case_id"],
+                "prompt": prompts[case["task_id"]],
+                "file": f"files/{name}",
+                **dict.fromkeys(SHEET_FIELDS),
+            }
+        )
+        key.append(case)
+    _write_rows(out / "sheet.jsonl", sheet)
+    _write_rows(out / "key.jsonl", key)
+    write_manifest(
+        {
+            "stage": "empirical-blind-sample",
+            "version": BLIND_VERSION,
+            "seed": seed,
+            "details_sha256": [digest_file(path) for path in details],
+            "journal_sha256": digest_file(journal),
+            "cases": len(cases),
+            "sheet_sha256": digest_file(out / "sheet.jsonl"),
+            "key_sha256": digest_file(out / "key.jsonl"),
+            "source": source_snapshot(),
+        },
+        out,
+    )
+    typer.echo(f"{len(cases)} cases in {out}; move key.jsonl away before reviewing")
+
+
+@app.command("blind-score")
+def blind_score(
+    sheet: Annotated[Path, typer.Argument(help="The completed sheet.jsonl.")],
+    key: Annotated[Path, typer.Argument(help="The key.jsonl of the same draw.")],
+    out: Annotated[Path, typer.Option(help="New score report (JSON).")],
+) -> None:
+    """Score the blind review: FP and FN by condition, kappa U2/U4, accuracy of the blind."""
+    from pstparser.empirical.blind import score_review
+    from pstparser.repro.manifest import digest_file
+
+    report = score_review(_json_lines(sheet), _json_lines(key))
+    report["inputs"] = {"sheet_sha256": digest_file(sheet), "key_sha256": digest_file(key)}
+    out.parent.mkdir(parents=True, exist_ok=True)
+    _write_document(out, report)
+    typer.echo(f"{report['cases']} cases scored; {out}")
+
+
+@app.command("determinism-sample")
+def determinism_sample(
+    variants: Annotated[Path, typer.Argument(help="Variants of the greedy journal.")],
+    journal: Annotated[Path, typer.Argument(help="The greedy journal (generations.jsonl).")],
+    seed: Annotated[int, typer.Option(help="Seed of the selection.")],
+    out: Annotated[Path, typer.Option(help="New variants file of the selected tasks.")],
+) -> None:
+    """Select whole tasks holding at least 5% of the greedy requests (minimum 20), 00 G-6.
+
+    The tasks are ordered by SHA-256(seed | task) and taken until the share is
+    reached; every condition of a chosen task is kept, so generate on the
+    output in a separate session reproduces the same request identifiers.
+    """
+    import hashlib
+    import math
+
+    from pstparser.repro.manifest import digest_file, source_snapshot, write_manifest
+
+    rows = _json_lines(journal)
+    per_task: dict[str, int] = {}
+    for row in rows:
+        per_task[row["task_id"]] = per_task.get(row["task_id"], 0) + 1
+    wanted = max(20, math.ceil(0.05 * len(rows)))
+    order = sorted(per_task, key=lambda task: hashlib.sha256(f"{seed}|{task}".encode()).hexdigest())
+    chosen: list[str] = []
+    for task in order:
+        if sum(per_task[name] for name in chosen) >= wanted:
+            break
+        chosen.append(task)
+    selected = set(chosen)
+    kept = [row for row in _json_lines(variants) if row["task_id"] in selected]
+    if {row["task_id"] for row in kept} != selected:
+        raise ValueError("the variants do not hold every selected task")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if out.exists():
+        raise FileExistsError(f"{out} exists")
+    _write_rows(out, kept)
+    write_manifest(
+        {
+            "stage": "empirical-determinism-sample",
+            "seed": seed,
+            "journal_sha256": digest_file(journal),
+            "variants_sha256": digest_file(variants),
+            "greedy_requests": len(rows),
+            "wanted_requests": wanted,
+            "tasks": sorted(selected),
+            "selected_variants_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(selected)} tasks, {len(kept)} variants in {out}")
+
+
+@app.command("determinism-compare")
+def determinism_compare(
+    original: Annotated[Path, typer.Argument(help="The greedy journal of the run.")],
+    regenerated: Annotated[Path, typer.Argument(help="Journal regenerated in another session.")],
+    out: Annotated[Path, typer.Option(help="New determinism report (JSON).")],
+) -> None:
+    """Compare the regenerated outputs with the original ones, byte for byte (00 G-6)."""
+    from pstparser.repro.manifest import digest_file
+
+    first = {row["request_id"]: row["raw_output"] for row in _json_lines(original)}
+    second = {row["request_id"]: row["raw_output"] for row in _json_lines(regenerated)}
+    unknown = sorted(set(second) - set(first))
+    if unknown or not second:
+        raise ValueError(f"regenerated requests absent from the original run: {unknown[:5]}")
+    differing = sorted(request for request in second if second[request] != first[request])
+    out.parent.mkdir(parents=True, exist_ok=True)
+    _write_document(
+        out,
+        {
+            "format": "determinism-v1",
+            "original_sha256": digest_file(original),
+            "regenerated_sha256": digest_file(regenerated),
+            "compared": len(second),
+            "identical": len(second) - len(differing),
+            "identical_share": (len(second) - len(differing)) / len(second),
+            "differing": differing,
+        },
+    )
+    typer.echo(f"{len(second) - len(differing)} of {len(second)} identical; {out}")
+
+
+@app.command("model-digests")
+def model_digests(
+    name: Annotated[str, typer.Option(help="Model repository on the Hub.")],
+    revision: Annotated[str, typer.Option(help="Immutable 40-character commit.")],
+    out: Annotated[Path, typer.Option(help="New model.json with the SHA-256 of every file.")],
+) -> None:
+    """Hash every file of the model snapshot, weights included, into model.json (Q-02 b).
+
+    Run once where the model is downloaded (Colab); the file goes to
+    protocol/model.json and into the freeze, and generate final compares the
+    loaded snapshot with it.
+    """
+    from pstparser.models.loader import resolve_snapshot
+
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("provide an immutable 40-character model revision")
+    snapshot = resolve_snapshot(name, revision, hash_weights=True)
+    if snapshot.sha != revision:
+        raise ValueError(f"the snapshot holds {snapshot.sha}, not {revision}")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("x", encoding="utf-8", newline="\n") as handle:
+        document = {
+            "format": "model-digests-v1",
+            "name": name,
+            "revision": snapshot.sha,
+            "files": dict(sorted(snapshot.files.items())),
+        }
+        handle.write(json.dumps(document, indent=2, ensure_ascii=False) + "\n")
+    typer.echo(f"{len(snapshot.files)} files of {name}@{revision} in {out}")
+
+
+@app.command()
+def design(
+    sample: Annotated[
+        Path, typer.Argument(help="Frozen sample (bcb-final.json) or LLMSecEval identifier map.")
+    ],
+    analysis_id: Annotated[str, typer.Option(help="analysis_id of the outcome ledger.")],
+    endpoint: Annotated[str, typer.Option(help="functional or security.")],
+    conditions: Annotated[str, typer.Option(help="Baseline and treatment, e.g. T,H-gold.")],
+    out: Annotated[Path, typer.Option(help="New design file (JSON), input of analyze.")],
+    selection: Annotated[
+        str | None, typer.Option(help="Selection of the identifier map (security), e.g. S2.")
+    ] = None,
+    replicates: Annotated[str, typer.Option(help="Replicate IDs, e.g. 0 or 0,1,2,3,4,5.")] = "0",
+) -> None:
+    """Write the analysis design of a frozen sample (R-STA-04): tasks, families, replicates.
+
+    Functional designs take the tasks of a frozen sample, in its order, without
+    families; security designs take the prompts of one selection of the
+    LLMSecEval identifier map with their family, the unit of inference.
+    """
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    document = _read_document(sample)
+    pair = conditions.split(",")
+    if len(pair) != 2:
+        raise ValueError("conditions must name a baseline and a treatment")
+    replicate_ids = [int(value) for value in replicates.split(",")]
+    if endpoint == "functional":
+        if "tasks" not in document or selection is not None:
+            raise ValueError("a functional design reads a frozen sample, without --selection")
+        tasks = [{"task_id": row["task_id"]} for row in document["tasks"]]
+    elif endpoint == "security":
+        if "records" not in document or selection is None:
+            raise ValueError("a security design reads the identifier map with --selection")
+        tasks = [
+            {"task_id": row["task_id"], "family_id": row["family_id"]}
+            for row in document["records"]
+            if selection in row["selections"]
+        ]
+    else:
+        raise ValueError("endpoint must be functional or security")
+    if not tasks:
+        raise ValueError("the sample has no task for this design")
+    payload = {
+        "analysis_id": analysis_id,
+        "endpoint": endpoint,
+        "tasks": tasks,
+        "replicate_ids": replicate_ids,
+        "conditions": pair,
+    }
+    # The same checks analyze will apply, before anything is written.
+    AnalysisDesign(
+        analysis_id,
+        endpoint,  # type: ignore[arg-type]
+        tuple(TaskSpec(**task) for task in tasks),
+        tuple(replicate_ids),
+        (pair[0], pair[1]),
+    )
+    ensure_stage_outputs(out.parent, "empirical-design", [out.name])
+    _write_document(out, payload)
+    write_manifest(
+        {
+            "stage": "empirical-design",
+            "sample_sha256": digest_file(sample),
+            "selection": selection,
+            "design_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(tasks)} tasks in {out}")
+
+
 @app.command()
 def analyze(
     design: Path,
@@ -1203,6 +1611,16 @@ def analyze(
             "pair (e.g. T,H-gold,E); rows of the others are counted and left out."
         ),
     ] = None,
+    purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
+    freeze: Annotated[Path | None, typer.Option(help=_FREEZE_HELP)] = None,
+    details: Annotated[
+        Path | None,
+        typer.Option(help="details.jsonl of check-bigcodebench, for the S-FLAKY sensitivity."),
+    ] = None,
+    near_duplicates: Annotated[
+        Path | None,
+        typer.Option(help="Groups of near-duplicates, for the S-NEARDUP sensitivity."),
+    ] = None,
 ) -> None:
     """Analyse the explicit paired design, rejecting absent/duplicate/mixed rows."""
     from pstparser.repro.manifest import (
@@ -1212,6 +1630,7 @@ def analyze(
         write_manifest,
     )
 
+    frozen = _purpose(purpose, freeze)
     ensure_stage_outputs(destination.parent, "empirical-analysis", [destination.name])
     payload = json.loads(design.read_text(encoding="utf-8"))
     payload["tasks"] = tuple(TaskSpec(**task) for task in payload["tasks"])
@@ -1220,7 +1639,13 @@ def analyze(
             payload[key] = tuple(payload[key])
     declared = tuple(ledger_conditions.split(",")) if ledger_conditions is not None else None
     report = analyze_paired(
-        AnalysisDesign(**payload), read_outcomes(outcomes), ledger_conditions=declared
+        AnalysisDesign(**payload),
+        read_outcomes(outcomes),
+        ledger_conditions=declared,
+        details=_json_lines(details) if details is not None else None,
+        near_duplicate_groups=(
+            _read_document(near_duplicates)["groups"] if near_duplicates is not None else None
+        ),
     )
     destination.parent.mkdir(parents=True, exist_ok=True)
     with destination.open("x", encoding="utf-8") as handle:
@@ -1232,6 +1657,11 @@ def analyze(
             "design_sha256": digest_file(design),
             "outcomes_sha256": digest_file(outcomes),
             "report_sha256": digest_file(destination),
+            **frozen,
+            "details_sha256": digest_file(details) if details is not None else None,
+            "near_duplicates_sha256": (
+                digest_file(near_duplicates) if near_duplicates is not None else None
+            ),
             "source": source_snapshot(),
             **({"ledger_conditions": list(declared)} if declared is not None else {}),
         },
@@ -1403,6 +1833,10 @@ def check_security(
     codeql: Annotated[Path, typer.Option(help="Frozen settings of the analyser.")],
     bundle_dir: Annotated[Path, typer.Option(help="Local copy of the unpacked bundle.")],
     cards: Annotated[Path, typer.Option(help="Scenario cards.")],
+    calibration: Annotated[
+        Path,
+        typer.Option(help="Frozen calibration.json of calibrate-security backing the cards."),
+    ],
     id_map: Annotated[Path, typer.Option(help="Identifier map giving the family of each task.")],
     measure: Annotated[str, typer.Option(help="general or targeted.")],
     directory: Annotated[Path, typer.Option(help="New directory for the outcomes.")],
@@ -1438,12 +1872,15 @@ def check_security(
         raise ValueError("--sensitivity applies to the targeted measure only")
     config = oracle.read_config(codeql, bundle_dir)
     scenario_cards = oracle.read_cards(cards)
+    # The family states come from a frozen calibration, not from the cards alone (R-ORA-10).
+    oracle.require_calibration(_read_document(calibration), config, scenario_cards)
     families = {row["task_id"]: row["family_id"] for row in _read_document(id_map)["records"]}
     rows = _json_lines(generations)
     unknown = sorted({row["task_id"] for row in rows} - set(families))
     if unknown or not rows:
         raise ValueError(f"generations for tasks outside the identifier map: {unknown[:5]}")
     _require_complete(rows)
+    rows, prefill = _with_prefill(rows, generations)
     without_card = sorted({families[row["task_id"]] for row in rows} - set(scenario_cards))
     if without_card:
         raise ValueError(f"families without a scenario card: {without_card[:5]}")
@@ -1472,6 +1909,7 @@ def check_security(
         {
             "stage": "empirical-check-security",
             "analysis_id": analysis_id,
+            "assistant_prefill_prepended": prefill is not None,
             "codeql": config.as_dict(),
             "codeql_version": version,
             "family_states": list(states) if measure == "targeted" else None,
@@ -1479,6 +1917,7 @@ def check_security(
             "generations_sha256": digest_file(generations),
             "configuration_sha256": digest_file(codeql),
             "cards_sha256": digest_file(cards),
+            "calibration_sha256": digest_file(calibration),
             "id_map_sha256": digest_file(id_map),
             "outcomes_sha256": digest_file(directory / "outcomes.jsonl"),
             "details_sha256": digest_file(directory / "details.jsonl"),
@@ -1703,7 +2142,12 @@ def agreement(
         char_kappa,
     )
     from pstparser.empirical.benchmarks import read_sources
-    from pstparser.empirical.covariates import JUDGEMENT_UNITS_RULE, judgement_mask
+    from pstparser.empirical.covariates import (
+        JUDGEMENT_UNITS_RULE,
+        UNIT_TYPES,
+        judgement_mask,
+        unit_type_mask,
+    )
     from pstparser.repro.manifest import digest_file, source_snapshot, write_manifest
 
     texts = {record.task_id: record for record in read_sources(sources)}
@@ -1726,6 +2170,20 @@ def agreement(
         for task in tasks
     ]
     every = [AgreementItem(i.task_id, i.text, i.first, i.second) for i in judged]
+    # Kappa per unit type (R-TRA-01): the first sentence is rule-fixed and only descriptive.
+    by_type = {}
+    for unit_type in UNIT_TYPES:
+        typed = [
+            AgreementItem(
+                i.task_id, i.text, i.first, i.second, unit_type_mask(i.text, rule, unit_type)
+            )
+            for i in judged
+        ]
+        by_type[unit_type] = {
+            "tasks_with_units": sum(1 for i in typed if i.mask is not None and any(i.mask)),
+            "char_kappa": char_kappa(typed),
+            "boundary_f1": boundary_f1(typed),
+        }
     _write_document(
         out,
         {
@@ -1736,6 +2194,10 @@ def agreement(
                 "char_kappa": char_kappa(judged),
                 "boundary_f1": boundary_f1(judged),
             },
+            "tasks_without_judgement_units": sum(
+                1 for i in judged if i.mask is not None and not any(i.mask)
+            ),
+            "by_unit_type": by_type,
             "all_characters": {"char_kappa": char_kappa(every), "boundary_f1": boundary_f1(every)},
             "per_task_judgement_kappa": {item.task_id: char_kappa([item]) for item in judged},
         },
@@ -1884,12 +2346,37 @@ def thesis_tables(
         list[str] | None,
         typer.Option(help="H1=<analysis_id>, and H3=<analysis_id> if H3 is in the family."),
     ] = None,
+    gate: Annotated[
+        Path | None,
+        typer.Option(help="parser-gate report deciding H3 (default: parser/gate/gate.json)."),
+    ] = None,
+    purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
+    freeze: Annotated[Path | None, typer.Option(help=_FREEZE_HELP)] = None,
 ) -> None:
     """Every table and figure the files of a run allow; the skipped kinds go in the manifest."""
     from pstparser.empirical.thesis import build_thesis, parse_confirmatory, write
 
-    outputs = build_thesis(run, protocol, parse_confirmatory(confirmatory or ()) or None)
-    written = write(outputs, out)
+    frozen = _purpose(purpose, freeze)
+    if frozen["purpose"] == "final":
+        # Thesis tables of a final run read only final analyses under this freeze (R-STA-04).
+        for manifest in sorted((run / "analysis").glob("*/empirical-analysis_manifest.json")):
+            upstream = _read_document(manifest)
+            if (upstream.get("purpose"), upstream.get("freeze_sha256")) != (
+                "final",
+                frozen["freeze_sha256"],
+            ):
+                raise ValueError(f"{manifest}: not a final analysis under this freeze")
+    if gate is None and (run / "parser" / "gate" / "gate.json").is_file():
+        gate = run / "parser" / "gate" / "gate.json"
+    if freeze is not None and gate is not None:
+        from pstparser.empirical.freeze import load_freeze
+
+        # The thresholds the gate was decided on must be the frozen ones (R-STA-01).
+        thresholds = _read_document(gate).get("inputs", {}).get("thresholds_sha256")
+        if thresholds not in set(load_freeze(freeze)["items"].values()):
+            raise ValueError("the parser gate was not decided on thresholds the freeze lists")
+    outputs = build_thesis(run, protocol, parse_confirmatory(confirmatory or ()) or None, gate)
+    written = write(outputs, out, frozen)
     for kind, reason in outputs.skipped.items():
         typer.echo(f"skipped {kind}: {reason}", err=True)
     typer.echo(f"{len(written)} files in {out}")
@@ -2016,6 +2503,8 @@ def parser_gate_command(
         Path, typer.Option(help="Frozen thresholds: max_strict_failure, min_macro_f1.")
     ],
     out: Annotated[Path, typer.Option(help="New gate report.")],
+    purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
+    freeze: Annotated[Path | None, typer.Option(help=_FREEZE_HELP)] = None,
 ) -> None:
     """Decide the parser gate (00 T-7) before any H-auto generation."""
     from pstparser.empirical.auto import parser_gate
@@ -2026,6 +2515,7 @@ def parser_gate_command(
         write_manifest,
     )
 
+    frozen = _purpose(purpose, freeze)
     ensure_stage_outputs(out.parent, "empirical-parser-gate", [out.name])
     report = parser_gate(_read_document(s_parse), _read_document(score), _read_document(thresholds))
     report["inputs"] = {
@@ -2040,6 +2530,7 @@ def parser_gate_command(
             **report["inputs"],
             "gate_sha256": digest_file(out),
             "status": report["status"],
+            **frozen,
             "source": source_snapshot(),
         },
         out.parent,

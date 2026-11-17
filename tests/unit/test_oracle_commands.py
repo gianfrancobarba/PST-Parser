@@ -91,6 +91,8 @@ def command(
         "pilot-01",
         "--order-seed",
         "7",
+        # The fixture has one discordant program out of seven (C-15: accepted explicitly).
+        "--accept-discordance",
     ]
 
 
@@ -113,7 +115,7 @@ def test_command_writes_the_ledger_the_details_and_the_manifest(
 
     assert result.exit_code == 0, result.output
     assert "9 generations, 7 executed, 1 discordant" in result.output
-    assert "warning: more than 1%" in result.output
+    assert "accepted: more than 1%" in result.output
     directory = tmp_path / "check"
     outcomes = read_outcomes(directory / "outcomes.jsonl")
     assert len(outcomes) == 9
@@ -127,7 +129,7 @@ def test_command_writes_the_ledger_the_details_and_the_manifest(
     manifest = json.loads((directory / "empirical-check-bcb_manifest.json").read_text("utf-8"))
     assert manifest["harness"]["image"] == bcb.IMAGE and manifest["harness_version"] == "0.2.4"
     assert manifest["extraction_policy"] == "bigcodebench-sanitize"
-    assert manifest["rules"] == ["json-response-v1", "prompt-as-data-v1"]
+    assert manifest["rules"] == ["json-response-v2", "prompt-as-data-v2"]
     assert manifest["order_seed"] == 7 and manifest["flaky_tasks"] == [bcb.TASKS[1]]
     assert (
         manifest["outcomes_sha256"]
@@ -230,6 +232,19 @@ def security_command(tmp_path: Path, bundle: Path, measure: str, *extra: str) ->
         journal.write_text(
             "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
         )
+    # A frozen calibration that backs every card (C-16, R-ORA-10).
+    calibration = tmp_path / "codeql-calibration.json"
+    if not calibration.exists():
+        cards = read_cards(sec.CARDS)
+        document = {
+            "settings": codeql.read_config(sec.SETTINGS, bundle).as_dict(),
+            "families": {
+                family: {"declared": card.state, "observed": card.state}
+                for family, card in cards.items()
+            },
+            "mismatches": [],
+        }
+        calibration.write_text(json.dumps(document), encoding="utf-8")
     return [
         "check-security",
         str(journal),
@@ -239,6 +254,8 @@ def security_command(tmp_path: Path, bundle: Path, measure: str, *extra: str) ->
         str(bundle),
         "--cards",
         str(sec.CARDS),
+        "--calibration",
+        str(calibration),
         "--id-map",
         str(sec.ID_MAP),
         "--measure",
@@ -280,7 +297,7 @@ def test_check_command_writes_ledger_details_and_manifest(
     )
     assert manifest["measure"] == "general" and manifest["family_states"] is None
     assert manifest["codeql"]["cli_version"] == "2.22.1" and manifest["order_seed"] == 7
-    assert manifest["oracle_version"].endswith("python-code-scanning/remote/usability-rules-v1")
+    assert manifest["oracle_version"].endswith("python-code-scanning/remote/usability-rules-v2")
     assert manifest["cards_sha256"] == hashlib.sha256(sec.CARDS.read_bytes()).hexdigest()
     assert (
         manifest["outcomes_sha256"]

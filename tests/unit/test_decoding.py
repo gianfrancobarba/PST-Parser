@@ -103,7 +103,7 @@ def test_fake_model_with_penalty_1_1_receives_1_0() -> None:
     assert passed.max_new_tokens == 8
     assert model.received["use_model_defaults"] is False
     # Every decoding value travels inside the explicit configuration.
-    assert set(model.received) == {"generation_config", "use_model_defaults"}
+    assert set(model.received) == {"generation_config", "use_model_defaults", "attention_mask"}
     assert result.generation_config == {
         "do_sample": False,
         "num_beams": 1,
@@ -231,6 +231,7 @@ def test_generate_command_rejects_sampling_at_temperature_zero_before_loading(
                 "dataset_revision": "test",
                 "purpose": "pilot",
                 "review_record": "review.md",
+                "gpu": "NVIDIA L4",
             }
         ),
         encoding="utf-8",
@@ -242,3 +243,33 @@ def test_generate_command_rejects_sampling_at_temperature_zero_before_loading(
     assert isinstance(result.exception, ValidationError)
     assert "temperature greater than 0" in str(result.exception)
     assert not (tmp_path / "o").exists()
+
+
+# --- Q-08: an explicit attention mask of ones ------------------------------------------------
+
+
+def test_generation_passes_an_explicit_attention_mask_of_ones() -> None:
+    model = RecordingModel()
+    generate_messages(model, Tokenizer(), [], InferenceConfig(max_new_tokens=8))
+    mask = model.received["attention_mask"]
+    assert mask.shape == (1, 3) and bool((mask == 1).all())
+
+
+def test_the_explicit_mask_leaves_greedy_outputs_unchanged() -> None:
+    captured: list[list[int]] = []
+
+    class Capture(Tokenizer):
+        def decode(self, values: Any, **kwargs: Any) -> str:
+            captured.append([int(v) for v in values])
+            return "answer"
+
+    config = InferenceConfig(max_new_tokens=12)
+    generate_messages(tiny_model(), Capture(), [], config)
+    model = tiny_model()
+    with torch.no_grad():
+        plain = model.generate(
+            input_ids=torch.tensor([[5, 6, 7]]),
+            generation_config=GenerationConfig(**decoding_parameters(config)),
+            use_model_defaults=False,
+        )
+    assert captured[0] == [int(v) for v in plain[0][3:]]
