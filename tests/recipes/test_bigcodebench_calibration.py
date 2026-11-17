@@ -35,6 +35,12 @@ SPLIT = "v0.1.4"
 # Excluded in every calibration made so far. Reference fails offline: 101, 176,
 # 314, 590, 1005, 1012. Tests that pass a program doing nothing: 59, 272.
 ALWAYS_EXCLUDED = {59, 101, 176, 272, 314, 590, 1005, 1012}
+# References that pass both reference runs and fail now and then only when
+# submitted as a sample (Q-27, decided (a) on 17/11/2026: left to the 2+1 rule,
+# the frozen exclusions are not reopened). 205: timeout of its process pool;
+# 819: timing tolerance of time.sleep. Such a calibration is not conclusive and
+# writes no exclusions, but it is not a regression.
+INTERMITTENT_AS_SAMPLE = {205, 819}
 
 
 def _setting(variable: str) -> str:
@@ -127,8 +133,15 @@ def test_full_calibration_excludes_the_stable_cases_and_only_adds_rule_e1(
         ],
     )
 
-    assert result.exit_code == 0, result.output
-    payload = json.loads(out.read_text(encoding="utf-8"))
+    payload = json.loads((directory / "calibration.json").read_text(encoding="utf-8"))
+    unexplained = {task_number(task) for task in payload["unexplained"]}
+    if unexplained:
+        assert unexplained <= INTERMITTENT_AS_SAMPLE, payload["unexplained"]
+        assert "unexplained reference failures" in str(result.exception)
+        assert not out.exists()
+    else:
+        assert result.exit_code == 0, result.output
+        assert json.loads(out.read_text(encoding="utf-8")) == payload
     rules = {task_number(row["task_id"]): row["rules"] for row in payload["excluded"]}
     assert set(rules) >= ALWAYS_EXCLUDED
     assert rules[59] == rules[272] == ["E2", "E3"]
@@ -138,9 +151,11 @@ def test_full_calibration_excludes_the_stable_cases_and_only_adds_rule_e1(
     assert all(rules[task] == ["E1"] for task in set(rules) - ALWAYS_EXCLUDED)
     assert (payload["tasks"], payload["hard"]) == (1140, 148)
     assert payload["eligible"] == 1140 - payload["excluded_count"]
-    assert payload["unexplained"] == []
     assert payload["scope"] == "all"
     manifest = json.loads(
         (directory / "empirical-calibrate-bcb_manifest.json").read_text(encoding="utf-8")
     )
-    assert manifest["exclusions_sha256"] == hashlib.sha256(out.read_bytes()).hexdigest()
+    if unexplained:
+        assert manifest["conclusive"] is False and manifest["exclusions_sha256"] is None
+    else:
+        assert manifest["exclusions_sha256"] == hashlib.sha256(out.read_bytes()).hexdigest()
