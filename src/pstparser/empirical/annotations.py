@@ -31,6 +31,9 @@ GUIDELINES_VERSION: Final = "gold-v2.0"
 SPLITTER_VERSION: Final = "g1-splitter-v1"
 BCB_RULE: Final = "bcb-markers-v1"
 LSE_RULE: Final = "lse-prefix-v1"
+#: Cuts of a judgement unit admitted by the lint when the notes record them (Q-16).
+CUT_RULE: Final = "g1-registered-cuts-v1"
+_CUT: Final = re.compile(r"\bcut@(\d+)\b")
 
 MAIN: Final = "main_instruction"
 FORMAT_LEAF: Final = "context.format"
@@ -468,6 +471,12 @@ def lint(source: SourceRecord, row: AnnotationRow) -> list[str]:
     boundaries that never cut a sentence, and a note for every span on a leaf
     that is expected to stay empty. The leaf chosen for a judgement unit is the
     annotator's decision and is not checked.
+
+    Rule ``g1-registered-cuts-v1`` (Q-16): a judgement unit (``G3`` or ``B6``)
+    may be cut at a space, for example between the items of a list written on
+    one line, when the notes record the cut as ``cut@<offset>``, the offset of
+    the first character after the cut. The first sentence, marker blocks and
+    fixed sections are never cut.
     """
     problems: list[str] = []
     if row.source_sha256 != source.source_sha256:
@@ -485,11 +494,35 @@ def lint(source: SourceRecord, row: AnnotationRow) -> list[str]:
         if unit.kind == "formula" and spans.get((unit.start, unit.end)) != unit.path:
             section = source.text[unit.start : unit.end].split("\n")[0][:40]
             problems.append(f"fixed section {unit.rule} ({section!r}) must be one {unit.path} span")
-    # A span may join whole sentences, never start or end inside one.
+    # A span may join whole sentences, never start or end inside one, except at
+    # a registered cut.
     starts = {unit.start for unit in units}
     ends = {unit.end for unit in units}
+    text = source.text
+    cuts = {int(found) for found in _CUT.findall(row.notes)}
+    judged = [unit for unit in units if unit.kind == "judgement"]
+    for cut in sorted(cuts):
+        valid = (
+            0 < cut < len(text)
+            and text[cut - 1].isspace()
+            and not text[cut].isspace()
+            and any(unit.start < cut < unit.end for unit in judged)
+        )
+        if not valid:
+            problems.append(f"registered cut@{cut} is not at a space inside a judgement unit")
+    admitted = {cut for cut in cuts if any(unit.start < cut < unit.end for unit in judged)}
+
+    def _next_start(end: int) -> int:
+        while end < len(text) and text[end].isspace():
+            end += 1
+        return end
+
     for span in row.spans:
-        if span.start not in starts or span.end not in ends:
+        opens = span.start in starts or span.start in admitted
+        closes = span.end in ends or (
+            not text[span.end - 1].isspace() and _next_start(span.end) in admitted
+        )
+        if not (opens and closes):
             problems.append(f"span {span.start}-{span.end} cuts a sentence or a fixed section")
         if span.path in RARE_LEAVES and not row.notes.strip():
             problems.append(f"span {span.start}-{span.end} uses {span.path} without a note")
