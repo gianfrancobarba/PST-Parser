@@ -6,8 +6,6 @@ them and catch the inputs nobody thought to write down.
 
 from __future__ import annotations
 
-import json
-
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
@@ -58,11 +56,20 @@ def test_tokens_carry_no_whitespace(text: str) -> None:
     assert all(token.strip() == token and token for token in tokenise(text))
 
 
+def _keys(value: object) -> list[str]:
+    """Every dictionary key of a tree, at any depth; list items are values, not keys."""
+    if isinstance(value, dict):
+        return [k for key, item in value.items() for k in (str(key), *_keys(item))]
+    if isinstance(value, list):
+        return [k for item in value for k in _keys(item)]
+    return []
+
+
 @given(trees)
 def test_assembled_tree_always_declares_every_leaf(tree: dict[str, object]) -> None:
-    flat = json.dumps(tree)
-
-    assert flat.count('"main_instruction"') == 1
+    # Counted on the structure, not on the JSON text: a segment may itself read
+    # "main_instruction" (R-PRO-02).
+    assert _keys(tree).count("main_instruction") == 1
     assert ROOT_KEY in tree
 
 

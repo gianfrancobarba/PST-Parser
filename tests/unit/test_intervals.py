@@ -213,3 +213,53 @@ def test_families_give_a_cr1_interval_and_no_tango() -> None:
     assert report.cr1_ci == expected.interval
     assert report.cr1_se == expected.standard_error
     assert report.cr1_df == 2
+
+
+# --- C-19 (R-DES-01, R-STA-06) -----------------------------------------------------------------
+
+
+def test_mid_p_and_tango_disagree_at_six_and_fifteen() -> None:
+    # Independent values: the mid-p of Fagerland et al. (2013) from the binomial
+    # Bin(21, 1/2), and Tango's score test at delta = 0, which is McNemar's
+    # z = (c - b) / sqrt(b + c) = 9 / sqrt(21) = 1.964 > 1.960.
+    tail = sum(math.comb(21, k) for k in range(7)) / 2**21
+    expected_midp = 2 * (tail - math.comb(21, 6) / 2**21 / 2)
+    assert midp_mcnemar(6, 15) == pytest.approx(expected_midp, abs=1e-12)
+    assert expected_midp > 0.05
+    assert (15 - 6) / math.sqrt(21) > NormalDist().inv_cdf(0.975)
+    pairs = [("pass", "fail")] * 6 + [("fail", "pass")] * 15 + [("pass", "pass")] * 19
+    design, records = ledger(pairs)
+    report = analyze_paired(design, records, bootstrap_samples=200)
+    assert report.tango_ci[0] > 0
+    assert "Mid-p and Tango disagree about zero" in " ".join(report.warnings)
+
+
+def _tango_coverage(n: int, p10: float, p01: float) -> float:
+    """Exact coverage of the 95% Tango interval; cells below exp(-28) are left out."""
+    delta = p01 - p10
+    covered = mass = 0.0
+    for b in range(n + 1):
+        for c in range(n - b + 1):
+            rest = n - b - c
+            log_p = (
+                math.lgamma(n + 1)
+                - math.lgamma(b + 1)
+                - math.lgamma(c + 1)
+                - math.lgamma(rest + 1)
+                + b * math.log(p10)
+                + c * math.log(p01)
+                + rest * math.log(1 - p10 - p01)
+            )
+            if log_p < -28:
+                continue
+            p = math.exp(log_p)
+            low, high = tango_interval(b, c, n, 0.95)
+            mass += p
+            covered += p * (low <= delta <= high)
+    return covered / mass
+
+
+@pytest.mark.parametrize("n, tolerance", [(30, 0.02), (100, 0.01), (800, 0.01)])
+@pytest.mark.parametrize("p10, p01", [(0.05, 0.10), (0.10, 0.10), (0.05, 0.15)])
+def test_tango_interval_covers_close_to_95_percent(n, tolerance, p10, p01) -> None:
+    assert abs(_tango_coverage(n, p10, p01) - 0.95) <= tolerance
