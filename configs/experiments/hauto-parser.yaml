@@ -1,0 +1,47 @@
+# The parser of H-auto (M19, R-HAU-03): the adapter of parser-2026-11-12-r3 on
+# the base weights it was trained on, loaded with the hf backend at a pinned
+# revision so that what runs can be verified.
+#
+# The reference run asked the optimised backend for
+# unsloth/Meta-Llama-3.1-8B-Instruct at a2856192, and that backend loaded the
+# prequantised repository below at 0db785ab instead (resolved_model_revision of
+# its train manifest). Those are the weights the adapter was trained on: their
+# quantisation leaves model.layers.1.mlp unquantised, which quantising the
+# bf16 weights at load time would not. The backend changes from the reference
+# run (unsloth, 12/11) to hf, by decision D-B4-2.
+extends:
+  - _base/data/pst_v2.yaml
+  - _base/model/llama31_8b.yaml
+  - _base/train/sft_lora.yaml
+  - _base/eval/default.yaml
+  - _base/synth/default.yaml
+
+name: hauto-parser
+seed: 42
+system_prompt_path: prompts/system_pst.md
+
+model:
+  backend: hf
+  name: unsloth/Meta-Llama-3.1-8B-Instruct-unsloth-bnb-4bit
+  revision: 0db785ab56c082e30ae7dea3645d45465fbb5797
+  max_seq_length: 8192
+  # The snapshot is already quantised; its own quantisation configuration is
+  # the one applied.
+  load_in_4bit: true
+  # The unquantised modules in the precision the reference run computed in.
+  dtype: bfloat16
+  # Not applied by the hf backend: the template is the one saved with the
+  # adapter's tokenizer, checked against the reference run by its digest.
+  chat_template: llama-3.1
+
+# M03: greedy decoding, every value written out, nothing inherited from the
+# generation_config published with the model.
+inference:
+  max_new_tokens: 3072
+  do_sample: false
+  temperature: 0.0
+  top_p: 1.0
+  top_k: null
+  repetition_penalty: 1.0
+  structured_output: false
+  batch_size: 1

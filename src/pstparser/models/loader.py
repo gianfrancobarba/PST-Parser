@@ -481,6 +481,10 @@ def _load_hf(config: ModelConfig) -> tuple[Model, Tokenizer]:
         # A pinned revision is loaded from its snapshot directory, model and
         # tokenizer alike, so that what runs is what resolve_snapshot identified.
         source = str(resolve_snapshot(config.name, config.revision).path)
+        if config.load_in_4bit and _prequantised(Path(source)):
+            # The snapshot carries its own quantisation (the parser's base
+            # weights, C-24): it is the one applied, not a default of ours.
+            del keywords["quantization_config"]
         keywords["attn_implementation"] = "sdpa"
         if not config.load_in_4bit and torch.cuda.is_available():
             # The whole model on one device: "auto" may offload layers to the
@@ -498,6 +502,15 @@ def _load_hf(config: ModelConfig) -> tuple[Model, Tokenizer]:
         tokenizer.pad_token = tokenizer.eos_token
 
     return model, tokenizer
+
+
+def _prequantised(snapshot: Path) -> bool:
+    """Whether a snapshot's configuration declares the quantisation of its weights."""
+    configuration = snapshot / "config.json"
+    if not configuration.is_file():
+        return False
+    document = json.loads(configuration.read_bytes().decode("utf-8"))
+    return isinstance(document, dict) and document.get("quantization_config") is not None
 
 
 def _four_bit_config() -> Any:
