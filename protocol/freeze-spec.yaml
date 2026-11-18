@@ -20,9 +20,14 @@ items:
   - protocol/README.md
   - protocol/analysis/contamination.json
   - protocol/freeze-spec.yaml
+  - protocol/hauto/gate-thresholds.json
   - protocol/oracles/bcb-exclusions.json
   - protocol/oracles/codeql.json
   - protocol/oracles/empirical-merge-calibrations_manifest.json
+  - protocol/reannotation/bcb/empirical-sample-reannotation_manifest.json
+  - protocol/reannotation/bcb/reannotation-bcb.json
+  - protocol/reannotation/lse/empirical-sample-reannotation_manifest.json
+  - protocol/reannotation/lse/reannotation-lse.json
   - protocol/samples/bcb-final.json
   - protocol/samples/bcb-full.json
   - protocol/samples/bcb-permutation.json
@@ -99,6 +104,5 @@ items:
   # - protocol/rules/prompt-as-data.md
   # Every other file of the repository is hashed by the freeze itself (protocol-freeze-v2).
   # TO ADD in the H-auto freeze (F8), before the parser runs on the benchmarks:
-  # - protocol/hauto/gate-thresholds.json (00 T-7; descriptive: H3 is exploratory by protocol)
   # - the parser configuration and its system prompt (prompts/system_pst.md)
   # - protocol/hauto/s-parse.json and the score results.json of the same predictions
