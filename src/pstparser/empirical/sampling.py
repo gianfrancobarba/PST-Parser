@@ -232,6 +232,39 @@ def pilot_pool(
     )
 
 
+def hard_census(
+    permutation: Permutation,
+    hard_ids: Collection[str],
+    pilot: SampleRecord | None = None,
+) -> SampleRecord:
+    """Every eligible Hard task, in permutation order: a census, not a draw.
+
+    The Hard subset is fixed by the benchmark, so nothing is sampled; the
+    frozen exclusions already removed the ineligible tasks. The pilot pool was
+    drawn outside Hard, which this function checks.
+
+    Raises:
+        ValueError: If no Hard task is eligible, or a pilot task is a Hard one.
+    """
+    hard = set(hard_ids)
+    if pilot is not None:
+        if pilot.dataset_sha256 != permutation.dataset_sha256:
+            raise ValueError("the pilot pool does not belong to this permutation")
+        if hard & set(pilot.task_ids):
+            raise ValueError("a pilot task is in the Hard subset")
+    chosen = [(position, task) for position, task in enumerate(permutation.order) if task in hard]
+    if not chosen:
+        raise ValueError("no eligible Hard task")
+    return SampleRecord(
+        task_ids=tuple(task for _, task in chosen),
+        positions=tuple(position for position, _ in chosen),
+        seed=permutation.seed,
+        dataset_sha256=permutation.dataset_sha256,
+        text_field=permutation.text_field,
+        excluded=dict(permutation.excluded),
+    )
+
+
 def full_minus(permutation: Permutation, pilot: SampleRecord) -> SampleRecord:
     """Return every eligible task but the pilot ones, in permutation order."""
     return sample(permutation, len(permutation.order) - len(pilot.task_ids), skip=pilot.task_ids)

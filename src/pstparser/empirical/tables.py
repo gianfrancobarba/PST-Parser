@@ -399,6 +399,17 @@ CONFIRMATORY_REPORTS: Final = {
 }
 
 
+#: Frozen protocol document that fixes the family before any data (decision of
+#: 18/11/2026): H1 alone at 0.05, H3 exploratory whatever the parser gate says.
+FAMILY_FORMAT: Final = "confirmatory-family-v1"
+PROTOCOL_FAMILY: Final = {
+    "format": FAMILY_FORMAT,
+    "family": ["H1"],
+    "alpha": 0.05,
+    "h3": "exploratory",
+}
+
+
 def _check_family(
     by_id: Mapping[str, Mapping[str, Any]],
     confirmatory: Mapping[str, str],
@@ -406,18 +417,27 @@ def _check_family(
 ) -> None:
     """The family follows the parser gate, and each member is the report it must be.
 
+    ``gate`` is either the parser gate report or the frozen protocol document
+    ``confirmatory-family-v1``, which fixes the family to H1 alone, read at 0.05,
+    with H3 exploratory.
+
     Raises:
         ValueError: If the gate report is missing or malformed, H3 is in the
-            family against the gate (or left out of it), or a report has the
-            wrong endpoint, conditions, suffix, test or task count.
+            family against the gate or the protocol (or left out of it), or a
+            report has the wrong endpoint, conditions, suffix, test or task count.
     """
     if set(confirmatory) - set(CONFIRMATORY_WEIGHTS) or "H1" not in confirmatory:
         raise ValueError("the confirmatory family is H1 and, optionally, H3")
-    if gate is None or gate.get("format") != "parser-gate-v1":
+    if gate is not None and gate.get("format") == FAMILY_FORMAT:
+        if dict(gate) != PROTOCOL_FAMILY:
+            raise ValueError(f"the only protocol family is {PROTOCOL_FAMILY}")
+        if "H3" in confirmatory:
+            raise ValueError("the protocol makes H3 exploratory: the family must leave out H3")
+    elif gate is None or gate.get("format") != "parser-gate-v1":
         raise ValueError("the confirmatory family needs the parser gate report (parser-gate-v1)")
-    if gate.get("h3") not in {"confirmatory", "descriptive"}:
+    elif gate.get("h3") not in {"confirmatory", "descriptive"}:
         raise ValueError("the parser gate report has no H3 decision")
-    if (gate["h3"] == "confirmatory") != ("H3" in confirmatory):
+    elif (gate["h3"] == "confirmatory") != ("H3" in confirmatory):
         raise ValueError(
             f"the parser gate makes H3 {gate['h3']}: the family must "
             f"{'include' if gate['h3'] == 'confirmatory' else 'leave out'} H3"

@@ -386,3 +386,62 @@ def test_sample_command_needs_the_hard_subset_for_bigcodebench(tmp_path: Path) -
     assert result.exit_code != 0
     assert "needs its Hard subset" in str(result.exception)
     assert not (tmp_path / "samples").exists()
+
+
+def hard_arguments(permutation_file: Path, pilot_file: Path, out: Path) -> list[str]:
+    return ["sample-hard", str(permutation_file), "--pilot", str(pilot_file), "--out", str(out)]
+
+
+def test_hard_command_writes_the_census_of_eligible_hard_tasks(tmp_path: Path) -> None:
+    permutation_file, final_file, hard = frozen_files(tmp_path)
+    perm = frozen()
+    assert (
+        CliRunner().invoke(app, pilot_arguments(permutation_file, final_file, tmp_path)).exit_code
+        == 0
+    )
+    pilot_file = tmp_path / "pilot" / "pilot.json"
+    out = tmp_path / "hard" / "hard.json"
+
+    result = CliRunner().invoke(app, hard_arguments(permutation_file, pilot_file, out))
+
+    assert result.exit_code == 0, result.output
+    census = load(out)
+    ids = [row["task_id"] for row in census["tasks"]]
+    assert census["kind"] == "hard-census" and census["n"] == 5 == census["hard_count"]
+    assert ids == [task for task in perm.order if task in hard]
+    assert [row["position"] for row in census["tasks"]] == [perm.order.index(t) for t in ids]
+    assert not set(ids) & {row["task_id"] for row in load(pilot_file)["tasks"]}
+    assert not set(ids) & set(EXCLUDE)
+    assert census["pilot_sha256"] == file_sha256(pilot_file)
+    assert census["permutation_sha256"] == file_sha256(permutation_file)
+    manifest = load(tmp_path / "hard" / "empirical-sample-hard_manifest.json")
+    assert manifest["census_sha256"] == file_sha256(out) and manifest["n"] == 5
+
+
+def test_hard_command_refuses_a_pilot_of_another_permutation_or_inside_hard(tmp_path: Path) -> None:
+    permutation_file, final_file, hard = frozen_files(tmp_path)
+    assert (
+        CliRunner().invoke(app, pilot_arguments(permutation_file, final_file, tmp_path)).exit_code
+        == 0
+    )
+    pilot_file = tmp_path / "pilot" / "pilot.json"
+    document = load(pilot_file)
+    document["tasks"][0]["task_id"] = sorted(hard)[0]
+    inside = tmp_path / "pilot" / "inside.json"
+    inside.write_text(json.dumps(document), encoding="utf-8")
+
+    inside_result = CliRunner().invoke(
+        app, hard_arguments(permutation_file, inside, tmp_path / "a" / "h.json")
+    )
+    document["permutation_sha256"] = "0" * 64
+    other = tmp_path / "pilot" / "other.json"
+    other.write_text(json.dumps(document), encoding="utf-8")
+    other_result = CliRunner().invoke(
+        app, hard_arguments(permutation_file, other, tmp_path / "b" / "h.json")
+    )
+
+    assert inside_result.exit_code != 0
+    assert "a pilot task is in the Hard subset" in str(inside_result.exception)
+    assert other_result.exit_code != 0
+    assert "not drawn from this permutation file" in str(other_result.exception)
+    assert not (tmp_path / "a" / "h.json").exists() and not (tmp_path / "b" / "h.json").exists()

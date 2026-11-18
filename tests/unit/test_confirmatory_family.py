@@ -184,3 +184,50 @@ def test_holm_levels_agree_with_the_decisions_on_a_grid() -> None:
                     assert levels[name] is None
                 else:
                     assert (value <= levels[name]) == (decisions[name] == "rejected")
+
+
+# Decision of 18/11/2026 (Hard census): the protocol fixes the family to H1 alone,
+# read at 0.05; H3 is exploratory whatever the parser gate says.
+PROTOCOL = {
+    "format": "confirmatory-family-v1",
+    "family": ["H1"],
+    "alpha": 0.05,
+    "h3": "exploratory",
+}
+
+
+def test_the_protocol_family_reads_h1_alone_at_five_percent_without_a_gate() -> None:
+    at_0045 = report("bcb-h1", 0.045)
+    main, _ = paired_tables({"a": at_0045, "b": H3}, {"H1": "bcb-h1"}, PROTOCOL)
+    decisions = {row[0]: row[-1] for row in main.rows}
+    assert decisions["bcb-h1"] == "H1 rejected"
+    assert decisions["bcb-h3-s-parse"] == "exploratory"
+
+
+def test_the_protocol_family_refuses_h3_even_after_a_passed_gate() -> None:
+    with pytest.raises(ValueError, match="H3 exploratory"):
+        paired_tables(REPORTS, FAMILY, PROTOCOL)
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        {**PROTOCOL, "alpha": 0.04},
+        {**PROTOCOL, "family": ["H1", "H3"]},
+        {**PROTOCOL, "h3": "confirmatory"},
+    ],
+)
+def test_a_protocol_family_other_than_h1_alone_is_refused(changed: dict[str, Any]) -> None:
+    with pytest.raises(ValueError, match="only protocol family"):
+        paired_tables(REPORTS, {"H1": "bcb-h1"}, changed)
+
+
+def test_the_protocol_file_holds_the_only_admitted_family() -> None:
+    import json
+    from pathlib import Path
+
+    from pstparser.empirical.tables import PROTOCOL_FAMILY
+
+    root = Path(__file__).resolve().parents[2]
+    document = json.loads((root / "protocol/analysis/confirmatory-family.json").read_text("utf-8"))
+    assert document == PROTOCOL_FAMILY == PROTOCOL

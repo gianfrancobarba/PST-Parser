@@ -54,6 +54,9 @@ def _purpose(purpose: str, freeze: Path | None) -> dict[str, Any]:
 
 _PURPOSE_HELP = "exploratory, or final: final requires --freeze (a verified protocol freeze)."
 _FREEZE_HELP = "protocol-freeze.json the command runs under; verified before anything is read."
+#: S_gold, the tasks with reviewed gold: the census of the eligible Hard tasks
+#: (decision of 18/11/2026, after the supervisors' reply; it replaces bcb-final.json).
+S_GOLD_FILE = "bcb-hard.json"
 
 
 def _rows(path: Path) -> list[dict[str, Any]]:
@@ -756,6 +759,54 @@ def sample_pilot(
         out.parent,
     )
     typer.echo(f"pilot pool of {n} in {out}; {len(full.task_ids)} tasks in {full_out}")
+
+
+@app.command("sample-hard")
+def sample_hard(
+    permutation: Path,
+    pilot: Annotated[Path, typer.Option(help="Frozen pilot pool, which must lie outside Hard.")],
+    out: Annotated[Path, typer.Option(help="New file for the Hard census (S_gold).")],
+) -> None:
+    """Write the census of the eligible Hard tasks, in permutation order (S_gold).
+
+    Nothing is drawn: the Hard subset is the benchmark's own, and the frozen
+    exclusions already left out the ineligible tasks.
+    """
+    from pstparser.empirical import sampling
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    frozen, hard = sampling.read_permutation_document(_read_document(permutation))
+    pilot_document = _read_document(pilot)
+    if pilot_document.get("permutation_sha256") != digest_file(permutation):
+        raise ValueError("the pilot pool was not drawn from this permutation file")
+    pool = sampling.read_sample_document(pilot_document, "pilot-sample")
+    census = sampling.hard_census(frozen, hard, pool)
+    ensure_stage_outputs(out.parent, "empirical-sample-hard", [out.name])
+    provenance = {
+        "benchmark": pilot_document["benchmark"],
+        "permutation_sha256": digest_file(permutation),
+        "pilot_sha256": digest_file(pilot),
+    }
+    _write_document(
+        out,
+        sampling.sample_document("hard-census", census, frozen, hard, **provenance),
+    )
+    write_manifest(
+        {
+            "stage": "empirical-sample-hard",
+            **provenance,
+            "n": len(census.task_ids),
+            "census_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(census.task_ids)} eligible Hard tasks in {out}")
 
 
 @app.command("sample-families")
@@ -1524,7 +1575,7 @@ def model_digests(
 @app.command()
 def design(
     sample: Annotated[
-        Path, typer.Argument(help="Frozen sample (bcb-final.json) or LLMSecEval identifier map.")
+        Path, typer.Argument(help="Frozen sample (bcb-hard.json) or LLMSecEval identifier map.")
     ],
     analysis_id: Annotated[str, typer.Option(help="analysis_id of the outcome ledger.")],
     endpoint: Annotated[str, typer.Option(help="functional or security.")],
@@ -2352,8 +2403,19 @@ def thesis_tables(
     ] = None,
     purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
     freeze: Annotated[Path | None, typer.Option(help=_FREEZE_HELP)] = None,
+    family: Annotated[
+        Path | None,
+        typer.Option(
+            help="Frozen confirmatory-family-v1 document (default: "
+            "<protocol>/analysis/confirmatory-family.json): H1 alone at 0.05, H3 exploratory."
+        ),
+    ] = None,
 ) -> None:
-    """Every table and figure the files of a run allow; the skipped kinds go in the manifest."""
+    """Every table and figure the files of a run allow; the skipped kinds go in the manifest.
+
+    When the protocol fixes the family (``confirmatory-family-v1``), the parser
+    gate no longer decides it: the gate stays a descriptive report.
+    """
     from pstparser.empirical.thesis import build_thesis, parse_confirmatory, write
 
     frozen = _purpose(purpose, freeze)
@@ -2366,16 +2428,33 @@ def thesis_tables(
                 frozen["freeze_sha256"],
             ):
                 raise ValueError(f"{manifest}: not a final analysis under this freeze")
-    if gate is None and (run / "parser" / "gate" / "gate.json").is_file():
-        gate = run / "parser" / "gate" / "gate.json"
-    if freeze is not None and gate is not None:
-        from pstparser.empirical.freeze import load_freeze
+    if family is None and (protocol / "analysis" / "confirmatory-family.json").is_file():
+        family = protocol / "analysis" / "confirmatory-family.json"
+    if family is not None:
+        from pstparser.empirical.tables import FAMILY_FORMAT
 
-        # The thresholds the gate was decided on must be the frozen ones (R-STA-01).
-        thresholds = _read_document(gate).get("inputs", {}).get("thresholds_sha256")
-        if thresholds not in set(load_freeze(freeze)["items"].values()):
-            raise ValueError("the parser gate was not decided on thresholds the freeze lists")
-    outputs = build_thesis(run, protocol, parse_confirmatory(confirmatory or ()) or None, gate)
+        if _read_document(family).get("format") != FAMILY_FORMAT:
+            raise ValueError(f"{family}: not a {FAMILY_FORMAT} document")
+        if freeze is not None:
+            from pstparser.empirical.freeze import load_freeze
+            from pstparser.repro.manifest import digest_file
+
+            # The family is fixed by the protocol only if the freeze lists it.
+            if digest_file(family) not in set(load_freeze(freeze)["items"].values()):
+                raise ValueError("the confirmatory family document is not in the freeze")
+        decider: Path | None = family
+    else:
+        if gate is None and (run / "parser" / "gate" / "gate.json").is_file():
+            gate = run / "parser" / "gate" / "gate.json"
+        if freeze is not None and gate is not None:
+            from pstparser.empirical.freeze import load_freeze
+
+            # The thresholds the gate was decided on must be the frozen ones (R-STA-01).
+            thresholds = _read_document(gate).get("inputs", {}).get("thresholds_sha256")
+            if thresholds not in set(load_freeze(freeze)["items"].values()):
+                raise ValueError("the parser gate was not decided on thresholds the freeze lists")
+        decider = gate
+    outputs = build_thesis(run, protocol, parse_confirmatory(confirmatory or ()) or None, decider)
     written = write(outputs, out, frozen)
     for kind, reason in outputs.skipped.items():
         typer.echo(f"skipped {kind}: {reason}", err=True)
@@ -2509,7 +2588,7 @@ def parser_gate_command(
     sample: Annotated[
         Path,
         typer.Option(
-            help="Frozen sample of the parsed tasks; final: protocol/samples/bcb-final.json."
+            help="Frozen sample of the parsed tasks; final: protocol/samples/bcb-hard.json."
         ),
     ],
     purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
@@ -2532,9 +2611,9 @@ def parser_gate_command(
     frozen = _purpose(purpose, freeze)
     if purpose == "final":
         assert freeze is not None
-        s_gold = default_root(freeze) / "protocol" / "samples" / "bcb-final.json"
+        s_gold = default_root(freeze) / "protocol" / "samples" / S_GOLD_FILE
         if digest_file(sample) != digest_file(s_gold):
-            raise ValueError("a final gate is measured on S_gold: protocol/samples/bcb-final.json")
+            raise ValueError(f"a final gate is measured on S_gold: protocol/samples/{S_GOLD_FILE}")
     ensure_stage_outputs(out.parent, "empirical-parser-gate", [out.name])
     sample_tasks = [row["task_id"] for row in _read_document(sample)["tasks"]]
     report = parser_gate(

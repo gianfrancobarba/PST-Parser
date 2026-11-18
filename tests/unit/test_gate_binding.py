@@ -249,7 +249,7 @@ def test_a_final_gate_is_measured_on_s_gold(tmp_path, monkeypatch) -> None:
     s_parse = convert(paths, tmp_path / "hauto")
     root = tmp_path / "repo"
     (root / "protocol" / "samples").mkdir(parents=True)
-    (root / "protocol" / "samples" / "bcb-final.json").write_text(
+    (root / "protocol" / "samples" / "bcb-hard.json").write_text(
         json.dumps({"tasks": [{"task_id": "BigCodeBench/7"}]}), encoding="utf-8"
     )
     freeze = root / "protocol" / "protocol-freeze-hauto.json"
@@ -275,4 +275,4 @@ def test_a_final_gate_is_measured_on_s_gold(tmp_path, monkeypatch) -> None:
     ]
     result = CliRunner().invoke(empirical_app, arguments)
     assert isinstance(result.exception, ValueError)
-    assert "bcb-final.json" in str(result.exception)
+    assert "bcb-hard.json" in str(result.exception)

@@ -18,15 +18,18 @@ conditions:
 renderer_version: {H-gold: pst-gold-json-v1, E: envelope-json-v1}
 items:
   - protocol/README.md
+  - protocol/analysis/confirmatory-family.json
   - protocol/analysis/contamination.json
   - protocol/freeze-spec.yaml
   - protocol/oracles/bcb-exclusions.json
   - protocol/oracles/codeql.json
   - protocol/oracles/empirical-merge-calibrations_manifest.json
   - protocol/samples/bcb-final.json
+  - protocol/samples/bcb-hard.json
   - protocol/samples/bcb-full.json
   - protocol/samples/bcb-permutation.json
   - protocol/samples/empirical-sample-families_manifest.json
+  - protocol/samples/empirical-sample-hard_manifest.json
   - protocol/samples/empirical-sample-pilot_manifest.json
   - protocol/samples/empirical-sample_manifest.json
   - protocol/samples/llmseceval-ids.json
@@ -83,7 +86,8 @@ items:
   - protocol/security/controls/V__89-SQI-3__web.py
   # TO ADD before the freeze (08 §3.2.1), once they exist:
   # - protocol/guidelines/<gold guidelines, copied by hand>
-  # - data/annotated/downstream/<benchmark>/annotations.jsonl (reviewed gold, status frozen)
+  # - data/annotated/downstream/bcb-hard/annotations.jsonl and the LLMSecEval gold (reviewed, status frozen);
+  #   S_gold is the Hard census (protocol/samples/bcb-hard.json), decision of 18/11/2026
   # - protocol/variants/<benchmark>.variants.jsonl (output of render, T, H-gold, E)
   # - protocol/covariates/<benchmark>.covariates.jsonl (output of covariates)
   # - protocol/prompts/<system message and wrapper>
@@ -93,6 +97,6 @@ items:
   # - protocol/rules/prompt-as-data.md
   # Every other file of the repository is hashed by the freeze itself (protocol-freeze-v2).
   # TO ADD in the H-auto freeze (F8), before the parser runs on the benchmarks:
-  # - protocol/hauto/gate-thresholds.json (00 T-7)
+  # - protocol/hauto/gate-thresholds.json (00 T-7; descriptive: H3 is exploratory by protocol)
   # - the parser configuration and its system prompt (prompts/system_pst.md)
   # - protocol/hauto/s-parse.json and the score results.json of the same predictions

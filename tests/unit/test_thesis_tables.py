@@ -396,3 +396,32 @@ def test_the_figures_command_draws_one_kind(tmp_path: Path, monkeypatch) -> None
     assert result.exit_code == 0, result.output
     assert (tmp_path / "f" / "forest.pdf").read_bytes().startswith(b"%PDF")
     assert (tmp_path / "f" / "forest.png").read_bytes().startswith(b"\x89PNG")
+
+
+def test_the_protocol_family_decides_h1_alone_through_the_command(
+    tmp_path: Path, monkeypatch
+) -> None:
+    run = fake_run(tmp_path)
+    monkeypatch.chdir(Path(__file__).resolve().parents[2])
+    family = run.parents[2] / "protocol" / "analysis" / "confirmatory-family.json"
+    family.parent.mkdir(parents=True, exist_ok=True)
+    family.write_text(
+        json.dumps(
+            {
+                "format": "confirmatory-family-v1",
+                "family": ["H1"],
+                "alpha": 0.05,
+                "h3": "exploratory",
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = run_thesis(run, tmp_path / "out")
+    assert result.exit_code == 0, result.output
+    manifest = json.loads((tmp_path / "out" / "empirical-tables_manifest.json").read_text("utf-8"))
+    assert any(name.endswith("confirmatory-family.json") for name in manifest["inputs"])
+
+    family.write_text(json.dumps({"format": "parser-gate-v1"}), encoding="utf-8")
+    refused = run_thesis(run, tmp_path / "out-2")
+    assert isinstance(refused.exception, ValueError)
+    assert "confirmatory-family-v1" in str(refused.exception)
