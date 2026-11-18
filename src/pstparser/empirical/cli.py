@@ -2804,6 +2804,63 @@ def auto_annotate_command(
     )
 
 
+@app.command("retarget-predictions")
+def retarget_predictions_command(
+    predictions: Annotated[Path, typer.Argument(help="predictions.jsonl of parse-prompts.")],
+    id_map: Annotated[Path, typer.Argument(help="id-map.json of the same parse-prompts run.")],
+    sources: Annotated[Path, typer.Argument(help="Benchmark sources of the parsed tasks.")],
+    gold: Annotated[Path, typer.Argument(help="Gold annotations of exactly the parsed tasks.")],
+    require_status: Annotated[
+        str, typer.Option(help="State of every gold row: reviewed (D-01) or frozen (final).")
+    ],
+    out: Annotated[Path, typer.Option(help="New predictions file with the gold targets.")],
+) -> None:
+    """Replace the stored target of each prediction with the gold tree (P-04, T-7).
+
+    Raw outputs, prompts, indices and token counts are kept; auto-annotate, score
+    and parser-gate then read the new file, so the gate stays bound to it.
+    """
+    from pstparser.data.predictions import load_predictions, write_predictions
+    from pstparser.empirical import annotations
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.empirical.retarget import RETARGET_VERSION, retarget_predictions
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    if require_status not in {"reviewed", "frozen"}:
+        raise ValueError("--require-status must be reviewed or frozen")
+    tasks = _read_document(id_map)["tasks"]
+    records = retarget_predictions(
+        load_predictions(predictions),
+        tasks,
+        read_sources(sources),
+        annotations.load_annotations(gold),
+        require_status=require_status,
+    )
+    ensure_stage_outputs(out.parent, "empirical-retarget", [out.name])
+    write_predictions(records, out)
+    write_manifest(
+        {
+            "stage": "empirical-retarget",
+            "retarget_version": RETARGET_VERSION,
+            "require_status": require_status,
+            "records": len(records),
+            "input_predictions_sha256": digest_file(predictions),
+            "id_map_sha256": digest_file(id_map),
+            "sources_sha256": digest_file(sources),
+            "gold_sha256": digest_file(gold),
+            "predictions_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(records)} predictions retargeted on the {require_status} gold in {out}")
+
+
 @app.command("merge-ledgers")
 def merge_ledgers_command(
     ledgers: Annotated[
