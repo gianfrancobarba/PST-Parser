@@ -2503,11 +2503,25 @@ def parser_gate_command(
         Path, typer.Option(help="Frozen thresholds: max_strict_failure, min_macro_f1.")
     ],
     out: Annotated[Path, typer.Option(help="New gate report.")],
+    id_map: Annotated[
+        Path, typer.Option(help="id-map.json of the parse-prompts run behind S_parse.")
+    ],
+    sample: Annotated[
+        Path,
+        typer.Option(
+            help="Frozen sample of the parsed tasks; final: protocol/samples/bcb-final.json."
+        ),
+    ],
     purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
     freeze: Annotated[Path | None, typer.Option(help=_FREEZE_HELP)] = None,
 ) -> None:
-    """Decide the parser gate (00 T-7) before any H-auto generation."""
+    """Decide the parser gate (00 T-7) before any H-auto generation.
+
+    The score report, S_parse and the index map must come from the same
+    predictions, and the tasks must be exactly those of the sample (R-HAU-02).
+    """
     from pstparser.empirical.auto import parser_gate
+    from pstparser.empirical.freeze import default_root
     from pstparser.repro.manifest import (
         digest_file,
         ensure_stage_outputs,
@@ -2516,12 +2530,28 @@ def parser_gate_command(
     )
 
     frozen = _purpose(purpose, freeze)
+    if purpose == "final":
+        assert freeze is not None
+        s_gold = default_root(freeze) / "protocol" / "samples" / "bcb-final.json"
+        if digest_file(sample) != digest_file(s_gold):
+            raise ValueError("a final gate is measured on S_gold: protocol/samples/bcb-final.json")
     ensure_stage_outputs(out.parent, "empirical-parser-gate", [out.name])
-    report = parser_gate(_read_document(s_parse), _read_document(score), _read_document(thresholds))
+    sample_tasks = [row["task_id"] for row in _read_document(sample)["tasks"]]
+    report = parser_gate(
+        _read_document(s_parse),
+        _read_document(score),
+        _read_document(thresholds),
+        id_map=_read_document(id_map),
+        id_map_sha256=digest_file(id_map),
+        sample_tasks=sample_tasks,
+    )
+    report["tasks"] = {"n": len(sample_tasks), "sample_sha256": digest_file(sample)}
     report["inputs"] = {
         "s_parse_sha256": digest_file(s_parse),
         "score_sha256": digest_file(score),
         "thresholds_sha256": digest_file(thresholds),
+        "id_map_sha256": digest_file(id_map),
+        "sample_sha256": digest_file(sample),
     }
     _write_document(out, report)
     write_manifest(

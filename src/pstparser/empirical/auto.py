@@ -335,19 +335,36 @@ def macro_f1(field_f1: Mapping[str, Mapping[str, Any]]) -> tuple[float | None, l
     return (math.fsum(values) / len(values) if values else None), leaves
 
 
+MACRO_F1_DEFINITION: Final = (
+    "Mean over the leaves with gold support of the leaf F1 reported by score: per prediction "
+    "and leaf, the distinct tokens assigned to the leaf; overlap, predicted and gold token "
+    "counts summed over the predictions (micro per leaf), then averaged over the leaves "
+    "(macro). Predictions that are not valid JSON are excluded from the F1 and count only in "
+    "the strict failure rate."
+)
+
+
 def parser_gate(
     s_parse: Mapping[str, Any],
     score: Mapping[str, Any],
     thresholds: Mapping[str, Any],
+    *,
+    id_map: Mapping[str, Any],
+    id_map_sha256: str | None,
+    sample_tasks: Sequence[str],
 ) -> dict[str, Any]:
     """The parser gate: strict failure rate and leaf macro F1 against frozen thresholds.
 
     ``s_parse`` must come from ``auto-strict-v1`` on S_gold; ``score`` is the
-    ``score`` report of the same predictions against the gold targets.
+    ``score`` report of the same predictions against the gold targets. Both are
+    bound to those predictions (R-HAU-02): the score must record the digest
+    the conversion read, over the indices of ``id_map``, whose digest the
+    conversion recorded too; and the tasks of ``id_map`` must be exactly
+    ``sample_tasks`` (S_gold).
 
     Raises:
-        ValueError: If a threshold is missing or invalid, or the conversion is
-            not strict.
+        ValueError: If a threshold is missing or invalid, the conversion is not
+            strict, or score, conversion, index map and sample do not correspond.
     """
     for key in ("max_strict_failure", "min_macro_f1"):
         value = thresholds.get(key)
@@ -358,6 +375,20 @@ def parser_gate(
     load_s_parse(s_parse)
     if score["total"] != s_parse["n"]:
         raise ValueError("the score report and the conversion cover different task counts")
+    inputs = s_parse.get("inputs") or {}
+    provenance = score.get("provenance") or {}
+    predictions_sha256 = inputs.get("predictions_sha256")
+    if not predictions_sha256 or provenance.get("predictions_sha256") != predictions_sha256:
+        raise ValueError("the score report was computed on other predictions than the conversion")
+    if id_map_sha256 is None or inputs.get("id_map_sha256") != id_map_sha256:
+        raise ValueError("the index map is not the one the conversion read")
+    tasks = list(id_map["tasks"])
+    if provenance.get("indices") != list(range(len(tasks))):
+        raise ValueError("the score report does not cover the indices of the index map in order")
+    if "tasks" in provenance and provenance["tasks"] != tasks:
+        raise ValueError("the score report records other tasks than the index map")
+    if len(set(tasks)) != len(tasks) or sorted(tasks) != sorted(sample_tasks):
+        raise ValueError("the parsed tasks are not exactly the tasks of the frozen sample")
     f1, leaves = macro_f1(score["field_f1"])
     reasons = []
     if s_parse["failure_rate"] > thresholds["max_strict_failure"]:
@@ -379,6 +410,8 @@ def parser_gate(
         "s_parse_tasks_sha256": s_parse["tasks_sha256"],
         "macro_f1": f1,
         "macro_f1_leaves": leaves,
+        "macro_f1_definition": MACRO_F1_DEFINITION,
+        "predictions_sha256": predictions_sha256,
         "status": "fail" if reasons else "pass",
         "reasons": reasons,
         "h3": "descriptive" if reasons else "confirmatory",

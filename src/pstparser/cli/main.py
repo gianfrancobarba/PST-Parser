@@ -6,8 +6,9 @@ delegate to the corresponding module. No pipeline logic lives here.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
-from typing import Annotated, cast
+from typing import Annotated, Any, cast
 
 import typer
 from rich.console import Console
@@ -319,6 +320,32 @@ def parse_prompts(
         Path | None,
         typer.Option("--adapter", "-a", help="Directory holding the trained adapter."),
     ] = None,
+    purpose: Annotated[
+        str,
+        typer.Option(
+            "--purpose",
+            help="exploratory, or pilot and final: both pin the parser to --identity "
+            "and --parser-model; final also needs --freeze.",
+        ),
+    ] = "exploratory",
+    identity: Annotated[
+        Path | None,
+        typer.Option("--identity", help="Parser identity (protocol/hauto/parser.json)."),
+    ] = None,
+    parser_model: Annotated[
+        Path | None,
+        typer.Option(
+            "--parser-model", help="Expected digests of the base model snapshot (model-digests)."
+        ),
+    ] = None,
+    freeze: Annotated[
+        Path | None,
+        typer.Option("--freeze", help="Verified freeze listing the identity and the digests."),
+    ] = None,
+    resume: Annotated[
+        bool,
+        typer.Option("--resume", help="Continue an interrupted run of the same plan in --run-dir."),
+    ] = False,
 ) -> None:
     """Run the parser on benchmark prompts; score and align read the predictions unchanged."""
     experiment = _load(config, set_)
@@ -327,7 +354,17 @@ def parse_prompts(
     from pstparser.models import BackendError
 
     try:
-        outcome = run(experiment, sources, run_dir, adapter)
+        outcome = run(
+            experiment,
+            sources,
+            run_dir,
+            adapter,
+            purpose=purpose,
+            identity=identity,
+            parser_model=parser_model,
+            freeze=freeze,
+            resume=resume,
+        )
     except BackendError as exc:
         error_console.print(f"[bold red]Backend error:[/] {exc}")
         raise typer.Exit(code=1) from exc
@@ -366,17 +403,43 @@ def score(
         Path | None,
         typer.Option("--run-dir", help="Directory for the results."),
     ] = None,
+    id_map: Annotated[
+        Path | None,
+        typer.Option(
+            "--id-map",
+            help="id-map.json of parse-prompts: the tasks are recorded with the results.",
+            exists=True,
+            dir_okay=False,
+        ),
+    ] = None,
 ) -> None:
-    """Score predictions against their references. Runs without an accelerator."""
+    """Score predictions against their references. Runs without an accelerator.
+
+    The results record the SHA-256 of the predictions and their indices, and
+    with ``--id-map`` the task of each index, so that the parser gate can bind
+    the report to the predictions behind S_parse (R-HAU-02).
+    """
     experiment = _load(config, set_)
 
     from pstparser.data import load_predictions
     from pstparser.evaluation import evaluate, write_report
+    from pstparser.repro.manifest import digest_file
 
     records = load_predictions(predictions)
     if not records:
         error_console.print(f"[bold red]No predictions found in[/] {predictions}")
         raise typer.Exit(code=1)
+    provenance: dict[str, Any] = {
+        "predictions_sha256": digest_file(predictions),
+        "indices": [record.index for record in records],
+    }
+    if id_map is not None:
+        tasks = json.loads(id_map.read_bytes().decode("utf-8"))["tasks"]
+        if sorted(provenance["indices"]) != list(range(len(tasks))):
+            error_console.print("[bold red]The index map does not cover the predictions[/]")
+            raise typer.Exit(code=1)
+        provenance["id_map_sha256"] = digest_file(id_map)
+        provenance["tasks"] = list(tasks)
 
     report = evaluate(
         predictions=[record.prediction for record in records],
@@ -392,6 +455,7 @@ def score(
             report,
             destination,
             top_confusions=experiment.evaluation.confusion_top_k,
+            provenance=provenance,
         )
         write_manifest(
             build_manifest(

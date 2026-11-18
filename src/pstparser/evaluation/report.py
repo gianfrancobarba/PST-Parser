@@ -12,7 +12,7 @@ text was wrapped in.
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -244,6 +244,7 @@ def write_report(
     report: EvaluationReport,
     directory: str | Path,
     top_confusions: int = 5,
+    provenance: Mapping[str, Any] | None = None,
 ) -> tuple[Path, Path]:
     """Write the aggregate report and the per-example scores.
 
@@ -251,6 +252,9 @@ def write_report(
         report: The outcome of :func:`evaluate`.
         directory: Destination directory, created if absent.
         top_confusions: Number of misassignments listed in the report.
+        provenance: What was scored (digest of the predictions, their indices
+            and tasks), written under ``provenance`` so that a reader can bind
+            the report to its predictions (R-HAU-02).
 
     Returns:
         The paths of the results file and the detail file.
@@ -263,7 +267,10 @@ def write_report(
 
     results_path = directory / RESULTS_FILE
     with results_path.open("x", encoding="utf-8") as handle:
-        handle.write(json.dumps(report.as_dict(top_confusions), indent=2, ensure_ascii=False))
+        document = report.as_dict(top_confusions)
+        if provenance is not None:
+            document["provenance"] = dict(provenance)
+        handle.write(json.dumps(document, indent=2, ensure_ascii=False))
 
     details_path = directory / DETAILS_FILE
     with details_path.open("x", encoding="utf-8", newline="\n") as handle:

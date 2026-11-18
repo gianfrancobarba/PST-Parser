@@ -1,5 +1,6 @@
 """H-auto (M19): parser predictions into spans, S_parse, the two H3 estimates and the gate."""
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -305,8 +306,12 @@ def test_inconsistent_h3_ledgers_are_refused() -> None:
         )
 
 
+# The bindings of the gate (R-HAU-02): the conversion and the score read the same predictions.
+BOUND = {"predictions_sha256": "p" * 64, "id_map_sha256": "m" * 64}
+BIND = {"id_map": ID_MAP, "id_map_sha256": "m" * 64, "sample_tasks": ID_MAP["tasks"]}
 SCORE = {
     "total": 4,
+    "provenance": {"predictions_sha256": "p" * 64, "indices": [0, 1, 2, 3]},
     "field_f1": {
         "prompt.main_instruction": {"precision": 1, "recall": 1, "f1": 0.9, "support": 10},
         "prompt.context.format": {"precision": 1, "recall": 1, "f1": 0.7, "support": 5},
@@ -333,20 +338,20 @@ def test_macro_f1_averages_the_leaves_with_gold_support() -> None:
 def test_the_gate_above_and_below_each_threshold(
     thresholds: dict[str, float], status: str, reasons: int
 ) -> None:
-    s_parse = auto_annotate(predictions(), ID_MAP, sources(), policy=STRICT).s_parse
-    gate = parser_gate(s_parse, SCORE, thresholds)
+    s_parse = auto_annotate(predictions(), ID_MAP, sources(), policy=STRICT, inputs=BOUND).s_parse
+    gate = parser_gate(s_parse, SCORE, thresholds, **BIND)
     assert gate["status"] == status and len(gate["reasons"]) == reasons
     assert gate["h3"] == ("confirmatory" if status == "pass" else "descriptive")
     assert gate["strict_failure_rate"] == 0.5 and gate["macro_f1"] == pytest.approx(0.8)
 
 
 def test_the_gate_refuses_missing_thresholds_and_a_non_strict_conversion() -> None:
-    s_parse = auto_annotate(predictions(), ID_MAP, sources(), policy=STRICT).s_parse
+    s_parse = auto_annotate(predictions(), ID_MAP, sources(), policy=STRICT, inputs=BOUND).s_parse
     with pytest.raises(ValueError, match="min_macro_f1"):
-        parser_gate(s_parse, SCORE, {"max_strict_failure": 0.25})
-    attach = auto_annotate(predictions(), ID_MAP, sources(), policy=ATTACH).s_parse
+        parser_gate(s_parse, SCORE, {"max_strict_failure": 0.25}, **BIND)
+    attach = auto_annotate(predictions(), ID_MAP, sources(), policy=ATTACH, inputs=BOUND).s_parse
     with pytest.raises(ValueError, match="strict"):
-        parser_gate(attach, SCORE, {"max_strict_failure": 0.25, "min_macro_f1": 0.8})
+        parser_gate(attach, SCORE, {"max_strict_failure": 0.25, "min_macro_f1": 0.8}, **BIND)
 
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> Path:
@@ -428,7 +433,10 @@ def test_the_cli_converts_renders_s_parse_and_gates(tmp_path: Path, monkeypatch)
     thresholds = tmp_path / "thresholds.json"
     thresholds.write_text(json.dumps({"max_strict_failure": 0.25, "min_macro_f1": 0.8}))
     score = tmp_path / "results.json"
-    score.write_text(json.dumps(SCORE))
+    provenance = {"predictions_sha256": hashlib.sha256(preds.read_bytes()).hexdigest()}
+    score.write_text(json.dumps({**SCORE, "provenance": {**SCORE["provenance"], **provenance}}))
+    sample = tmp_path / "sample.json"
+    sample.write_text(json.dumps({"tasks": [{"task_id": t} for t in ID_MAP["tasks"]]}))
     result = runner.invoke(
         app,
         [
@@ -437,6 +445,10 @@ def test_the_cli_converts_renders_s_parse_and_gates(tmp_path: Path, monkeypatch)
             str(score),
             "--thresholds",
             str(thresholds),
+            "--id-map",
+            str(id_map),
+            "--sample",
+            str(sample),
             "--out",
             str(tmp_path / "gate" / "gate.json"),
         ],
@@ -444,7 +456,13 @@ def test_the_cli_converts_renders_s_parse_and_gates(tmp_path: Path, monkeypatch)
     assert result.exit_code == 0, result.output
     gate = json.loads((tmp_path / "gate" / "gate.json").read_text("utf-8"))
     assert gate["status"] == "fail" and gate["h3"] == "descriptive"
-    assert set(gate["inputs"]) == {"s_parse_sha256", "score_sha256", "thresholds_sha256"}
+    assert set(gate["inputs"]) == {
+        "s_parse_sha256",
+        "score_sha256",
+        "thresholds_sha256",
+        "id_map_sha256",
+        "sample_sha256",
+    }
 
 
 def test_the_cli_writes_the_two_h3_ledgers(tmp_path: Path, monkeypatch) -> None:
