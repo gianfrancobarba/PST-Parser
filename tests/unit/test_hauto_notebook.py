@@ -59,3 +59,11 @@ def test_no_link_to_unversioned_documents_and_no_secrets() -> None:
     raw = NOTEBOOK.read_text(encoding="utf-8")
     assert "docs/" not in raw
     assert "HF_TOKEN" not in raw and "load_dotenv" not in raw
+
+
+def test_the_final_branch_reads_the_single_freeze_f4() -> None:
+    # Plan of 18/11/2026, P-09: one freeze, F4. The prefix is parsed as a pilot run
+    # before F4; a final run (a re-parse) reads protocol/protocol-freeze.json.
+    text = NOTEBOOK.read_text(encoding="utf-8")
+    assert "protocol-freeze-hauto" not in text
+    assert 'PROJECT / \\"protocol\\" / \\"protocol-freeze.json\\"' in text
