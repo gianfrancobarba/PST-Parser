@@ -89,7 +89,7 @@ def load_predictions(source: str | Path) -> list[PredictionRecord]:
         raise FileNotFoundError(f"predictions file not found: {source}")
 
     predictions = []
-    for line in source.read_text(encoding="utf-8").splitlines():
+    for line in source.read_text(encoding="utf-8").split("\n"):
         if not line.strip():
             continue
         payload = json.loads(line)

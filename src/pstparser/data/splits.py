@@ -244,7 +244,7 @@ def _digest(path: Path) -> str:
 
 def _record_ids(path: Path) -> set[int]:
     ids: set[int] = set()
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").split("\n"):
         if not line.strip():
             continue
         index = json.loads(line)["index"]

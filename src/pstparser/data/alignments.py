@@ -91,7 +91,7 @@ def load_alignments(source: str | Path) -> list[AlignmentRecord]:
         raise FileNotFoundError(f"alignments file not found: {source}")
 
     records = []
-    for line in source.read_text(encoding="utf-8").splitlines():
+    for line in source.read_text(encoding="utf-8").split("\n"):
         if not line.strip():
             continue
         payload = json.loads(line)

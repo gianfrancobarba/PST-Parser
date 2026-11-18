@@ -286,7 +286,7 @@ def load_records(source: str | Path) -> list[PreparedRecord]:
         raise FileNotFoundError(f"records file not found: {source}")
 
     records = []
-    for line in source.read_text(encoding="utf-8").splitlines():
+    for line in source.read_text(encoding="utf-8").split("\n"):
         if not line.strip():
             continue
         payload = json.loads(line)
