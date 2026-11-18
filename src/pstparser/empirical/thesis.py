@@ -265,8 +265,9 @@ def build_thesis(
     """Every table and figure the files of ``run`` (and ``protocol``) allow.
 
     ``gate`` decides whether H3 is in the confirmatory family: the parser gate
-    report, or the frozen ``confirmatory-family-v1`` document that fixes the
-    family to H1 alone. It defaults to ``parser/gate/gate.json`` of the run.
+    report, or, under the prespecified time cut, the frozen
+    ``confirmatory-family-v1`` document that fixes the family to H1 alone. It
+    defaults to ``parser/gate/gate.json`` of the run.
     """
     if gate is None and (run / "parser" / "gate" / "gate.json").is_file():
         gate = run / "parser" / "gate" / "gate.json"

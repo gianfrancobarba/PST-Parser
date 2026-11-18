@@ -1,10 +1,12 @@
 {
-  "stage": "empirical-sample-hard",
-  "benchmark": "bigcodebench",
+  "stage": "empirical-sample",
+  "seed": 7319,
+  "n": 400,
+  "strata_rule": "bigcodebench-exceptions-doctest-v1",
+  "sources_sha256": "79ef49cd4d5079777bbe7881fca96f435d4f60ff514d44937e47849ba5375ec1",
+  "exclusions_sha256": "373c8ce117d0f376ec3a3027eefdf62310a47fe53993d9228588048a36213a99",
   "permutation_sha256": "2037d8c8ed94e591e537afe3a11062b77014d7377d025e616864bff2797d8f79",
-  "pilot_sha256": "d4ce329c1e14b06bd45b8f374d7562d17c97d508d2742230cafa1c68c4d06fc5",
-  "n": 145,
-  "census_sha256": "e1f075f09304ac9621732b6f1aa6a8a1e1b8530dcd2bc2b001c0734da4337912",
+  "sample_sha256": "0397314bf41a2ec958f84ecf347bb7f7707e92f3ed9381e3f61e02d6cdf74110",
   "source": {
     "files": {
       "pstparser/__init__.py": "6cc4a73caedf50b090f87cd2bef9f9d5bf922ebd6bf7bec4c1b62d312d116fd0",
@@ -37,7 +39,7 @@
       "pstparser/empirical/benchmarks.py": "94cb01866695e96a41a4f6d893853f91094dbb45e466e3945436916926737871",
       "pstparser/empirical/bigcodebench.py": "64a3903798e1ad3a842504ae56026c5c7abe8c056e4f5c1436f179b994cbbe60",
       "pstparser/empirical/blind.py": "34e8cd6b6e44885416a743962db21039d999509fc201c2390f790572f0fb4889",
-      "pstparser/empirical/cli.py": "cf16f44031d51727dfbfbbf15552ee97143b5a54fc732dc8f8579fc76d8fecc9",
+      "pstparser/empirical/cli.py": "742c869b6d4b3d62cb37b5780a27098fa3dce267d18c2aa6dd01e43ca7ee43bd",
       "pstparser/empirical/codeql.py": "a56fb58302df7259986a36399af66b40f4a16f0124ee86c2887a572ca6fd9e24",
       "pstparser/empirical/contamination.py": "3f487c54cec66cf660f10a13ac3b40ac7386501b8c8942b2bf3734868454f723",
       "pstparser/empirical/contracts.py": "4b50d425ed68273c1f5c2e28690afc2b9307074f56126479c6eff77a1571b518",
@@ -55,8 +57,8 @@
       "pstparser/empirical/sampling.py": "2d550e6939bc8deea73c197d0bc7f975b5968340b4923e840bd7b9745a48e98b",
       "pstparser/empirical/sandbox.py": "5f0154cc9eebae03f2a48f06536e0fc20d7db0163b15bb332669747aa9582a7a",
       "pstparser/empirical/security.py": "19ecfd46b78dbf127e5b1e04f1640e48b08f2c3b04fde1eab97e3a9512a89b9e",
-      "pstparser/empirical/tables.py": "fc07900cc44f68f75950b06ace31c86a4be8665fdcc05f476afb6a0089a352ca",
-      "pstparser/empirical/thesis.py": "208cb726083a1b7113e424c9218f6b87331bec3379055a0ae5ff6747f9a9163d",
+      "pstparser/empirical/tables.py": "45a9410dceb08df99ef10d39a124f50c103a826e3959363e335591ace01a5c53",
+      "pstparser/empirical/thesis.py": "4bd2a69c7a00a91a1ba42d30a50e74d2f67fea0633a8844f8944cf9c44aa9d30",
       "pstparser/empirical/usability.py": "7f1ab4b05ad002e718059120359ca0de8c766e358fb67321125638e8a7e21a94",
       "pstparser/empirical/workflow.py": "d3b9a6a1f378649de3d1d5dea33bed8506669c40c8e652a7d04cdb1f0db55016",
       "pstparser/evaluation/__init__.py": "77bab46aee91739805fc7008f5de85180b77e1fdab63d682e75564c54feb41bd",
@@ -92,6 +94,6 @@
       "uv.lock": "7bda2e2175d305c8079be1fe2f07c91f7ac488113c010edfc29a0ccf1621c1ff",
       "pyproject.toml": "3c4edc917812a22e041d4a17ab08c970d90a153763023b0bbbaeb3df831a528f"
     },
-    "digest": "391f05c85db3d290e9c5ee366801bcc37acfce8b4d0c17ffe78365f4f3ac39ae"
+    "digest": "7ca34816c88ac2749566ada9653212ffa4423f815a8289267ac6484a57c14ac1"
   }
 }

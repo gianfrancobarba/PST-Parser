@@ -186,8 +186,9 @@ def test_holm_levels_agree_with_the_decisions_on_a_grid() -> None:
                     assert (value <= levels[name]) == (decisions[name] == "rejected")
 
 
-# Decision of 18/11/2026 (Hard census): the protocol fixes the family to H1 alone,
-# read at 0.05; H3 is exploratory whatever the parser gate says.
+# Prespecified time cut (plan of 18/11/2026, P-04, CP2): without a complete parse
+# by the deadline, a frozen document fixes the family to H1 alone, read at 0.05;
+# H3 is then exploratory whatever the parser gate says.
 PROTOCOL = {
     "format": "confirmatory-family-v1",
     "family": ["H1"],
@@ -220,14 +221,3 @@ def test_the_protocol_family_refuses_h3_even_after_a_passed_gate() -> None:
 def test_a_protocol_family_other_than_h1_alone_is_refused(changed: dict[str, Any]) -> None:
     with pytest.raises(ValueError, match="only protocol family"):
         paired_tables(REPORTS, {"H1": "bcb-h1"}, changed)
-
-
-def test_the_protocol_file_holds_the_only_admitted_family() -> None:
-    import json
-    from pathlib import Path
-
-    from pstparser.empirical.tables import PROTOCOL_FAMILY
-
-    root = Path(__file__).resolve().parents[2]
-    document = json.loads((root / "protocol/analysis/confirmatory-family.json").read_text("utf-8"))
-    assert document == PROTOCOL_FAMILY == PROTOCOL

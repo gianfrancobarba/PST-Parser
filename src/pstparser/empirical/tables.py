@@ -399,8 +399,10 @@ CONFIRMATORY_REPORTS: Final = {
 }
 
 
-#: Frozen protocol document that fixes the family before any data (decision of
-#: 18/11/2026): H1 alone at 0.05, H3 exploratory whatever the parser gate says.
+#: Frozen protocol document for the prespecified time cut (plan of 18/11/2026,
+#: P-04): without a complete parse by its deadline, the family is H1 alone at
+#: 0.05 and H3 is exploratory whatever the parser gate says. Without this
+#: document the parser gate decides the family.
 FAMILY_FORMAT: Final = "confirmatory-family-v1"
 PROTOCOL_FAMILY: Final = {
     "format": FAMILY_FORMAT,
@@ -418,8 +420,8 @@ def _check_family(
     """The family follows the parser gate, and each member is the report it must be.
 
     ``gate`` is either the parser gate report or the frozen protocol document
-    ``confirmatory-family-v1``, which fixes the family to H1 alone, read at 0.05,
-    with H3 exploratory.
+    ``confirmatory-family-v1`` of the prespecified time cut, which fixes the
+    family to H1 alone, read at 0.05, with H3 exploratory.
 
     Raises:
         ValueError: If the gate report is missing or malformed, H3 is in the

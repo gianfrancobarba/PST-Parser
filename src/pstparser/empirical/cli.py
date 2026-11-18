@@ -54,9 +54,13 @@ def _purpose(purpose: str, freeze: Path | None) -> dict[str, Any]:
 
 _PURPOSE_HELP = "exploratory, or final: final requires --freeze (a verified protocol freeze)."
 _FREEZE_HELP = "protocol-freeze.json the command runs under; verified before anything is read."
-#: S_gold, the tasks with reviewed gold: the census of the eligible Hard tasks
-#: (decision of 18/11/2026, after the supervisors' reply; it replaces bcb-final.json).
-S_GOLD_FILE = "bcb-hard.json"
+#: S_gold, the tasks with reviewed gold, relative to protocol/samples: the 600-task
+#: prefix of the frozen permutation (plan of 18/11/2026, P-02).
+S_GOLD_FILE = "prefix-600/bcb-prefix-600.json"
+#: Prespecified fallback, the nested 400-task prefix: chosen only for time (pilot
+#: stopwatch above 3.0 min per prompt, or gold review late at CP4), never for
+#: outcomes; switching to it is recorded before any outcome is seen.
+S_GOLD_FALLBACK_FILE = "prefix-400/bcb-prefix-400.json"
 
 
 def _rows(path: Path) -> list[dict[str, Any]]:
@@ -1575,7 +1579,10 @@ def model_digests(
 @app.command()
 def design(
     sample: Annotated[
-        Path, typer.Argument(help="Frozen sample (bcb-hard.json) or LLMSecEval identifier map.")
+        Path,
+        typer.Argument(
+            help="Frozen sample (prefix-600/bcb-prefix-600.json) or LLMSecEval identifier map."
+        ),
     ],
     analysis_id: Annotated[str, typer.Option(help="analysis_id of the outcome ledger.")],
     endpoint: Annotated[str, typer.Option(help="functional or security.")],
@@ -2407,14 +2414,17 @@ def thesis_tables(
         Path | None,
         typer.Option(
             help="Frozen confirmatory-family-v1 document (default: "
-            "<protocol>/analysis/confirmatory-family.json): H1 alone at 0.05, H3 exploratory."
+            "<protocol>/analysis/confirmatory-family.json, if present): H1 alone at 0.05, "
+            "H3 exploratory. Only for the prespecified time cut; otherwise the gate decides."
         ),
     ] = None,
 ) -> None:
     """Every table and figure the files of a run allow; the skipped kinds go in the manifest.
 
-    When the protocol fixes the family (``confirmatory-family-v1``), the parser
-    gate no longer decides it: the gate stays a descriptive report.
+    The parser gate decides whether H3 is in the confirmatory family. Only when
+    the prespecified time cut applies (no complete parse by its deadline) does a
+    frozen ``confirmatory-family-v1`` document fix the family to H1 alone; the
+    gate then stays a descriptive report.
     """
     from pstparser.empirical.thesis import build_thesis, parse_confirmatory, write
 
@@ -2588,7 +2598,7 @@ def parser_gate_command(
     sample: Annotated[
         Path,
         typer.Option(
-            help="Frozen sample of the parsed tasks; final: protocol/samples/bcb-hard.json."
+            help=f"Frozen sample of the parsed tasks; final: protocol/samples/{S_GOLD_FILE}."
         ),
     ],
     purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
