@@ -44,10 +44,16 @@ empirica è tenuto nella documentazione locale di progettazione, non versionata.
 
 **A che punto è la valutazione.** I campioni e le esclusioni sono congelati in `protocol/`: le
 esclusioni di BigCodeBench, i task idonei e quelli Hard sono in `protocol/oracles/bcb-exclusions.json`
-(`excluded_count`, `eligible`, `eligible_hard`), il campione finale in `protocol/samples/bcb-final.json`
-(`n`) e il pool pilota in `protocol/samples/pilot-bcb.json` e `pilot-llmseceval.json`. Il freeze del
-protocollo (`protocol/protocol-freeze.json`) non è ancora stato eseguito: finché manca, ogni output
-downstream è una prova tecnica, non un risultato.
+(`excluded_count`, `eligible`, `eligible_hard`). La permutazione stratificata degli idonei è in
+`protocol/samples/bcb-permutation.json`; il campione su cui si rivede il gold (S_gold) è il prefisso
+di 600 task, `protocol/samples/prefix-600/bcb-prefix-600.json`, con il prefisso annidato di 400
+(`prefix-400/`) come ripiego prespecificato, solo per tempo. `protocol/samples/bcb-final.json` è il
+prefisso di 800 da cui sono nate le bozze. Il pool pilota è in `protocol/samples/pilot-bcb.json` e
+`pilot-llmseceval.json`, i campioni della ri-annotazione in `protocol/reannotation/`, le soglie del
+gate del parser in `protocol/hauto/gate-thresholds.json` e le configurazioni di generazione in
+`protocol/configs/`. Il freeze del protocollo (`protocol/protocol-freeze.json`, uno solo, prima
+delle generazioni finali) non è ancora stato eseguito: finché manca, ogni output downstream è una
+prova tecnica, non un risultato.
 
 **La run del parser `parser-2026-11-12-r3`** è quella che H-auto userà. I suoi artefatti
 (`run-identity.json`, `run_manifest.json`, `results.json`) sono su Google Drive e non sono
@@ -337,12 +343,13 @@ Gli altri comandi downstream, nell'ordine in cui si usano (`--help` ne descrive 
 
 | Fase | Comandi |
 |---|---|
-| Dati e campioni | `import-benchmark`, `calibrate-bigcodebench`, `merge-calibrations`, `sample`, `sample-pilot`, `sample-families` |
-| Annotazione gold | `propose-spans` (solo bozze `draft`), `gold-lint`, `canonicalize`, `agreement` |
-| Generazione | `render`, `generate` (anche su Colab con `notebooks/downstream.ipynb`) |
-| Valutazione | `check-bigcodebench` (harness ufficiale, 2+1 esecuzioni), `calibrate-security`, `check-security` (CodeQL, un database per programma) |
-| Pilot e freeze | `pilot-report` (non direzionale), `power`, `freeze`, `freeze-verify` |
-| Analisi | `analyze`, `covariates`, `contamination`, `near-duplicates` |
+| Dati e campioni | `import-benchmark`, `calibrate-bigcodebench`, `merge-calibrations`, `sample` (permutazione e prefissi), `sample-pilot`, `sample-families`, `sample-hard`, `sample-reannotation` |
+| Annotazione gold | `propose-spans` (solo bozze `draft`), `gold-lint`, `canonicalize`, `gold-diff` (bozza contro gold), `agreement` (ri-annotazione) |
+| Generazione | `render`, `generate` (anche su Colab con `notebooks/downstream.ipynb`), `model-digests`, `merge-journals` (due journal di una sessione) |
+| H-auto | `parse-prompts` dell'interfaccia `pstparser` (su Colab con `notebooks/hauto-parser.ipynb`), `auto-annotate`, `parser-gate`, `merge-ledgers`, `hauto-ledgers` |
+| Valutazione | `check-bigcodebench` (harness ufficiale, 2+1 esecuzioni), `calibrate-security`, `check-security` (CodeQL, un database per programma), `blind-sample`, `blind-score`, `determinism-sample`, `determinism-compare` |
+| Pilot e freeze | `pilot-report` (non direzionale; `--merged` per due journal), `power`, `freeze`, `freeze-verify` |
+| Analisi | `design`, `analyze`, `check`, `covariates`, `contamination`, `near-duplicates` |
 | Tesi | `tables`, `figures`, `thesis-tables` |
 
 `thesis-tables` rigenera ogni tabella (CSV e LaTeX) e figura (PDF e PNG) che i file di una run
