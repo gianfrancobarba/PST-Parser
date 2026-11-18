@@ -1547,11 +1547,23 @@ def pilot_report_command(
     journal: Annotated[Path, typer.Argument(help="Directory of one generation journal.")],
     out: Annotated[Path, typer.Option(help="New JSON file for the report.")],
     outcomes: Annotated[
-        Path | None, typer.Option(help="Outcomes of one check run of this journal.")
+        list[Path] | None,
+        typer.Option(
+            help="Outcomes of a check run of this journal; repeat with --merged for the "
+            "check runs of the merged files of a session (core and extra)."
+        ),
     ] = None,
     details: Annotated[
-        Path | None, typer.Option(help="Details written by the same check run.")
+        list[Path] | None,
+        typer.Option(help="Details written by the same check run(s), in the same order."),
     ] = None,
+    merged: Annotated[
+        bool,
+        typer.Option(
+            help="The check runs cover the merged files of two journals: keep only the "
+            "cells and requests of this journal (C-26), then check exact coverage."
+        ),
+    ] = False,
 ) -> None:
     """Report the technical pilot criteria and b + c, never a difference between conditions."""
     from pstparser.empirical.pilot_report import pilot_report
@@ -1562,6 +1574,14 @@ def pilot_report_command(
         write_manifest,
     )
 
+    outcome_files = outcomes or []
+    detail_files = details or []
+    if len(outcome_files) != len(detail_files):
+        raise ValueError("give one --details file for each --outcomes file")
+    if len(outcome_files) > 1 and not merged:
+        raise ValueError("several check runs are read only with --merged")
+    if merged and not outcome_files:
+        raise ValueError("--merged needs --outcomes and --details")
     ensure_stage_outputs(out.parent, "empirical-pilot-report", [out.name])
     manifest_path = journal / "empirical-generate_manifest.json"
     journal_path = journal / "generations.jsonl"
@@ -1570,8 +1590,9 @@ def pilot_report_command(
     report = pilot_report(
         manifest,
         rows,
-        read_outcomes(outcomes) if outcomes is not None else None,
-        _json_lines(details) if details is not None else None,
+        [r for path in outcome_files for r in read_outcomes(path)] if outcome_files else None,
+        [d for path in detail_files for d in _json_lines(path)] if detail_files else None,
+        restrict=merged,
     )
     with out.open("x", encoding="utf-8", newline="\n") as handle:
         json.dump(report, handle, indent=2, ensure_ascii=False, allow_nan=False)
@@ -1582,8 +1603,9 @@ def pilot_report_command(
             "report_version": report["report_version"],
             "generate_manifest_sha256": digest_file(manifest_path),
             "journal_sha256": digest_file(journal_path),
-            "outcomes_sha256": digest_file(outcomes) if outcomes is not None else None,
-            "details_sha256": digest_file(details) if details is not None else None,
+            "outcomes_sha256": [digest_file(path) for path in outcome_files] or None,
+            "details_sha256": [digest_file(path) for path in detail_files] or None,
+            "merged": merged,
             "report_sha256": digest_file(out),
             "source": source_snapshot(),
         },
@@ -2780,6 +2802,43 @@ def auto_annotate_command(
         f"{document['converted']}/{document['n']} converted; "
         f"failure rate {document['failure_rate']:.4f}; S_parse {document['tasks_sha256']}"
     )
+
+
+@app.command("merge-ledgers")
+def merge_ledgers_command(
+    ledgers: Annotated[
+        list[Path], typer.Argument(help="Outcome ledgers of the check runs of one session.")
+    ],
+    analysis_id: Annotated[str, typer.Option(help="analysis_id of the merged ledger.")],
+    out: Annotated[Path, typer.Option(help="New merged ledger (JSON Lines).")],
+) -> None:
+    """Merge the core and extra ledgers of a session for hauto-ledgers (C-26), unchanged."""
+    from pstparser.empirical.analysis import write_outcomes
+    from pstparser.empirical.ledgers import merge_ledgers
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    merged = merge_ledgers([read_outcomes(path) for path in ledgers], analysis_id)
+    ensure_stage_outputs(out.parent, "empirical-merge-ledgers", [out.name])
+    if out.exists():
+        raise FileExistsError(f"{out} exists: a merged ledger is never overwritten")
+    write_outcomes(merged, out)
+    write_manifest(
+        {
+            "stage": "empirical-merge-ledgers",
+            "analysis_id": analysis_id,
+            "ledgers_sha256": [digest_file(path) for path in ledgers],
+            "records": len(merged),
+            "merged_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(merged)} records in {out}")
 
 
 @app.command("hauto-ledgers")

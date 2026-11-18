@@ -323,14 +323,21 @@ def pilot_report(
     journal: Sequence[Mapping[str, Any]],
     outcomes: Sequence[OutcomeRecord] | None = None,
     details: Sequence[Mapping[str, Any]] | None = None,
+    *,
+    restrict: bool = False,
 ) -> dict[str, Any]:
     """Compute the pilot criteria of one journal and, optionally, of its evaluation.
 
     Args:
         manifest: The ``empirical-generate`` manifest of the journal.
         journal: Its rows, as read; duplicates and unknown rows are counted.
-        outcomes: The outcome ledger of one endpoint (one check run).
-        details: The details written by the same check run.
+        outcomes: The outcome ledger of one endpoint (one check run), or, with
+            ``restrict``, the ledgers of the check runs of the merged files.
+        details: The details written by the same check run(s).
+        restrict: Keep only the outcomes of the journal's cells and the
+            details of its requests (two journals in one session, C-26); the
+            exact coverage check applies after the restriction, so a missing
+            or doubly judged cell still stops the report.
 
     Returns:
         A JSON-compatible report with no success rate by condition and no
@@ -342,6 +349,8 @@ def pilot_report(
     """
     if (outcomes is None) != (details is None):
         raise ValueError("outcomes and details must be given together")
+    if restrict and outcomes is None:
+        raise ValueError("restrict applies to an evaluation: give outcomes and details")
     planned = {request["request_id"] for request in manifest["requests"]}
     unique: dict[str, Mapping[str, Any]] = {}
     for row in journal:
@@ -364,6 +373,10 @@ def pilot_report(
         "not_computed_here": dict(NOT_COMPUTED),
     }
     if outcomes is not None and details is not None:
+        if restrict:
+            cells = {(row["task_id"], row["condition"], row["replicate_id"]) for row in rows}
+            outcomes = [r for r in outcomes if (r.task_id, r.condition, r.replicate_id) in cells]
+            details = [d for d in details if d["request_id"] in unique]
         report.update(_evaluation(rows, outcomes, details))
     json.dumps(report, allow_nan=False)
     _check_keys(report)
