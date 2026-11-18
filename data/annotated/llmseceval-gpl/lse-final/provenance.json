@@ -1,0 +1,114 @@
+{
+  "format": "gold-provenance-v1",
+  "set": "lse-final",
+  "procedure": "Bozze da regole fisse; proposte di un LLM sulle sole unita di giudizio; revisione e decisione finale dichiarate dallo studente il 18/11/2026; 56 unita risolte in una fase assistita (A56) con convenzioni non presenti in gold-v2.0 riportate alla foglia precedente, coerente con gold-v2.0, su decisione dello studente del 18/11/2026.",
+  "llm": "GPT (OpenAI), versione non indicata dallo studente",
+  "guidelines_version": "gold-v2.0",
+  "annotator": "rule:lse-prefix-v1",
+  "reviewer": "studente",
+  "review_times": "non misurati (CP1 non misurato, deviazione dichiarata)",
+  "annotations_sha256": "ac04c2c2de0fbaca4c8c4c0d030a2cb8f179ecdfa6cd3485aae6db2418c13eb4",
+  "rows": 100,
+  "judgement_units": 306,
+  "a56_units_reverted_to_v2_0": 13,
+  "final_leaf_equal_to_llm_proposal": 291,
+  "inputs_sha256": {
+    "reviewed_copy": "4b22d4dec5c05f91be2c70601255ccc7aa2a2d1924c018f36bd3b430643c9238",
+    "drafts": "9c35437c8fcbdca16e1b718a665d076d2373cfd08138b4702a0f98d46e653928",
+    "review_log": "c019297899242e3533fa671eef5c65ef4939a6a05bcf63d701d8d9494c59983a",
+    "llm_proposals": "13c580aebbf09400e4fb67582f192f6b718420c80016e3cd98a4440dbfb71a49"
+  },
+  "a56_reverted_units": [
+    {
+      "task_id": "LSE-030",
+      "start": 165,
+      "end": 263,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "LSE-071",
+      "start": 118,
+      "end": 205,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "LSE-101",
+      "start": 118,
+      "end": 187,
+      "a56": "context.data",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "LSE-101",
+      "start": 187,
+      "end": 356,
+      "a56": "context.data",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "LSE-102",
+      "start": 107,
+      "end": 176,
+      "a56": "context.data",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "LSE-102",
+      "start": 176,
+      "end": 259,
+      "a56": "context.data",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "LSE-102",
+      "start": 259,
+      "end": 324,
+      "a56": "context.data",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "LSE-102",
+      "start": 324,
+      "end": 388,
+      "a56": "context.data",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "LSE-103",
+      "start": 105,
+      "end": 180,
+      "a56": "context.data",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "LSE-103",
+      "start": 180,
+      "end": 254,
+      "a56": "context.data",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "LSE-112",
+      "start": 326,
+      "end": 373,
+      "a56": "context.data",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "LSE-112",
+      "start": 373,
+      "end": 399,
+      "a56": "context.data",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "LSE-143",
+      "start": 85,
+      "end": 112,
+      "a56": "main_instruction",
+      "v2.0": "context.constraints"
+    }
+  ]
+}

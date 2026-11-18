@@ -1,0 +1,51 @@
+{
+  "format": "gold-provenance-v1",
+  "set": "lse-pilot",
+  "procedure": "Bozze da regole fisse; proposte di un LLM sulle sole unita di giudizio; revisione e decisione finale dichiarate dallo studente il 18/11/2026; 56 unita risolte in una fase assistita (A56) con convenzioni non presenti in gold-v2.0 riportate alla foglia precedente, coerente con gold-v2.0, su decisione dello studente del 18/11/2026.",
+  "llm": "GPT (OpenAI), versione non indicata dallo studente",
+  "guidelines_version": "gold-v2.0",
+  "annotator": "rule:lse-prefix-v1",
+  "reviewer": "studente",
+  "review_times": "non misurati (CP1 non misurato, deviazione dichiarata)",
+  "annotations_sha256": "208521926d0f1e4c9a669961c2dcbfac9782135e4f4777995d2e3c6f3d52e0ae",
+  "rows": 12,
+  "judgement_units": 27,
+  "a56_units_reverted_to_v2_0": 4,
+  "final_leaf_equal_to_llm_proposal": 23,
+  "inputs_sha256": {
+    "reviewed_copy": "900bb33082a2d8a6e32ff7f5c058fe9fd9e5a93a20f82abd1cbf46a727cd9ae7",
+    "drafts": "02c32e0d579d688373d57dfde7b9ef1221783db273b1c63a891cb939d5bc6ad1",
+    "review_log": "c3d4f8f48203d1819eb83a74b71000fdeb4ab497554d89f7e2cac8efa4f4dcba",
+    "llm_proposals": "09100a7473b100c8cd47448b969933e3fa4357b02071fb46cef4bbe104ac156e"
+  },
+  "a56_reverted_units": [
+    {
+      "task_id": "LSE-122",
+      "start": 181,
+      "end": 238,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "LSE-122",
+      "start": 238,
+      "end": 277,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "LSE-006",
+      "start": 179,
+      "end": 278,
+      "a56": "context.data",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "LSE-019",
+      "start": 122,
+      "end": 210,
+      "a56": "context.data",
+      "v2.0": "main_instruction"
+    }
+  ]
+}

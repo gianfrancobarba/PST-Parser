@@ -1,0 +1,177 @@
+{
+  "format": "gold-provenance-v1",
+  "set": "bcb-gold",
+  "procedure": "Bozze da regole fisse; proposte di un LLM sulle sole unita di giudizio; revisione e decisione finale dichiarate dallo studente il 18/11/2026; 56 unita risolte in una fase assistita (A56) con convenzioni non presenti in gold-v2.0 riportate alla foglia precedente, coerente con gold-v2.0, su decisione dello studente del 18/11/2026.",
+  "llm": "GPT (OpenAI), versione non indicata dallo studente",
+  "guidelines_version": "gold-v2.0",
+  "annotator": "rule:bcb-markers-v1",
+  "reviewer": "studente",
+  "review_times": "non misurati (CP1 non misurato, deviazione dichiarata)",
+  "annotations_sha256": "272895309f01581a0bf40d41eff9b89777538db3fe8923d4d4d843ee399a7e58",
+  "rows": 600,
+  "judgement_units": 901,
+  "a56_units_reverted_to_v2_0": 22,
+  "final_leaf_equal_to_llm_proposal": 853,
+  "inputs_sha256": {
+    "reviewed_copy": "8d312513c2031ef12ccf0df3993a641102da3d31dee2baf16edef309423f6751",
+    "drafts": "c07eae38ee60aafd84d4fb3623f2947d7cbabc56575509288f8feeda86071e6a",
+    "review_log": "dcabcb44fab1481233490e3e3edc71d05e13a21be2528961bbe4f505643ba964",
+    "llm_proposals": "825c2cf8397955585c50f18678f89abc08d1fdbb94539ab60412391f57154e09"
+  },
+  "a56_reverted_units": [
+    {
+      "task_id": "BigCodeBench/500",
+      "start": 250,
+      "end": 284,
+      "a56": "examples",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/976",
+      "start": 226,
+      "end": 367,
+      "a56": "examples",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/841",
+      "start": 117,
+      "end": 220,
+      "a56": "context.format",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/466",
+      "start": 192,
+      "end": 222,
+      "a56": "examples",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/465",
+      "start": 272,
+      "end": 302,
+      "a56": "examples",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/867",
+      "start": 134,
+      "end": 278,
+      "a56": "context.constraints",
+      "v2.0": "context.data"
+    },
+    {
+      "task_id": "BigCodeBench/1070",
+      "start": 330,
+      "end": 408,
+      "a56": "context.constraints",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/499",
+      "start": 210,
+      "end": 250,
+      "a56": "examples",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/860",
+      "start": 192,
+      "end": 241,
+      "a56": "context.data",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/850",
+      "start": 176,
+      "end": 243,
+      "a56": "main_instruction",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "BigCodeBench/554",
+      "start": 264,
+      "end": 333,
+      "a56": "examples",
+      "v2.0": "context.constraints"
+    },
+    {
+      "task_id": "BigCodeBench/98",
+      "start": 229,
+      "end": 291,
+      "a56": "context.constraints",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/227",
+      "start": 251,
+      "end": 419,
+      "a56": "main_instruction",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/1031",
+      "start": 84,
+      "end": 186,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/15",
+      "start": 94,
+      "end": 178,
+      "a56": "main_instruction",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/861",
+      "start": 177,
+      "end": 254,
+      "a56": "main_instruction",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/794",
+      "start": 149,
+      "end": 215,
+      "a56": "main_instruction",
+      "v2.0": "context.data"
+    },
+    {
+      "task_id": "BigCodeBench/1066",
+      "start": 307,
+      "end": 396,
+      "a56": "context.data",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/1072",
+      "start": 123,
+      "end": 230,
+      "a56": "context.constraints",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/1086",
+      "start": 74,
+      "end": 147,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/666",
+      "start": 114,
+      "end": 301,
+      "a56": "context.data",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/193",
+      "start": 229,
+      "end": 418,
+      "a56": "context.constraints",
+      "v2.0": "context.format"
+    }
+  ]
+}

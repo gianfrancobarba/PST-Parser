@@ -1,0 +1,72 @@
+{
+  "format": "gold-provenance-v1",
+  "set": "bcb-pilot",
+  "procedure": "Bozze da regole fisse; proposte di un LLM sulle sole unita di giudizio; revisione e decisione finale dichiarate dallo studente il 18/11/2026; 56 unita risolte in una fase assistita (A56) con convenzioni non presenti in gold-v2.0 riportate alla foglia precedente, coerente con gold-v2.0, su decisione dello studente del 18/11/2026.",
+  "llm": "GPT (OpenAI), versione non indicata dallo studente",
+  "guidelines_version": "gold-v2.0",
+  "annotator": "rule:bcb-markers-v1",
+  "reviewer": "studente",
+  "review_times": "non misurati (CP1 non misurato, deviazione dichiarata)",
+  "annotations_sha256": "ff194933f582aa118dd0fa2bf62a4030e4214011b0de5f6759f249a95076fddc",
+  "rows": 30,
+  "judgement_units": 45,
+  "a56_units_reverted_to_v2_0": 7,
+  "final_leaf_equal_to_llm_proposal": 38,
+  "inputs_sha256": {
+    "reviewed_copy": "8c91c20d4695a9d930a6af764c669a57256feb020775f82be3398384a32b162e",
+    "drafts": "6731b05c8446e4e19799c2804d657292900e759e20799f8df117fd3a38e02d30",
+    "review_log": "e6b8b012fffca7e313a606aa63e0d6f7eb1e489f321f8e711ac6a7006a988b7b",
+    "llm_proposals": "7ba96cee4e58d69a575c3b4f55bfad0a5ca65db28bc314154b0867bbd2bd0459"
+  },
+  "a56_reverted_units": [
+    {
+      "task_id": "BigCodeBench/115",
+      "start": 107,
+      "end": 312,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/521",
+      "start": 197,
+      "end": 385,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/1036",
+      "start": 166,
+      "end": 289,
+      "a56": "main_instruction",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/342",
+      "start": 304,
+      "end": 362,
+      "a56": "main_instruction",
+      "v2.0": "context.format"
+    },
+    {
+      "task_id": "BigCodeBench/1058",
+      "start": 66,
+      "end": 211,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    },
+    {
+      "task_id": "BigCodeBench/1058",
+      "start": 212,
+      "end": 270,
+      "a56": "main_instruction",
+      "v2.0": "context.data"
+    },
+    {
+      "task_id": "BigCodeBench/801",
+      "start": 75,
+      "end": 199,
+      "a56": "context.constraints",
+      "v2.0": "main_instruction"
+    }
+  ]
+}
