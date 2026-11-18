@@ -77,7 +77,10 @@ def test_agreement_report_by_unit_type(tmp_path: Path) -> None:
     spans[index] = SpanAnnotation(
         "context.format", *(spans[index].start, spans[index].end), spans[index].phrase
     )
-    second = [replace(first[0], spans=tuple(spans)), first[1]]
+    second = [
+        replace(first[0], spans=tuple(spans), annotator="studente"),
+        replace(first[1], annotator="studente"),
+    ]
     write_annotations(first, tmp_path / "a.jsonl")
     write_annotations(second, tmp_path / "b.jsonl")
     out = tmp_path / "agree" / "agreement.json"
@@ -90,6 +93,10 @@ def test_agreement_report_by_unit_type(tmp_path: Path) -> None:
             str(tmp_path / "b.jsonl"),
             "--rule",
             BCB_RULE,
+            "--first-date",
+            "2026-11-21",
+            "--second-date",
+            "2026-11-27",
             "--out",
             str(out),
         ],
@@ -102,3 +109,4 @@ def test_agreement_report_by_unit_type(tmp_path: Path) -> None:
     assert report["by_unit_type"]["prose"]["char_kappa"] == 1.0
     assert report["by_unit_type"]["notes"]["char_kappa"] < 1.0
     assert report["judgement_units"]["char_kappa"] < 1.0
+    assert report["interval_days"] == 6

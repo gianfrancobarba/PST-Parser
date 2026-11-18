@@ -412,6 +412,67 @@ def calibrate_bigcodebench(
         raise ValueError(f"unexplained reference failures: {report['unexplained']}")
 
 
+@app.command("merge-journals")
+def merge_journals_command(
+    journals: Annotated[list[Path], typer.Argument(help="Journal directories of one session.")],
+    sample: Annotated[Path, typer.Option(help="Frozen sample the core rows must cover.")],
+    out: Annotated[Path, typer.Option(help="New directory for the merged generations.")],
+    s_parse: Annotated[
+        Path | None, typer.Option(help="S_parse document the H-auto rows must cover exactly.")
+    ] = None,
+) -> None:
+    """Verified union of the journals of one session, before check-bigcodebench (C-26).
+
+    Writes ``generations-core.jsonl`` (the conditions of every journal, on the
+    sample) and, if any, ``generations-extra.jsonl`` (H-auto on S_parse).
+    """
+    from pstparser.empirical.auto import load_s_parse
+    from pstparser.empirical.journal import merge_journals
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    merged = merge_journals(journals, _sample_ids(sample, None))
+    if s_parse is not None:
+        expected = set(load_s_parse(_read_document(s_parse)))
+        hauto = {row["task_id"] for row in merged["extra"] if row["condition"] == "H-auto"}
+        if hauto != expected:
+            raise ValueError("the H-auto rows do not cover exactly the S_parse tasks")
+    names = ["generations-core.jsonl", "generations-extra.jsonl"]
+    ensure_stage_outputs(out, "empirical-merge-journals", names)
+    _write_rows(out / names[0], merged["core"])
+    if merged["extra"]:
+        _write_rows(out / names[1], merged["extra"])
+    write_manifest(
+        {
+            "stage": "empirical-merge-journals",
+            "journals": [
+                {
+                    "directory": str(path),
+                    "manifest_sha256": digest_file(path / "empirical-generate_manifest.json"),
+                    "generations_sha256": digest_file(path / "generations.jsonl"),
+                }
+                for path in journals
+            ],
+            "sample_sha256": digest_file(sample),
+            "s_parse_sha256": None if s_parse is None else digest_file(s_parse),
+            "core_conditions": merged["core_conditions"],
+            "extra_conditions": merged["extra_conditions"],
+            "sessions": merged["sessions"],
+            "gpu": merged["gpu"],
+            "environment_digest": merged["environment_digest"],
+            "core_sha256": digest_file(out / names[0]),
+            "extra_sha256": digest_file(out / names[1]) if merged["extra"] else None,
+            "source": source_snapshot(),
+        },
+        out,
+    )
+    typer.echo(f"{len(merged['core'])} core and {len(merged['extra'])} extra rows in {out}")
+
+
 @app.command("check-bigcodebench")
 def check_bigcodebench(
     generations: Path,
@@ -899,9 +960,107 @@ def sample_families(
     typer.echo(f"{len(drawn)} prompts in {families} families in {out}")
 
 
+@app.command("sample-reannotation")
+def sample_reannotation(
+    sources: Path,
+    rule: Annotated[str, typer.Option(help="Draft rule of the benchmark (judgement units).")],
+    n: Annotated[int, typer.Option(help="Number of tasks to re-annotate from scratch.")],
+    seed: Annotated[int, typer.Option(help="Seed of the draw, fixed before the gold review.")],
+    out: Annotated[Path, typer.Option(help="New file for the re-annotation sample.")],
+    sample: Annotated[
+        Path | None, typer.Option(help="Frozen sample the tasks must belong to (BigCodeBench).")
+    ] = None,
+    by_family: Annotated[
+        bool, typer.Option(help="One prompt from each of n seeded families (LLMSecEval).")
+    ] = False,
+) -> None:
+    """Draw the re-annotation sample among the tasks with at least one judgement unit.
+
+    Drawn with a seed before the gold review, so that the choice of tasks cannot
+    depend on how the review went (plan of 18/11/2026, P-07).
+    """
+    from pstparser.empirical import sampling
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.empirical.covariates import JUDGEMENT_UNITS_RULE, judgement_regions
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    records = read_sources(sources)
+    if not records:
+        raise ValueError("empty sources")
+    if sample is not None:
+        allowed = set(_sample_ids(sample, None))
+        if not allowed <= {record.task_id for record in records}:
+            raise ValueError("a task of the frozen sample is not among the sources")
+        records = [record for record in records if record.task_id in allowed]
+    dataset_sha256 = records[0].dataset_file_sha256
+    candidates = [record for record in records if judgement_regions(record.text, rule)]
+    drawn = sampling.reannotation_sample(
+        candidates, n=n, seed=seed, dataset_sha256=dataset_sha256, by_family=by_family
+    )
+    ensure_stage_outputs(out.parent, "empirical-sample-reannotation", [out.name])
+    provenance = {
+        "sources_sha256": digest_file(sources),
+        "sample_sha256": None if sample is None else digest_file(sample),
+    }
+    _write_document(
+        out,
+        {
+            "format_version": 1,
+            "kind": "reannotation-sample",
+            "benchmark": records[0].benchmark,
+            "dataset_revision": records[0].dataset_revision,
+            "dataset_file_sha256": dataset_sha256,
+            "text_field": records[0].text_field,
+            "method": sampling.ORDER_METHOD,
+            "purpose": "reannotation",
+            "seed": seed,
+            "rule": rule,
+            "judgement_units_rule": JUDGEMENT_UNITS_RULE,
+            "by_family": by_family,
+            "population": len(records),
+            "candidates": len(candidates),
+            "candidate_families": len({record.family_id for record in candidates}),
+            "n": len(drawn),
+            **provenance,
+            "tasks": [
+                {
+                    "task_id": record.task_id,
+                    "family_id": record.family_id,
+                    "source_sha256": record.source_sha256,
+                }
+                for record in drawn
+            ],
+        },
+    )
+    write_manifest(
+        {
+            "stage": "empirical-sample-reannotation",
+            "seed": seed,
+            "n": n,
+            "rule": rule,
+            "by_family": by_family,
+            **provenance,
+            "reannotation_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{len(drawn)} of {len(candidates)} candidate tasks in {out}")
+
+
 def _sample_ids(path: Path, selection: str | None) -> list[str]:
-    """Read the task identifiers of a frozen sample, or of one LLMSecEval selection."""
+    """Read the task identifiers of a frozen sample, of S_parse, or of one LLMSecEval selection."""
     document = _read_document(path)
+    if document.get("format") == "s-parse-v1" and selection is None:
+        from pstparser.empirical.auto import load_s_parse
+
+        # The H-auto rows are judged on S_parse, whose hash is checked here.
+        return load_s_parse(document)
     if "tasks" in document:
         if selection is not None:
             raise ValueError("--selection applies to an identifier map only")
@@ -960,6 +1119,57 @@ def propose_spans(
         out.parent,
     )
     typer.echo(f"{len(rows)} draft annotations in {out}")
+
+
+@app.command("gold-diff")
+def gold_diff_command(
+    sources: Path,
+    drafts: Path,
+    gold: Path,
+    rule: Annotated[str, typer.Option(help="Rule that proposed the drafts.")],
+    out: Annotated[Path, typer.Option(help="New diff report (JSON).")],
+    sample: Annotated[
+        Path | None, typer.Option(help="Frozen sample the gold must cover exactly.")
+    ] = None,
+) -> None:
+    """Diff between the rule drafts and the reviewed gold: units and characters by rule.
+
+    A prespecified analysis (plan of 18/11/2026, P-07): share of tasks changed,
+    characters and units changed for each rule, and the share of characters the
+    rules leave to the reviewer.
+    """
+    from pstparser.empirical import annotations
+    from pstparser.empirical.benchmarks import read_sources
+    from pstparser.empirical.golddiff import gold_diff
+    from pstparser.repro.manifest import (
+        digest_file,
+        ensure_stage_outputs,
+        source_snapshot,
+        write_manifest,
+    )
+
+    gold_rows = annotations.load_annotations(gold)
+    if sample is not None and sorted(_sample_ids(sample, None)) != sorted(
+        row.task_id for row in gold_rows
+    ):
+        raise ValueError("the gold does not cover exactly the tasks of the frozen sample")
+    report = gold_diff(read_sources(sources), annotations.load_annotations(drafts), gold_rows, rule)
+    ensure_stage_outputs(out.parent, "empirical-gold-diff", [out.name])
+    _write_document(out, report)
+    write_manifest(
+        {
+            "stage": "empirical-gold-diff",
+            "rule": rule,
+            "sources_sha256": digest_file(sources),
+            "drafts_sha256": digest_file(drafts),
+            "gold_sha256": digest_file(gold),
+            "sample_sha256": None if sample is None else digest_file(sample),
+            "report_sha256": digest_file(out),
+            "source": source_snapshot(),
+        },
+        out.parent,
+    )
+    typer.echo(f"{report['tasks_changed']} of {report['tasks']} tasks changed; {out}")
 
 
 @app.command("gold-lint")
@@ -1391,6 +1601,9 @@ def blind_sample(
     sources: Annotated[Path, typer.Option(help="LLMSecEval sources: the prompt in its T form.")],
     seed: Annotated[int, typer.Option(help="Seed of the sample, fixed before opening files.")],
     out: Annotated[Path, typer.Option(help="New directory: files/, sheet.jsonl, key.jsonl.")],
+    form: Annotated[
+        str, typer.Option(help="full, or reduced (only the U and targeted V cases).")
+    ] = "full",
 ) -> None:
     """Draw the blind review (04 §3.10): programs renamed by hash, one sheet, a separate key.
 
@@ -1404,7 +1617,7 @@ def blind_sample(
     if out.exists():
         raise FileExistsError(f"{out} exists: each draw needs a new directory")
     rows = [row for path in details for row in _json_lines(path)]
-    cases = draw_cases(rows, seed)
+    cases = draw_cases(rows, seed, form)
     outputs = {row["request_id"]: row["raw_output"] for row in _json_lines(journal)}
     prompts = {record.task_id: record.text for record in read_sources(sources)}
     (out / "files").mkdir(parents=True)
@@ -1430,6 +1643,7 @@ def blind_sample(
         {
             "stage": "empirical-blind-sample",
             "version": BLIND_VERSION,
+            "form": form,
             "seed": seed,
             "details_sha256": [digest_file(path) for path in details],
             "journal_sha256": digest_file(journal),
@@ -2185,13 +2399,21 @@ def agreement(
     first: Path,
     second: Path,
     rule: Annotated[str, typer.Option(help="Draft rule of the benchmark (judgement units).")],
+    first_date: Annotated[str, typer.Option(help="Date of the first annotation (YYYY-MM-DD).")],
+    second_date: Annotated[
+        str, typer.Option(help="Date of the re-annotation from scratch (YYYY-MM-DD).")
+    ],
     out: Annotated[Path, typer.Option(help="New agreement report (JSON).")],
 ) -> None:
     """Character kappa and boundary F1 of two annotation files of the same tasks.
 
     The primary measures count only the judgement units; the measures on every
-    non-whitespace character are descriptive.
+    non-whitespace character are descriptive. The second file is the
+    re-annotation from scratch: no row may come from a rule, and the interval
+    between the two annotations is recorded (plan of 18/11/2026, P-07).
     """
+    from datetime import date
+
     from pstparser.empirical import annotations
     from pstparser.empirical.agreement import (
         AGREEMENT_VERSION,
@@ -2211,6 +2433,12 @@ def agreement(
     texts = {record.task_id: record for record in read_sources(sources)}
     left = {row.task_id: row for row in annotations.load_annotations(first)}
     right = {row.task_id: row for row in annotations.load_annotations(second)}
+    ruled = sorted(task for task, row in right.items() if row.annotator.startswith("rule:"))
+    if ruled:
+        raise ValueError(f"the second file must be a human re-annotation; rule rows: {ruled[:3]}")
+    interval_days = (date.fromisoformat(second_date) - date.fromisoformat(first_date)).days
+    if interval_days < 0:
+        raise ValueError("the second date comes before the first date")
     if set(left) != set(right) or not set(left) <= set(texts):
         raise ValueError("both files must annotate the same tasks of the sources")
     for task in left:
@@ -2247,6 +2475,9 @@ def agreement(
         {
             "agreement_version": AGREEMENT_VERSION,
             "judgement_units_rule": JUDGEMENT_UNITS_RULE,
+            "first_date": first_date,
+            "second_date": second_date,
+            "interval_days": interval_days,
             "tasks": len(tasks),
             "judgement_units": {
                 "char_kappa": char_kappa(judged),
@@ -2476,7 +2707,13 @@ def auto_annotate_command(
     predictions: Annotated[Path, typer.Argument(help="predictions.jsonl of parse-prompts.")],
     id_map: Annotated[Path, typer.Argument(help="id-map.json of the same parse-prompts run.")],
     sources: Annotated[Path, typer.Argument(help="Source prompts (task_id, text) JSONL.")],
-    policy: Annotated[str, typer.Option(help="auto-strict-v1 (primary) or auto-attach-v1.")],
+    policy: Annotated[
+        str,
+        typer.Option(
+            help="auto-strict-v1 (primary), auto-attach-v1 (sensitivity) or auto-strict-v2 "
+            "(primary only by the C-22 rule)."
+        ),
+    ],
     out: Annotated[Path, typer.Option(help="New H-auto canonical JSONL.")],
     failures: Annotated[Path, typer.Option(help="New JSONL of the parser failures.")],
     s_parse: Annotated[Path, typer.Option(help="New S_parse document (s-parse-v1).")],
@@ -2586,7 +2823,9 @@ def hauto_ledgers_command(
 
 @app.command("parser-gate")
 def parser_gate_command(
-    s_parse: Annotated[Path, typer.Argument(help="S_parse of auto-strict-v1 on S_gold.")],
+    s_parse: Annotated[
+        Path, typer.Argument(help="S_parse of the primary strict policy on S_gold.")
+    ],
     score: Annotated[Path, typer.Argument(help="score results.json of the same predictions.")],
     thresholds: Annotated[
         Path, typer.Option(help="Frozen thresholds: max_strict_failure, min_macro_f1.")
@@ -2603,6 +2842,13 @@ def parser_gate_command(
     ],
     purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
     freeze: Annotated[Path | None, typer.Option(help=_FREEZE_HELP)] = None,
+    c22: Annotated[
+        Path | None,
+        typer.Option(
+            help="S_parse of auto-strict-v1 on the pilot tasks (D-01): the C-22 rule fixes "
+            "the primary policy. Required, and listed in the freeze, for a final gate."
+        ),
+    ] = None,
 ) -> None:
     """Decide the parser gate (00 T-7) before any H-auto generation.
 
@@ -2624,6 +2870,12 @@ def parser_gate_command(
         s_gold = default_root(freeze) / "protocol" / "samples" / S_GOLD_FILE
         if digest_file(sample) != digest_file(s_gold):
             raise ValueError(f"a final gate is measured on S_gold: protocol/samples/{S_GOLD_FILE}")
+        if c22 is None:
+            raise ValueError("a final gate needs --c22, the v1 conversion of the pilot tasks")
+        from pstparser.empirical.freeze import load_freeze
+
+        if digest_file(c22) not in set(load_freeze(freeze)["items"].values()):
+            raise ValueError("the C-22 document is not in the freeze")
     ensure_stage_outputs(out.parent, "empirical-parser-gate", [out.name])
     sample_tasks = [row["task_id"] for row in _read_document(sample)["tasks"]]
     report = parser_gate(
@@ -2633,6 +2885,7 @@ def parser_gate_command(
         id_map=_read_document(id_map),
         id_map_sha256=digest_file(id_map),
         sample_tasks=sample_tasks,
+        c22=None if c22 is None else _read_document(c22),
     )
     report["tasks"] = {"n": len(sample_tasks), "sample_sha256": digest_file(sample)}
     report["inputs"] = {
@@ -2641,6 +2894,7 @@ def parser_gate_command(
         "thresholds_sha256": digest_file(thresholds),
         "id_map_sha256": digest_file(id_map),
         "sample_sha256": digest_file(sample),
+        "c22_sha256": None if c22 is None else digest_file(c22),
     }
     _write_document(out, report)
     write_manifest(

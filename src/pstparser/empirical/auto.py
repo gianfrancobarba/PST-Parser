@@ -14,6 +14,12 @@ Two policies (00 T-6):
 * ``auto-attach-v1`` (sensitivity): unplaced phrases are dropped and counted; a
   gap with content extends the preceding span (a prefix extends the first);
   only an invalid output or no located phrase fails the task.
+* ``auto-strict-v2`` (plan of 18/11/2026, P-04, C-22): as ``auto-strict-v1``,
+  except that a gap that is exactly the starting code block of a BigCodeBench
+  prompt becomes a ``context.data`` span. The block is found in the source text
+  by its fixed marker (rule B4 of the drafts), never in the gold. Available but
+  never the default: it becomes primary only by the C-22 rule
+  (:func:`c22_primary_policy`) read on the v1 conversion of the pilot tasks.
 
 The tasks whose conversion succeeds form S_parse, written with its hash before
 any H-auto generation. H3 is estimated on S_parse; the end-to-end estimate
@@ -39,7 +45,12 @@ from pstparser.pst.alignment import DEFAULT_LEVELS, align_tree
 
 STRICT: Final = "auto-strict-v1"
 ATTACH: Final = "auto-attach-v1"
-POLICIES: Final = (STRICT, ATTACH)
+STRICT_V2: Final = "auto-strict-v2"
+POLICIES: Final = (STRICT, ATTACH, STRICT_V2)
+#: Strict policies: a gap with content fails the task (v2 exempts the starting code).
+STRICT_POLICIES: Final = (STRICT, STRICT_V2)
+#: Share of the v1 failures above which auto-strict-v2 becomes primary (C-22).
+C22_THRESHOLD: Final = 0.5
 S_PARSE_FORMAT: Final = "s-parse-v1"
 GATE_FORMAT: Final = "parser-gate-v1"
 #: Causes of a parser failure, in the order they are checked (02 §3.7, (a)-(d)).
@@ -88,6 +99,22 @@ def _span(text: str, path: str, start: int, end: int) -> SpanAnnotation:
     return SpanAnnotation(path, start, end, text[start:end])
 
 
+def starting_code_block(text: str) -> tuple[int, int] | None:
+    """Bounds of the starting code block of a BigCodeBench prompt, from the source alone.
+
+    The block is the unit of rule B4 of the drafts (the fenced code after the
+    fixed marker); a text without that shape has none.
+    """
+    from pstparser.empirical.annotations import bigcodebench_units
+
+    try:
+        units = bigcodebench_units(text)
+    except ValueError:
+        return None
+    blocks = [(unit.start, unit.end) for unit in units if unit.rule == "B4"]
+    return blocks[0] if len(blocks) == 1 else None
+
+
 def predicted_spans(text: str, prediction: str, *, policy: str) -> AutoResult:
     """Spans of ``text`` from the parser's raw ``prediction`` under ``policy``.
 
@@ -126,7 +153,20 @@ def predicted_spans(text: str, prediction: str, *, policy: str) -> AutoResult:
         "non_exact": sum(leaf.level != "exact" for leaf in located),
         "content_gaps": len(gaps),
     }
+    block = starting_code_block(text) if policy in STRICT_POLICIES else None
+    code_gaps = [gap for gap in gaps if block is not None and (gap[1], gap[2]) == block]
     if policy == STRICT:
+        # How many v1 failures the v2 exemption alone would rescue (C-22 rule).
+        diagnostics["only_gap_is_starting_code"] = int(
+            not absent and not contested and bool(spans) and gaps == code_gaps and bool(gaps)
+        )
+    if policy == STRICT_V2 and code_gaps:
+        assert block is not None
+        index = code_gaps[0][0]
+        spans.insert(index, _span(text, "context.data", *block))
+        gaps = [gap for gap in gaps if gap not in code_gaps]
+        diagnostics["starting_code_exempt"] = 1
+    if policy in STRICT_POLICIES:
         for cause, count in (
             ("absent_phrase", absent),
             ("contested_phrase", contested),
@@ -246,7 +286,26 @@ def auto_annotate(
         "diagnostics": dict(sorted(totals.items())),
         "inputs": dict(inputs or {}),
     }
+    if policy == STRICT:
+        rescued = totals["only_gap_is_starting_code"]
+        document["starting_code_only_failures"] = rescued
+        document["starting_code_share_of_failures"] = rescued / len(failures) if failures else None
     return Conversion(tuple(canonical), tuple(failures), document)
+
+
+def c22_primary_policy(s_parse: Mapping[str, Any]) -> str:
+    """The primary strict policy by the C-22 rule, read on a v1 conversion (P-04).
+
+    ``auto-strict-v2`` if the omitted starting code alone causes more than half
+    of the strict failures; otherwise ``auto-strict-v1``. With no failure, v1.
+
+    Raises:
+        ValueError: If the document is not an ``auto-strict-v1`` conversion.
+    """
+    if s_parse.get("format") != S_PARSE_FORMAT or s_parse.get("policy") != STRICT:
+        raise ValueError(f"the C-22 rule reads an {STRICT} conversion")
+    share = s_parse.get("starting_code_share_of_failures")
+    return STRICT_V2 if share is not None and share > C22_THRESHOLD else STRICT
 
 
 def load_s_parse(document: Mapping[str, Any]) -> list[str]:
@@ -352,10 +411,14 @@ def parser_gate(
     id_map: Mapping[str, Any],
     id_map_sha256: str | None,
     sample_tasks: Sequence[str],
+    c22: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """The parser gate: strict failure rate and leaf macro F1 against frozen thresholds.
 
-    ``s_parse`` must come from ``auto-strict-v1`` on S_gold; ``score`` is the
+    ``s_parse`` must come from the primary strict policy on S_gold: ``auto-strict-v1``,
+    or ``auto-strict-v2`` only when the C-22 rule read on ``c22`` (the v1
+    conversion of the pilot tasks) makes it primary (plan of 18/11/2026, P-04);
+    a v1 conversion is refused when that rule makes v2 primary. ``score`` is the
     ``score`` report of the same predictions against the gold targets. Both are
     bound to those predictions (R-HAU-02): the score must record the digest
     the conversion read, over the indices of ``id_map``, whose digest the
@@ -364,14 +427,21 @@ def parser_gate(
 
     Raises:
         ValueError: If a threshold is missing or invalid, the conversion is not
-            strict, or score, conversion, index map and sample do not correspond.
+            the primary strict one by the C-22 rule, or score, conversion, index
+            map and sample do not correspond.
     """
     for key in ("max_strict_failure", "min_macro_f1"):
         value = thresholds.get(key)
         if not isinstance(value, int | float) or isinstance(value, bool) or not 0 <= value <= 1:
             raise ValueError(f"the frozen thresholds need {key} in [0, 1]")
-    if s_parse.get("policy") != STRICT:
-        raise ValueError(f"the gate reads the {STRICT} conversion")
+    policy = s_parse.get("policy")
+    if policy not in STRICT_POLICIES:
+        raise ValueError(f"the gate reads a strict conversion ({', '.join(STRICT_POLICIES)})")
+    primary = None if c22 is None else c22_primary_policy(c22)
+    if policy == STRICT_V2 and primary != STRICT_V2:
+        raise ValueError("auto-strict-v2 is gated only when the C-22 rule makes it primary")
+    if policy == STRICT and primary == STRICT_V2:
+        raise ValueError("the C-22 rule makes auto-strict-v2 primary: gate its conversion")
     load_s_parse(s_parse)
     if score["total"] != s_parse["n"]:
         raise ValueError("the score report and the conversion cover different task counts")
@@ -397,6 +467,8 @@ def parser_gate(
         reasons.append("leaf macro F1 below the threshold")
     return {
         "format": GATE_FORMAT,
+        "policy": policy,
+        "c22_primary_policy": primary,
         "thresholds": {
             "max_strict_failure": thresholds["max_strict_failure"],
             "min_macro_f1": thresholds["min_macro_f1"],

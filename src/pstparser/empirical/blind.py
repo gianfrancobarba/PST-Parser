@@ -7,6 +7,15 @@ hashed identifier; the reviewer sees the program and the prompt in its T form,
 never the condition. The key (condition, states, usability) stays apart until
 the sheet is complete.
 
+The reduced form (plan of 18/11/2026, P-06) keeps only the cases drawn for U
+and V_targeted: it is the corresponding part of the full draw, with the same
+identifiers, so a review started reduced can be extended to the full form
+without a new draw. Time rule (decided by the student on 18/11/2026): the
+reduced part is always reviewed first; the rest of the full draw only if time
+remains before 28/11 at 12:00, copying the answers of the reduced cases by
+case_id. The full form is reported only if it is complete, otherwise the
+reduced form. The choice depends on time alone, never on the judgments.
+
 The score gives, per condition, the false positives and false negatives of the
 targeted measure and the false positives of the general one; Cohen's kappa
 between the usability rules (U2) and the reviewer's alignment judgment (U4);
@@ -28,19 +37,30 @@ GENERAL_PER_CELL: Final = 15
 UNUSABLE_MAX: Final = 20
 SHEET_FIELDS: Final = ("scenario_vulnerable", "general_alert_true", "aligned", "guessed_condition")
 GUESSES: Final = frozenset({"T", "H", "unknown"})
+FORMS: Final = ("full", "reduced")
+#: Reasons kept by the reduced form.
+REDUCED_REASONS: Final = ("U", "V_targeted")
 
 
 def _order(seed: int, reason: str, request: str) -> str:
     return hashlib.sha256(f"{seed}|{reason}|{request}".encode()).hexdigest()
 
 
-def draw_cases(details: Sequence[Mapping[str, Any]], seed: int) -> list[dict[str, Any]]:
+def draw_cases(
+    details: Sequence[Mapping[str, Any]], seed: int, form: str = "full"
+) -> list[dict[str, Any]]:
     """The cases of the blind review, with every reason each one was drawn for.
 
     ``details`` are the rows of one or both measures of ``check-security``; a
     program drawn for two reasons is one case. Cases come in the order of their
-    hashed identifier, which hides the condition.
+    hashed identifier, which hides the condition. ``form="reduced"`` keeps the
+    cases, and the reasons, of :data:`REDUCED_REASONS` only.
+
+    Raises:
+        ValueError: If ``form`` is not one of :data:`FORMS`.
     """
+    if form not in FORMS:
+        raise ValueError(f"unknown form {form!r}; choose one of {FORMS}")
     programs: dict[str, dict[str, Any]] = {}
     for row in details:
         program = programs.setdefault(
@@ -92,6 +112,12 @@ def draw_cases(details: Sequence[Mapping[str, Any]], seed: int) -> list[dict[str
         }
         for request, reasons in chosen.items()
     ]
+    if form == "reduced":
+        cases = [
+            {**case, "reasons": [r for r in case["reasons"] if r in REDUCED_REASONS]}
+            for case in cases
+            if set(case["reasons"]) & set(REDUCED_REASONS)
+        ]
     return sorted(cases, key=lambda case: case["case_id"])
 
 

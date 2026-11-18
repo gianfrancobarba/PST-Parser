@@ -308,6 +308,53 @@ def family_sample(
     ]
 
 
+def reannotation_sample(
+    records: Sequence[SourceRecord],
+    *,
+    n: int,
+    seed: int,
+    dataset_sha256: str,
+    by_family: bool,
+    purpose: str = "reannotation",
+) -> list[SourceRecord]:
+    """Draw the tasks of the re-annotation from scratch, in the drawn order.
+
+    Without ``by_family`` the head of the seeded order of the candidates. With
+    ``by_family`` one prompt from each of the first ``n`` families in seeded
+    order (purpose ``<purpose>-families``), the prompt being the head of the
+    seeded order of its family (purpose ``<purpose>:<family>``). The caller
+    passes only the candidates (for instance the tasks with judgement units).
+
+    Raises:
+        ValueError: If ``n`` is not positive, a record comes from another
+            dataset file or has no family when one is needed, or there are
+            fewer than ``n`` candidates (or candidate families).
+    """
+    if type(n) is not int or n < 1:
+        raise ValueError("n must be a positive integer")
+    for record in records:
+        if record.dataset_file_sha256 != dataset_sha256:
+            raise ValueError(f"{record.task_id}: the record comes from another dataset file")
+    by_id = {record.task_id: record for record in records}
+    if not by_family:
+        drawn = seeded_order(list(by_id), seed, purpose, dataset_sha256)[:n]
+        if len(drawn) < n:
+            raise ValueError(f"only {len(drawn)} candidate tasks available, {n} requested")
+        return [by_id[task] for task in drawn]
+    members: dict[str, list[str]] = {}
+    for record in records:
+        if record.family_id is None:
+            raise ValueError(f"{record.task_id}: no family")
+        members.setdefault(record.family_id, []).append(record.task_id)
+    families = seeded_order(list(members), seed, f"{purpose}-families", dataset_sha256)[:n]
+    if len(families) < n:
+        raise ValueError(f"only {len(families)} candidate families available, {n} requested")
+    return [
+        by_id[seeded_order(members[family], seed, f"{purpose}:{family}", dataset_sha256)[0]]
+        for family in families
+    ]
+
+
 def shared_families(first: Sequence[SourceRecord], second: Sequence[SourceRecord]) -> set[str]:
     """Families that appear in both sets; a non-empty result means a split family."""
     left = {record.family_id for record in first if record.family_id is not None}

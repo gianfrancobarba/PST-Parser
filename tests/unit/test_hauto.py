@@ -462,7 +462,9 @@ def test_the_cli_converts_renders_s_parse_and_gates(tmp_path: Path, monkeypatch)
         "thresholds_sha256",
         "id_map_sha256",
         "sample_sha256",
+        "c22_sha256",
     }
+    assert gate["inputs"]["c22_sha256"] is None and gate["policy"] == "auto-strict-v1"
 
 
 def test_the_cli_writes_the_two_h3_ledgers(tmp_path: Path, monkeypatch) -> None:

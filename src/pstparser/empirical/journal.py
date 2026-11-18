@@ -174,3 +174,95 @@ def run_journal(
             os.fsync(handle.fileno())
             completed[identifier] = record
     return [completed[r["request_id"]] for r in requests]
+
+
+#: Configuration keys that legitimately differ between the journals of one
+#: session: the conditions (H-auto only on S_parse) and the variant file.
+MERGE_FREE_KEYS = frozenset({"conditions", "variant_file_sha256"})
+
+
+def _journal_rows(directory: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    manifest = json.loads(
+        (directory / "empirical-generate_manifest.json").read_text(encoding="utf-8")
+    )
+    text = (directory / "generations.jsonl").read_bytes().decode("utf-8")
+    rows = [json.loads(line) for line in text.split("\n") if line]
+    expected = {request["request_id"] for request in manifest["requests"]}
+    found = [row["request_id"] for row in rows]
+    if len(found) != len(set(found)) or set(found) != expected:
+        raise ValueError(f"{directory}: incomplete journal, or rows outside its plan")
+    if any(row.get("fingerprint") != manifest["fingerprint"] for row in rows):
+        raise ValueError(f"{directory}: a row belongs to another plan")
+    for row in rows:
+        _validate_completion(row)
+    return manifest, rows
+
+
+def merge_journals(directories: Sequence[Path], sample_tasks: Sequence[str]) -> dict[str, Any]:
+    """Verified union of the complete journals of one generation session (C-26).
+
+    The core conditions are those of every journal; their rows must cover each
+    task of ``sample_tasks`` exactly once, a task belonging to one journal only.
+    The other conditions (H-auto) go to the extra rows. The configurations may
+    differ only in :data:`MERGE_FREE_KEYS`, and every row must come from the
+    declared GPU with one frozen environment.
+
+    Raises:
+        ValueError: If a journal is incomplete, a task is in more than one
+            journal, the core does not cover exactly the sample, the
+            configurations differ, a row lacks its session identity or comes
+            from another GPU or environment, or a journal uses a prefill.
+    """
+    if len(directories) < 2:
+        raise ValueError("a union needs at least two journals")
+    loaded = [_journal_rows(Path(directory)) for directory in directories]
+    configurations = [manifest["configuration"] for manifest, _ in loaded]
+    if any("assistant_prefill" in configuration for configuration in configurations):
+        raise ValueError("journals with an assistant prefill are not merged")
+    fixed = [
+        {key: value for key, value in configuration.items() if key not in MERGE_FREE_KEYS}
+        for configuration in configurations
+    ]
+    if any(other != fixed[0] for other in fixed[1:]):
+        raise ValueError("the journals were generated with different configurations")
+    gpu = configurations[0].get("gpu")
+    environments = set()
+    sessions = set()
+    for _, rows in loaded:
+        for row in rows:
+            if not row.get("gpu_name") or not row.get("environment_digest"):
+                raise ValueError("a row has no session identity (gpu_name, environment_digest)")
+            if row["gpu_name"] != gpu:
+                raise ValueError(f"a row comes from GPU {row['gpu_name']!r}, not {gpu!r}")
+            environments.add(row["environment_digest"])
+            sessions.add(row.get("session_id"))
+    if len(environments) != 1:
+        raise ValueError("the journals were generated in different environments")
+    owner: dict[str, int] = {}
+    for index, (_, rows) in enumerate(loaded):
+        for task in {row["task_id"] for row in rows}:
+            if owner.setdefault(task, index) != index:
+                raise ValueError(f"{task}: the task is in more than one journal")
+    condition_sets = [set(configuration["conditions"]) for configuration in configurations]
+    core_conditions = set.intersection(*condition_sets)
+    extra_conditions = set.union(*condition_sets) - core_conditions
+    if set(owner) != set(sample_tasks) or len(set(sample_tasks)) != len(sample_tasks):
+        raise ValueError("the journals do not cover exactly the tasks of the sample")
+    every = [row for _, rows in loaded for row in rows]
+    core = [row for row in every if row["condition"] in core_conditions]
+    extra = [row for row in every if row["condition"] in extra_conditions]
+    cells = {(row["task_id"], row["condition"], row["replicate_id"]) for row in core}
+    replicates = {row["replicate_id"] for row in core}
+    expected_cells = len(sample_tasks) * len(core_conditions) * len(replicates)
+    if len(cells) != len(core) or len(core) != expected_cells:
+        raise ValueError("the core rows do not hold each task, condition and replicate once")
+    order = sorted(set().union(*condition_sets), key=CONDITIONS.index)
+    return {
+        "core_conditions": [name for name in order if name in core_conditions],
+        "extra_conditions": [name for name in order if name in extra_conditions],
+        "core": core,
+        "extra": extra,
+        "sessions": sorted(session for session in sessions if session is not None),
+        "environment_digest": next(iter(environments)),
+        "gpu": gpu,
+    }

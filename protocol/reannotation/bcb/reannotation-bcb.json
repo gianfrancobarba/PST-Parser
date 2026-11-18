@@ -1,0 +1,172 @@
+{
+  "format_version": 1,
+  "kind": "reannotation-sample",
+  "benchmark": "bigcodebench",
+  "dataset_revision": "b74c0d0bf70d2c0bc459be537895cca163007f1a",
+  "dataset_file_sha256": "d9a4965821c9507ebdfb551c288656b2d5fe553234f5183044333ca8a4018267",
+  "text_field": "instruct_prompt",
+  "method": "sha256-order-v1",
+  "purpose": "reannotation",
+  "seed": 7319,
+  "rule": "bcb-markers-v1",
+  "judgement_units_rule": "judgement-units-v2",
+  "by_family": false,
+  "population": 400,
+  "candidates": 254,
+  "candidate_families": 1,
+  "n": 30,
+  "sources_sha256": "79ef49cd4d5079777bbe7881fca96f435d4f60ff514d44937e47849ba5375ec1",
+  "sample_sha256": "0397314bf41a2ec958f84ecf347bb7f7707e92f3ed9381e3f61e02d6cdf74110",
+  "tasks": [
+    {
+      "task_id": "BigCodeBench/310",
+      "family_id": null,
+      "source_sha256": "2a9b6c13c6f53a9f9a24491a16a12db073aa1b2900cc1a658fc24fe0a8a43a86"
+    },
+    {
+      "task_id": "BigCodeBench/761",
+      "family_id": null,
+      "source_sha256": "45f9210a3127b4f33db2c985874214d6245baa38eeab0b0f21184c6e9e52749a"
+    },
+    {
+      "task_id": "BigCodeBench/782",
+      "family_id": null,
+      "source_sha256": "e529c8899b35578d97781ea1d11f4f7926ecf7c57a83827b5eb9c861f88dc6a7"
+    },
+    {
+      "task_id": "BigCodeBench/99",
+      "family_id": null,
+      "source_sha256": "4185c382e3f6de8a07f5fe420d77cde285ce5c3cca2e6acb9954be94767e4122"
+    },
+    {
+      "task_id": "BigCodeBench/644",
+      "family_id": null,
+      "source_sha256": "e8ba526b08eb690a7e5c1b29f457cb7b12c46e09b1d01e4ae80205084aa28f8f"
+    },
+    {
+      "task_id": "BigCodeBench/1015",
+      "family_id": null,
+      "source_sha256": "9aa15f0bacfabb9cc09140fbeb65b05a4e19f4d196eef9c9710a3e07242954e0"
+    },
+    {
+      "task_id": "BigCodeBench/658",
+      "family_id": null,
+      "source_sha256": "e504c7fac1e5e8dd0fb4922a8b10f467179cb14e91366f7a869435ba61d847cf"
+    },
+    {
+      "task_id": "BigCodeBench/721",
+      "family_id": null,
+      "source_sha256": "247d8e84ca3b339c1a51a9e5ca46180fc2507e96fb856c1fdc17d7dfe99536cb"
+    },
+    {
+      "task_id": "BigCodeBench/221",
+      "family_id": null,
+      "source_sha256": "cfe75d6c53e4a2d663f2383298825a0517ebb1207345aec89208bc9b56ab954f"
+    },
+    {
+      "task_id": "BigCodeBench/990",
+      "family_id": null,
+      "source_sha256": "76816769079487ef4c95c3b523e4262d7bc98792a68ca90555dbca82c28a70e4"
+    },
+    {
+      "task_id": "BigCodeBench/577",
+      "family_id": null,
+      "source_sha256": "92640e61756b22c53001832ad191c2b20aa585c30b830c3998d80d38fdc5da63"
+    },
+    {
+      "task_id": "BigCodeBench/150",
+      "family_id": null,
+      "source_sha256": "5ca9c073a9be146bad5d0558b9bd766bfeb2563b85c94f2246b699da46ff48b8"
+    },
+    {
+      "task_id": "BigCodeBench/1090",
+      "family_id": null,
+      "source_sha256": "a958bc98e3194f8b0aa3f889219b5a730d919aea7f6f00c10f097724c269179c"
+    },
+    {
+      "task_id": "BigCodeBench/1075",
+      "family_id": null,
+      "source_sha256": "5c6ce9ea89c965948ba49efc15e5847b94c2c86460f0233c643bfaaefa4438c4"
+    },
+    {
+      "task_id": "BigCodeBench/748",
+      "family_id": null,
+      "source_sha256": "d271a2e289aa3eaa721348c2ab3761b96daccf584de994e55b8753f165cce41c"
+    },
+    {
+      "task_id": "BigCodeBench/674",
+      "family_id": null,
+      "source_sha256": "ff9afab45fc0df039c603a1013c12995b663f197cc89a483dabaa25ec2437d22"
+    },
+    {
+      "task_id": "BigCodeBench/265",
+      "family_id": null,
+      "source_sha256": "4619ab9d40b865da31893d696ccb394ca5d48b28d612c39ff10fc41be94c51a4"
+    },
+    {
+      "task_id": "BigCodeBench/816",
+      "family_id": null,
+      "source_sha256": "416ead674e2a704df71626a43cbabf088209fdb4860755deedd56b3880ff2e89"
+    },
+    {
+      "task_id": "BigCodeBench/975",
+      "family_id": null,
+      "source_sha256": "ae9661b65d9446128def36bfb5ac3e7b3ab3d77bbb6679717cfc8a5c847ffc13"
+    },
+    {
+      "task_id": "BigCodeBench/153",
+      "family_id": null,
+      "source_sha256": "6b96d10b7ffdc71b165bce4b3943301ca8edd06d7647cf9d316c09bc62ea66d6"
+    },
+    {
+      "task_id": "BigCodeBench/4",
+      "family_id": null,
+      "source_sha256": "9ca9eef500ffda24eef9cd976ba63f9b69847ffe2b717871eadc6649a5f64cc9"
+    },
+    {
+      "task_id": "BigCodeBench/143",
+      "family_id": null,
+      "source_sha256": "8ede30e7617eb84da39860d18c83c5b90b5c1ef12bdabf54dd1d702a0895545d"
+    },
+    {
+      "task_id": "BigCodeBench/882",
+      "family_id": null,
+      "source_sha256": "1fa201b6de1b96c7339e0dc72d9872d6bdbc91f6c83d2fcbea553b5fac17f074"
+    },
+    {
+      "task_id": "BigCodeBench/1057",
+      "family_id": null,
+      "source_sha256": "f03c0ab55ed7b76801bb4582191e3dec1ae1e16dd85173667c45d376e9b46170"
+    },
+    {
+      "task_id": "BigCodeBench/62",
+      "family_id": null,
+      "source_sha256": "85659f63c3c0707e0ab3b71a59163ac293dcdfb2e21e2e2df55d98846fb72a81"
+    },
+    {
+      "task_id": "BigCodeBench/1001",
+      "family_id": null,
+      "source_sha256": "d8614052dec7ff9f28d158ba173a51480349cabc93b741123ab09282b0d81a8a"
+    },
+    {
+      "task_id": "BigCodeBench/905",
+      "family_id": null,
+      "source_sha256": "56ad9e1469fef6a3cedfc6010961e18e500753fe2661a6065f9a8922ff924b2d"
+    },
+    {
+      "task_id": "BigCodeBench/338",
+      "family_id": null,
+      "source_sha256": "8fb036d3d2d85e5a16fbbc038b875668a7fd380ad8739edbdcbc7971939127fb"
+    },
+    {
+      "task_id": "BigCodeBench/656",
+      "family_id": null,
+      "source_sha256": "81cd597f35d2f3e81a1a8ea11ec309169b4383ebaf85542b84296a00480304d9"
+    },
+    {
+      "task_id": "BigCodeBench/587",
+      "family_id": null,
+      "source_sha256": "b25521e211c5baec29f0940ac202a45dc6e197dfd62f0e207dbe69444b8c759c"
+    }
+  ]
+}
