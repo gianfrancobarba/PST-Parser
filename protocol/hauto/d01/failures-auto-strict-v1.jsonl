@@ -1,0 +1,2 @@
+{"task_id": "BigCodeBench/342", "policy": "auto-strict-v1", "cause": "invalid_output", "diagnostics": {"invalid_output": 1}}
+{"task_id": "BigCodeBench/1058", "policy": "auto-strict-v1", "cause": "content_gap", "diagnostics": {"phrases": 2, "blank_phrases": 0, "located": 2, "absent": 0, "contested": 0, "non_exact": 0, "content_gaps": 1, "only_gap_is_starting_code": 0}}

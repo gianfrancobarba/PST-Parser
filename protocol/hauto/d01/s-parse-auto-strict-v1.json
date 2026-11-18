@@ -1,0 +1,65 @@
+{
+  "format": "s-parse-v1",
+  "policy": "auto-strict-v1",
+  "tasks": [
+    "BigCodeBench/349",
+    "BigCodeBench/71",
+    "BigCodeBench/728",
+    "BigCodeBench/281",
+    "BigCodeBench/293",
+    "BigCodeBench/49",
+    "BigCodeBench/115",
+    "BigCodeBench/323",
+    "BigCodeBench/521",
+    "BigCodeBench/472",
+    "BigCodeBench/815",
+    "BigCodeBench/1036",
+    "BigCodeBench/353",
+    "BigCodeBench/605",
+    "BigCodeBench/244",
+    "BigCodeBench/269",
+    "BigCodeBench/172",
+    "BigCodeBench/670",
+    "BigCodeBench/940",
+    "BigCodeBench/698",
+    "BigCodeBench/749",
+    "BigCodeBench/40",
+    "BigCodeBench/1029",
+    "BigCodeBench/829",
+    "BigCodeBench/248",
+    "BigCodeBench/1105",
+    "BigCodeBench/801",
+    "BigCodeBench/257"
+  ],
+  "tasks_sha256": "2f9070a4ea02d5765d40c7e36fcefdea383480fc76fcfb5e24622c4f28603756",
+  "n": 30,
+  "converted": 28,
+  "failures": 2,
+  "failure_rate": 0.06666666666666667,
+  "failure_rate_ci95_clopper_pearson": [
+    0.008178134460656253,
+    0.2207354015229624
+  ],
+  "causes": {
+    "invalid_output": 1,
+    "content_gap": 1
+  },
+  "diagnostics": {
+    "absent": 0,
+    "blank_phrases": 0,
+    "content_gaps": 1,
+    "contested": 0,
+    "invalid_output": 1,
+    "located": 103,
+    "non_exact": 8,
+    "only_gap_is_starting_code": 0,
+    "phrases": 103
+  },
+  "inputs": {
+    "predictions_sha256": "88d429ccb5081f65a2b0fc1091bffa01df41fdf9d130cfc3b1d9516941d3068f",
+    "id_map_sha256": "0d046da845b7785bdf4048ab9221c2a18022662506aa65784ae4f4c8715a58bc",
+    "sources_sha256": "0b1d55e0f2b875b247687c38d6a50c949ebb6b902c4762db432429bfc781636d"
+  },
+  "starting_code_only_failures": 0,
+  "starting_code_share_of_failures": 0.0
+}
