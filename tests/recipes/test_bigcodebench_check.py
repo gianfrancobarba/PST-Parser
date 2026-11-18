@@ -34,6 +34,13 @@ TRIAL += [1013, 1051, 1057, 1113, 101, 590, 1012]
 NETWORK = {101, 590, 1012}
 # The reference of 363 hangs in most runs, not in all of them.
 UNSTABLE = {363}
+# Since the infrastructure retries (9f703a0) a failing or hanging reference is a
+# fault of the run, never an outcome: these four tasks end as missing
+# (harness_unavailable) after three batch attempts and a run per task, which
+# took 100 minutes. All four are frozen exclusions (protocol/oracles/
+# bcb-exclusions.json), never judged in the study, and their behaviour is the
+# subject of the calibration recipe; this end-to-end check runs on the others.
+STABLE = [number for number in TRIAL if number not in NETWORK | UNSTABLE]
 
 
 def _setting(variable: str) -> str:
@@ -111,7 +118,7 @@ def test_official_sanitize_on_the_shapes_an_answer_can_take(
 def test_trial_sample_end_to_end(config: HarnessConfig, tmp_path: Path) -> None:
     dataset = {row["task_id"]: row for row in read_harness_dataset(config.dataset_jsonl)}
     generations = []
-    for number in TRIAL:
+    for number in STABLE:
         task = f"BigCodeBench/{number}"
         row = dataset[task]
         reference = row["code_prompt"] + row["canonical_solution"]
@@ -134,20 +141,18 @@ def test_trial_sample_end_to_end(config: HarnessConfig, tmp_path: Path) -> None:
         if outcome.outcome == "pass":
             passed[outcome.condition].add(number)
         assert outcome.outcome in {"pass", "fail"}
-    assert len(result["outcomes"]) == 69
-    # References: 19 of 23 pass; the three network tasks fail; 363 usually hangs.
-    assert set(TRIAL) - NETWORK - UNSTABLE <= passed["reference"]
-    assert not passed["reference"] & NETWORK
-    assert len(passed["reference"] - UNSTABLE) == 19
+    assert len(result["outcomes"]) == 3 * len(STABLE) == 57
+    # Every stable reference passes.
+    assert passed["reference"] == set(STABLE)
     # Neither control passes any task; the empty answer is never executed.
     assert passed["trivial"] == set() and passed["empty"] == set()
     assert reasons["empty"] == {"no_code"}
     executed = [d for d in result["details"] if d["executed"]]
-    assert len(executed) == 46 and result["summary"]["executed"] == 46
+    assert len(executed) == 38 and result["summary"]["executed"] == 38
+    assert result["summary"]["retried_runs"] == 0
     assert {d["extraction_policy"] for d in result["details"]} == {"bigcodebench-sanitize"}
-    # The second run agrees, except possibly on the unstable task.
-    flaky = {int(task.split("/")[1]) for task in result["summary"]["flaky_tasks"]}
-    assert flaky <= UNSTABLE
+    # The second run agrees.
+    assert result["summary"]["flaky_tasks"] == []
 
 
 def test_prompts_in_the_image_are_the_imported_ones(config: HarnessConfig) -> None:
