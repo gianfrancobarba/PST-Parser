@@ -120,7 +120,10 @@ items:
   # - protocol/guidelines/<gold guidelines, copied by hand>
   # - the BigCodeBench gold of S_gold and the LLMSecEval gold (reviewed, status frozen);
   #   S_gold is the 600-task prefix (protocol/samples/prefix-600/bcb-prefix-600.json), or the
-  #   nested 400-task prefix if the prespecified time rule applies (plan of 18/11/2026, P-02)
+  #   nested 400-task prefix if the prespecified time rule applies (plan of 18/11/2026, P-02).
+  #   The BigCodeBench gold is data/annotated/downstream/bcb-gold/annotations.jsonl (the first
+  #   600 rows of the bcb-final drafts, same order; its first 400 rows if the fallback applies);
+  #   bcb-final keeps the 800 drafts, the draft side of gold-diff
   # - protocol/variants/<benchmark>.variants.jsonl and their render records (T, H-gold, E, F)
   # - protocol/covariates/<benchmark>.covariates.jsonl (output of covariates)
   # - protocol/model.json (generator digests) and protocol/hauto/parser-model.json (parser digests)
