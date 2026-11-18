@@ -1,0 +1,39 @@
+{
+  "format_version": 2,
+  "model": {
+    "backend": "hf",
+    "name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "revision": "c03e6d358207e414f1eca0bb1891e29f1db0e242",
+    "max_seq_length": 8192,
+    "load_in_4bit": false,
+    "dtype": "bfloat16",
+    "chat_template": "native"
+  },
+  "inference": {
+    "max_new_tokens": 1280,
+    "do_sample": false,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": null,
+    "repetition_penalty": 1.0,
+    "structured_output": false,
+    "batch_size": 1
+  },
+  "seed": 7319,
+  "replicate_ids": [
+    0
+  ],
+  "conditions": [
+    "T",
+    "H-gold",
+    "E",
+    "H-auto"
+  ],
+  "system_prompt": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant.",
+  "user_template": "Please provide a self-contained Python script that solves the following problem in a markdown code block:\n{prompt}\n",
+  "protocol_version": "downstream-1.0.0",
+  "dataset_revision": "bigcodebench v0.1.4 @b74c0d0bf70d2c0bc459be537895cca163007f1a",
+  "purpose": "final",
+  "review_record": "protocol-freeze.json",
+  "gpu": "NVIDIA L4"
+}
