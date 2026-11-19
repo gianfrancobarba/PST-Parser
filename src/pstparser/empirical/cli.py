@@ -136,6 +136,13 @@ def render(
     flat: Annotated[
         bool, typer.Option(help="Also write F (pst-flat-json-v1) after the hierarchical variant.")
     ] = False,
+    exclude_tasks: Annotated[
+        Path | None,
+        typer.Option(
+            help="S_parse document: render only the tasks outside it, verified by hash "
+            "(the journal without H-auto of a session, C-26)."
+        ),
+    ] = None,
     purpose: Annotated[str, typer.Option(help=_PURPOSE_HELP)] = "exploratory",
     freeze: Annotated[Path | None, typer.Option(help=_FREEZE_HELP)] = None,
 ) -> None:
@@ -144,16 +151,25 @@ def render(
     With ``--condition H-auto`` the hierarchical variant of parsed spans is
     labelled H-auto (M19); ``--no-traditional`` leaves T out, so that it can be
     joined with the gold rendering of the same tasks; ``--tasks`` keeps only
-    the tasks of an S_parse document; ``--flat`` adds the extension F.
+    the tasks of an S_parse document and ``--exclude-tasks`` only the others,
+    so that the two journals of a session partition the sample; ``--flat`` adds
+    the extension F.
     """
     if condition not in {"H-gold", "H-auto"}:
         raise ValueError("condition must be H-gold or H-auto")
+    if tasks is not None and exclude_tasks is not None:
+        raise ValueError("give --tasks or --exclude-tasks, not both")
     frozen = _purpose(purpose, freeze)
     selected: set[str] | None = None
     if tasks is not None:
         from pstparser.empirical.auto import load_s_parse
 
         selected = set(load_s_parse(_read_document(tasks)))
+    excluded: list[str] | None = None
+    if exclude_tasks is not None:
+        from pstparser.empirical.auto import load_s_parse
+
+        excluded = load_s_parse(_read_document(exclude_tasks))
     variants: list[dict[str, Any]] = []
     seen: set[str] = set()
     for row in _rows(source):
@@ -167,6 +183,8 @@ def render(
             raise ValueError("duplicate canonical task")
         seen.add(canonical.task_id)
         if selected is not None and canonical.task_id not in selected:
+            continue
+        if excluded is not None and canonical.task_id in excluded:
             continue
         plain, hierarchical = render_prompt_variants(canonical)
         if condition == "H-auto":
@@ -182,8 +200,11 @@ def render(
             variants.append(render_envelope_variant(canonical).as_dict())
     if selected is not None and not selected <= seen:
         raise ValueError("the S_parse document lists tasks absent from the source")
+    if excluded is not None and not set(excluded) <= seen:
+        raise ValueError("the S_parse document lists tasks absent from the source")
     if not variants:
         raise ValueError("empty corpus")
+    from pstparser.empirical.auto import tasks_digest
     from pstparser.repro.manifest import digest_file
 
     # State of the gold the canonical file was joined in (R-TRA-02), read from the
@@ -210,6 +231,10 @@ def render(
                     "annotations_sha256": annotations_sha256,
                     "h_gold_prompt_hashes": sorted(
                         row["prompt_hash"] for row in variants if row["condition"] == "H-gold"
+                    ),
+                    # The S_parse list a complement rendering left out, by its own hash.
+                    "excluded_tasks_sha256": (
+                        tasks_digest(excluded) if excluded is not None else None
                     ),
                     **frozen,
                 },
