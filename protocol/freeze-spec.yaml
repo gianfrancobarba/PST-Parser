@@ -4,16 +4,17 @@
 # and time rules. Before F4: add the files marked TO ADD, set the pilot block and the
 # supervisor acknowledgement (export of messages M1 and M2), commit everything, then run
 #   python -m pstparser.empirical freeze --spec protocol/freeze-spec.yaml --out protocol/protocol-freeze.json
-# Its SHA-256 goes into the single OSF deposit under embargo and into message M3.
+# Its SHA-256 goes into the dated email to the supervisor (message M3), which is the
+# preregistration: no public registry is used (decision of 19/11/2026).
 format: freeze-spec-v1
 protocol_version: downstream-1.0.0
 frozen_by: studente
 supervisor_ack: {messages: [M1, M2], date: null, channel: chat, record: null}
 preregistration:
-  registry: OSF
-  deposit: single, under embargo, at the freeze F4
-  osf_url: null
-  embargo_until: null
+  registry: null
+  record: dated email to the supervisor with the SHA-256 of protocol-freeze.json (M3)
+  sent_at: null
+  export: null
 pilot: {run_ids: [], report_sha256: null, changelog_sha256: null}
 extraction_policies:
   bigcodebench: bigcodebench-sanitize
@@ -32,6 +33,11 @@ renderer_version:
   F: pst-flat-json-v1
   H-auto: pst-gold-json-v1
 items:
+  # Gold of S_gold (600-task prefix) and of LLMSecEval S2, status frozen (6d0b223, 79c2b9b)
+  - data/annotated/downstream/bcb-gold/annotations.jsonl
+  - data/annotated/downstream/bcb-gold/frozen-record.json
+  - data/annotated/llmseceval-gpl/lse-final/annotations.jsonl
+  - data/annotated/llmseceval-gpl/lse-final/frozen-record.json
   - protocol/README.md
   - protocol/configs/final/bcb-greedy-f.json
   - protocol/configs/final/bcb-greedy-hauto-f.json
@@ -47,8 +53,21 @@ items:
   - protocol/analysis/plan.md
   - protocol/freeze-spec.yaml
   - protocol/guidelines/gold-v2.0.md
+  - protocol/hauto/d01/empirical-auto-annotate_manifest.json
+  - protocol/hauto/d01/failures-auto-strict-v1.jsonl
+  - protocol/hauto/d01/s-parse-auto-strict-v1.json
   - protocol/hauto/gate-thresholds.json
+  - protocol/hauto/parser-model.json
   - protocol/hauto/parser.json
+  - protocol/hauto/prefix/empirical-auto-annotate_manifest.json
+  - protocol/hauto/prefix/failures-auto-strict-v1.jsonl
+  - protocol/hauto/prefix/hauto-auto-strict-v1.jsonl
+  - protocol/hauto/prefix/id-map.json
+  - protocol/hauto/prefix/predictions.jsonl
+  - protocol/hauto/prefix/record.json
+  - protocol/hauto/prefix/run-identity.json
+  - protocol/hauto/prefix/s-parse-auto-strict-v1.json
+  - protocol/hauto/prefix/score-results.json
   - protocol/model.json
   - protocol/oracles/bcb-exclusions.json
   - protocol/oracles/codeql-calibration.json
@@ -164,19 +183,9 @@ items:
   - protocol/security/controls/V__89-SQI-3__percent.py
   - protocol/security/controls/V__89-SQI-3__web.py
   # TO ADD before the freeze F4, once they exist (all committed first):
-  # - the BigCodeBench gold of S_gold and the LLMSecEval gold (reviewed, status frozen);
-  #   S_gold is the 600-task prefix (protocol/samples/prefix-600/bcb-prefix-600.json), or the
-  #   nested 400-task prefix if the prespecified time rule applies (plan of 18/11/2026, P-02).
-  #   The BigCodeBench gold is data/annotated/downstream/bcb-gold/annotations.jsonl (the first
-  #   600 rows of the bcb-final drafts, same order; its first 400 rows if the fallback applies);
-  #   bcb-final keeps the 800 drafts, the draft side of gold-diff
   # - protocol/variants/<benchmark>.variants.jsonl and their render records (T, H-gold, E, F)
   # - protocol/covariates/<benchmark>.covariates.jsonl (output of covariates)
-  # - protocol/hauto/parser-model.json (parser digests; protocol/model.json is listed above)
-  # - protocol/hauto/: the v1 conversion of the pilot tasks read by the C-22 rule (D-01), the
-  #   S_parse document of the primary policy on S_gold, its failures, the H-auto variants, the
-  #   score results.json of the same predictions and the record of their SHA-256. The prefix is
-  #   parsed as a pilot run before F4; the gate report is computed after F4 (parser-gate
-  #   --purpose final --freeze --c22), before any analysis: its outcome only applies a frozen rule
+  # (protocol/hauto/: listed above. The gate report is computed after F4, parser-gate
+  #  --purpose final --freeze --c22, before any analysis: its outcome only applies a frozen rule)
   # - protocol/analysis/design-*.json; the values of plan.md marked TO FILL (pilot, power)
   # Every other file of the repository is hashed by the freeze itself (protocol-freeze-v2).

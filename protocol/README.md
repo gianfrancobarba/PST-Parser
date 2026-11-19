@@ -13,4 +13,4 @@ Everything the study is frozen on before any final generation, versioned with LF
 - `rules/`: rules stated as text next to the code that applies them (`prompt-as-data.md`).
 - `freeze-spec.yaml`: the list of files the single freeze covers; `protocol-freeze.json` is written from it once, by `python -m pstparser.empirical freeze`, and checked by `freeze-verify`.
 - After the freeze no listed file changes in place: a correction is a new file and an entry in `deviations.md`.
-- The freeze proves what was fixed, not when: the date comes from the single OSF deposit under embargo and from the exported messages to the supervisors, kept in `acks/`.
+- The freeze proves what was fixed, not when: the date comes from the dated email to the supervisor carrying the SHA-256 of `protocol-freeze.json` (message M3) and from the exported messages to the supervisors, kept in `acks/`. No public registry is used.
