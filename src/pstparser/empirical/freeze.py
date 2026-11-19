@@ -6,8 +6,8 @@ plan), the digest of the package source (generation and analysis code alike,
 07 RD-4) and the lock file. It never holds its own hash: a generation
 configuration points at the freeze through ``review_record`` and the freeze
 lists the configuration. The file is written once, canonically serialised;
-the date it was written is proved by OSF and the e-mail to the supervisor,
-not by this file.
+the date it was written is proved by the dated email to the supervisor that
+carries its SHA-256, not by this file.
 
 Format v2 (R-GEN-01) also lists every other file of the repository by hash
 (``repository``): gold, notebooks, prompts, configurations and
