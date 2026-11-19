@@ -48,7 +48,9 @@ items:
   - protocol/hauto/gate-thresholds.json
   - protocol/hauto/parser.json
   - protocol/oracles/bcb-exclusions.json
+  - protocol/oracles/codeql-calibration.json
   - protocol/oracles/codeql.json
+  - protocol/oracles/empirical-calibrate-security_manifest.json
   - protocol/oracles/empirical-merge-calibrations_manifest.json
   - protocol/reannotation/bcb/empirical-sample-reannotation_manifest.json
   - protocol/reannotation/bcb/reannotation-bcb.json
@@ -69,7 +71,11 @@ items:
   - protocol/samples/prefix-600/empirical-sample_manifest.json
   - protocol/security/README.md
   - protocol/security/cards.yaml
+  - protocol/security/controls/B__732-IPA-1__fchmod.py
+  - protocol/security/controls/B__732-IPA-2__pathlib.py
   - protocol/security/controls/B__732-IPA-3__chmod_symbolic.py
+  - protocol/security/controls/B__732-IPA-3__fchmod.py
+  - protocol/security/controls/B__732-IPA-3__pathlib.py
   - protocol/security/controls/B__79-INI-1__streams.py
   - protocol/security/controls/M__comment_only_stub.py
   - protocol/security/controls/M__flask_debug_only.py
@@ -95,26 +101,63 @@ items:
   - protocol/security/controls/S2__89-SQI-1__param.py
   - protocol/security/controls/S2__89-SQI-2__param.py
   - protocol/security/controls/S2__89-SQI-3__param.py
+  - protocol/security/controls/V__20-IIV-1__fullmatch.py
   - protocol/security/controls/V__20-IIV-1__regex.py
+  - protocol/security/controls/V__20-IIV-1__search.py
+  - protocol/security/controls/V__20-IIV-2__netloc.py
+  - protocol/security/controls/V__20-IIV-2__startswith.py
   - protocol/security/controls/V__20-IIV-2__substring.py
   - protocol/security/controls/V__22-ILP-1__argv.py
+  - protocol/security/controls/V__22-ILP-1__pathlib.py
   - protocol/security/controls/V__22-ILP-1__web.py
+  - protocol/security/controls/V__22-ILP-2__fstring.py
+  - protocol/security/controls/V__22-ILP-2__send_file.py
   - protocol/security/controls/V__22-ILP-2__web.py
   - protocol/security/controls/V__22-ILP-3__tar.py
+  - protocol/security/controls/V__502-DUD-1__marshal.py
+  - protocol/security/controls/V__502-DUD-1__pickle.py
   - protocol/security/controls/V__502-DUD-1__yaml.py
+  - protocol/security/controls/V__502-DUD-2__marshal.py
+  - protocol/security/controls/V__502-DUD-2__pickle_stream.py
   - protocol/security/controls/V__502-DUD-2__yaml.py
+  - protocol/security/controls/V__502-DUD-3__marshal.py
   - protocol/security/controls/V__502-DUD-3__pickle.py
+  - protocol/security/controls/V__502-DUD-3__yaml.py
+  - protocol/security/controls/V__732-IPA-1__chmod.py
+  - protocol/security/controls/V__732-IPA-1__chmod_variable.py
   - protocol/security/controls/V__732-IPA-1__osopen.py
+  - protocol/security/controls/V__732-IPA-2__chmod.py
+  - protocol/security/controls/V__732-IPA-2__chmod_keyword.py
   - protocol/security/controls/V__732-IPA-2__osopen.py
   - protocol/security/controls/V__732-IPA-3__chmod.py
+  - protocol/security/controls/V__732-IPA-3__chmod_keyword.py
+  - protocol/security/controls/V__732-IPA-3__chmod_variable.py
   - protocol/security/controls/V__78-INS-1__argv.py
+  - protocol/security/controls/V__78-INS-1__fstring_shell.py
+  - protocol/security/controls/V__78-INS-1__popen.py
+  - protocol/security/controls/V__78-INS-2__popen.py
+  - protocol/security/controls/V__78-INS-2__subprocess.py
   - protocol/security/controls/V__78-INS-2__web.py
   - protocol/security/controls/V__78-INS-3__argv.py
+  - protocol/security/controls/V__78-INS-3__format.py
+  - protocol/security/controls/V__78-INS-3__subprocess.py
+  - protocol/security/controls/V__79-INI-1__fstring.py
+  - protocol/security/controls/V__79-INI-1__make_response.py
   - protocol/security/controls/V__79-INI-1__web.py
+  - protocol/security/controls/V__79-INI-2__dictloader.py
+  - protocol/security/controls/V__79-INI-2__from_string.py
   - protocol/security/controls/V__79-INI-2__jinja.py
+  - protocol/security/controls/V__79-INI-3__concat.py
+  - protocol/security/controls/V__79-INI-3__format.py
   - protocol/security/controls/V__79-INI-3__web.py
+  - protocol/security/controls/V__89-SQI-1__format.py
+  - protocol/security/controls/V__89-SQI-1__fstring.py
   - protocol/security/controls/V__89-SQI-1__web.py
+  - protocol/security/controls/V__89-SQI-2__concat.py
+  - protocol/security/controls/V__89-SQI-2__percent.py
   - protocol/security/controls/V__89-SQI-2__web.py
+  - protocol/security/controls/V__89-SQI-3__fstring.py
+  - protocol/security/controls/V__89-SQI-3__percent.py
   - protocol/security/controls/V__89-SQI-3__web.py
   # TO ADD before the freeze F4, once they exist (all committed first):
   # - protocol/guidelines/<gold guidelines, copied by hand>
@@ -127,7 +170,6 @@ items:
   # - protocol/variants/<benchmark>.variants.jsonl and their render records (T, H-gold, E, F)
   # - protocol/covariates/<benchmark>.covariates.jsonl (output of covariates)
   # - protocol/model.json (generator digests) and protocol/hauto/parser-model.json (parser digests)
-  # - protocol/oracles/codeql-calibration.json (calibrate-security, after Q-19)
   # - protocol/hauto/: the v1 conversion of the pilot tasks read by the C-22 rule (D-01), the
   #   S_parse document of the primary policy on S_gold, its failures, the H-auto variants, the
   #   score results.json of the same predictions and the record of their SHA-256. The prefix is

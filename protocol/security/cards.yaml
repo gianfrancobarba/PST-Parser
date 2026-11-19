@@ -11,6 +11,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__20-IIV-1__regex.py", sha256: 140ca744d5f412206231fedc9c307151a9e2e3c6a7062f4b7f9a1ed2e461f302}
+        - {path: "controls/V__20-IIV-1__fullmatch.py", sha256: 17df3cf53113b0f29b92c2220e6e577c301b69a7c38cc9245d5505deab11c21b}
+        - {path: "controls/V__20-IIV-1__search.py", sha256: 86c4a5ff5a088118de9c4998c30c5dda88545cb50beed13905e910334349239a}
       safe:
         - {path: "controls/S2__20-IIV-1__regex.py", sha256: d1de0cd0cec61476a3082c5943b237e2cde7e107979cea6b77c757e894035a57}
     secure_samples:
@@ -24,6 +26,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__20-IIV-2__substring.py", sha256: d32bdc9c881255a102e0ad3959e2cef74ff9f59ce6bcbe2d87702a8d0026c57c}
+        - {path: "controls/V__20-IIV-2__netloc.py", sha256: 95bb15b9d4a59e9592633c2c1573d37ab08d92d311b794cf87d5c98eaba9e45d}
+        - {path: "controls/V__20-IIV-2__startswith.py", sha256: c5d168daf431f8cd8150b5d9be21f2eff929addcb22b084b92dc4e4686a24234}
       safe:
         - {path: "controls/S2__20-IIV-2__netloc.py", sha256: 1d886991cf2b4fea86f6b9bf197fd41f03329c3579c9e441405ebf875ba6f646}
     secure_samples:
@@ -38,6 +42,7 @@ families:
       vulnerable:
         - {path: "controls/V__22-ILP-1__argv.py", sha256: bbd9d64c6fffdfc4789826f10ef7e45270c3f2c71e718bf7a9715bc98f5c1b24}
         - {path: "controls/V__22-ILP-1__web.py", sha256: 6a56763cfe2fe032c12884e7f46a0c594d785420ac67dcd23d27e41a6e4a7590}
+        - {path: "controls/V__22-ILP-1__pathlib.py", sha256: 4d13d3d778ea9e8dd48d86c85a5c496f6813da7418565195c5f3e127afe65813}
       safe:
         - {path: "controls/S2__22-ILP-1__argv.py", sha256: ceecb8991a48e39d5afab6d206fa879114c16296d3d5030f525f089fda7dc9f6}
     secure_samples:
@@ -51,6 +56,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__22-ILP-2__web.py", sha256: 1de3397fce6ceba096afe79fa6938a10c5382faa1dfabd8babe1e0f41fe45173}
+        - {path: "controls/V__22-ILP-2__fstring.py", sha256: 0b5bc1feb567040bc570dffc9402c08d31d3edd4bfd5f94f4d300a47e641f199}
+        - {path: "controls/V__22-ILP-2__send_file.py", sha256: 87cec2a4e0e83bb9f08745f0ddd30214be0f0c1a4a9c7a6438092d38513fae88}
       safe:
         - {path: "controls/S2__22-ILP-2__senddir.py", sha256: d6cdb3981bd46a6075720703c9898e68180889141e231639f85059631cbd992d}
     secure_samples:
@@ -79,6 +86,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__78-INS-1__argv.py", sha256: 6ffe92519839c6cdbde63f0e307ed131dad2dadcef3e623c2f77ec81fded6de5}
+        - {path: "controls/V__78-INS-1__fstring_shell.py", sha256: 500dd5084de974aff9df75e3815c5681736cdedf1fabc0450aa0bdfa53be9049}
+        - {path: "controls/V__78-INS-1__popen.py", sha256: ef4ea74505e13fcd32f8a498835271152d373b7a6577c6f19e51d5fe3c6af336}
       safe:
         - {path: "controls/S2__78-INS-1__list.py", sha256: e09bfbe88472d2ac0518d467d4b6b7349518dc757647e3405d32fedbdc19ff0d}
     secure_samples:
@@ -92,6 +101,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__78-INS-2__web.py", sha256: 69c4cdbb5ec6146feefbcfb8353f36e418531232e9114f864be27b4915b007b5}
+        - {path: "controls/V__78-INS-2__popen.py", sha256: 63bde530eacb58ac21f5744d9ef72d2dbd16023b5e349d0be8978fe41927a26d}
+        - {path: "controls/V__78-INS-2__subprocess.py", sha256: 8adb2dd609a5ac81415d0b5bf6a97177030358a9b4ee3b6438d05a037df7a5d7}
       safe:
         - {path: "controls/S2__78-INS-2__list.py", sha256: 37701c55af434751224bcfff931c0879c0377df01d11bc884f7af33054696657}
     secure_samples:
@@ -105,6 +116,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__78-INS-3__argv.py", sha256: c7b506cee6acb873eea1062ada7a6842f20bc9af127f12b7891640f92839fec6}
+        - {path: "controls/V__78-INS-3__format.py", sha256: a6c464b218226118194e46271cdb3816e19cc025f098d09e6f94d31b04d1b355}
+        - {path: "controls/V__78-INS-3__subprocess.py", sha256: adaa260faf1894be7df1008cd6f1c3719f4fd727da5116cd3b04c30158be69e0}
       safe:
         - {path: "controls/S2__78-INS-3__const.py", sha256: 60a827464530a2de948bbb3e35072e21334355bb52583c2c8f18164d175d2ad9}
     secure_samples:
@@ -118,6 +131,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__79-INI-1__web.py", sha256: 49626957dc03c457731184b06c93d1c2ed5f20af5c4c6da45af7967f5890c7dd}
+        - {path: "controls/V__79-INI-1__fstring.py", sha256: 12d2ca439a02cb89a43996e1023fdd0bc08a777df34f9f1be6f32a190189a9a2}
+        - {path: "controls/V__79-INI-1__make_response.py", sha256: e30967051c09bb553d0d582d3547ce9e4343af8d16e0fcb713ca762b11be0f4d}
       safe:
         - {path: "controls/S2__79-INI-1__escape.py", sha256: b853217377f409cfe0307560d41ffaaae21b143c99a3062bfd13fcda39af6dd4}
       blind_spot:
@@ -133,6 +148,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__79-INI-2__jinja.py", sha256: c4a1696c8deaf003e8eab87fffef21255717aa1a41b768a5fd94cac243956389}
+        - {path: "controls/V__79-INI-2__dictloader.py", sha256: 812d0127903b22949a0b779fed66019d2ef2739342158d29629071838dc65f07}
+        - {path: "controls/V__79-INI-2__from_string.py", sha256: 46652cf14149fbbb48c83716523e9188d89e28f859ff34442d3c15223f923708}
       safe:
         - {path: "controls/S2__79-INI-2__autoescape.py", sha256: c685e73fb757b44777936aee7e9c32edb63174792fe5abe432917cd3d64d3d4f}
     secure_samples:
@@ -146,6 +163,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__79-INI-3__web.py", sha256: 491786f0cfea67a7b2ccb225c31c5c74d6f278d13a9e5aa67bb7ee8319b83c72}
+        - {path: "controls/V__79-INI-3__concat.py", sha256: d8b5ddad1728b41e74cf6756297bf72da495f46d01b5cd3577f22a6eb0b10f5a}
+        - {path: "controls/V__79-INI-3__format.py", sha256: 7d7ab23a3fa96b8e0149a0cb99abf4eb9b4be1d5c6d53b69559d8f932c029bc7}
       safe:
         - {path: "controls/S2__79-INI-3__template.py", sha256: bc77dab04b38e2c4ba8f147ccc79ab6f8c4090eb5adc11ac15c28e18c2aaebd7}
     secure_samples:
@@ -159,6 +178,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__89-SQI-1__web.py", sha256: cb627c35cd21546d82b23c96b54f47e64582ebda38517ec734c2f12af001ea54}
+        - {path: "controls/V__89-SQI-1__format.py", sha256: 9087cfa2566986d65f8a177d34d232f66fe55e07c9bf043e3468dc12559f751d}
+        - {path: "controls/V__89-SQI-1__fstring.py", sha256: 74bd0d058903a9c21ddbfe6ef0a8bcb5a6e3661824bf8d535b36de85f541d294}
       safe:
         - {path: "controls/S2__89-SQI-1__param.py", sha256: d14729f73990d1e65c60fb6b235febf88907f3d5a2475d90050c95850f97eb04}
     secure_samples:
@@ -172,6 +193,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__89-SQI-2__web.py", sha256: 8ccc856fee06128659e52af2003ed6c95e87c4828aaf80f0bc9136fa291655d0}
+        - {path: "controls/V__89-SQI-2__concat.py", sha256: 462b7e017ef828ce65dbc2e7e828b2c1cb232cf42bce21739d39316d0c43b358}
+        - {path: "controls/V__89-SQI-2__percent.py", sha256: b662bde0eb867ec22351203e447411c2e76479f2cd3d4622557ca2f48fef19ee}
       safe:
         - {path: "controls/S2__89-SQI-2__param.py", sha256: 3b9d109924c277ea00ef823be8f1ddea8c0c0865ad649b0f158fc2c7a313a240}
     secure_samples:
@@ -185,6 +208,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__89-SQI-3__web.py", sha256: 9710e263517dc3508c270e1ce122cbcaee184c7e564a9e9d2659c0301977beb6}
+        - {path: "controls/V__89-SQI-3__fstring.py", sha256: 1a1f8bd96312ee47059d06ffe1d65c229f66c19aabc4b8d03d1882d6328e8513}
+        - {path: "controls/V__89-SQI-3__percent.py", sha256: 4ddce660347155ff3f96464c18773623e518aa923a4b979fbd135cbb0435819a}
       safe:
         - {path: "controls/S2__89-SQI-3__param.py", sha256: e697b4fe7dcc6adf5a518db3ce81282d0b5da1f4a80e5a136c4b3b57cc9535c5}
     secure_samples:
@@ -234,6 +259,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__502-DUD-1__yaml.py", sha256: 93af5872b7a12979cd4fc87f996e5c8d85bf0310252aa9b4d163fb4f1ae47baa}
+        - {path: "controls/V__502-DUD-1__marshal.py", sha256: 0505caa4016476d5110fcbdf9f83ff4cffd31e926a1fead3dd07b43e3697be03}
+        - {path: "controls/V__502-DUD-1__pickle.py", sha256: a09259823b95e456d23abb0eceb1cb5a262a6d48909e87a05bc514f2c2c500fd}
       safe:
         - {path: "controls/S2__502-DUD-1__safeload.py", sha256: 9b8697c872e52c80e934d522b2d7a02f570594bb0caabf1014911fdb0bed3864}
     secure_samples:
@@ -247,6 +274,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__502-DUD-2__yaml.py", sha256: fbe7535c5114e70ac12fa1828caac593c4c479a0292907711da95542746798e2}
+        - {path: "controls/V__502-DUD-2__marshal.py", sha256: c2ef45f086c4d40f2d3398d4f24d840b2a1107ad96bc15e7e10c6068513a0d7e}
+        - {path: "controls/V__502-DUD-2__pickle_stream.py", sha256: efe6e2d45383be1853e32035bff37616afc5142e072526d22d3eca0a773ff77f}
       safe:
         - {path: "controls/S2__502-DUD-2__json.py", sha256: 3d55a7e500513b9c06b22653f913983c2156788ca46ec67f90e43967fad8e926}
     secure_samples:
@@ -260,6 +289,8 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__502-DUD-3__pickle.py", sha256: ecffb18eafd5ec3d3f421f267f058cd2acc151f90e2deae1009a3bb2f0068b61}
+        - {path: "controls/V__502-DUD-3__marshal.py", sha256: fd809de9906d294f030cf8f4590d3fc3dc9d68b117d60d506dccc7e908a569ef}
+        - {path: "controls/V__502-DUD-3__yaml.py", sha256: f40427156d33dab4b4d93ece3472ba258b1c680bf7e093f8714fdeb4cab1cf5f}
       safe:
         - {path: "controls/S2__502-DUD-3__safeload.py", sha256: a1f2c558e5afdff3de9c00458aedaae315d1885d2cf119b7455f18ed30331e2c}
     secure_samples:
@@ -285,8 +316,12 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__732-IPA-1__osopen.py", sha256: b6b6115d08369ef6c6f3a91b5def0475939b0dc8b9111fbd6a60d26e141fdf3d}
+        - {path: "controls/V__732-IPA-1__chmod.py", sha256: d9c3087354a6fa7ecf2d12699cec3145e190a51675e8753e9f060de7a740aa0f}
+        - {path: "controls/V__732-IPA-1__chmod_variable.py", sha256: b8237a17a008e51a8f00853dd25eca7a4748019eff9c54242a3f7e1e5a82df4e}
       safe:
         - {path: "controls/S2__732-IPA-1__osopen.py", sha256: 47d40b40507dc33ed9f0b8d199f042dae97323afa6eb0994d7d8479ca9a9593e}
+      blind_spot:
+        - {path: "controls/B__732-IPA-1__fchmod.py", sha256: 68d12caaffc406f9eb9e8222b2357020e93446f967fcd5d402ae5c09872a1fbb}
     secure_samples:
       - {path: "CWE-732/CWE-732_IPA-1a.py", sha256: 71657546aab034faad7311f609a4e61fcf4571b0de5cf8e916b6797bc02d0196}
       - {path: "CWE-732/CWE-732_IPA-1b.py", sha256: 6f68a1188af7260268d196e044515a2ef8b7457ab3fd1c9751da5b5265d41f91}
@@ -297,8 +332,12 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__732-IPA-2__osopen.py", sha256: ed6f8b2a4937e8f6dbc98442836f6f602a272d2a993a8f98006cc69e87030558}
+        - {path: "controls/V__732-IPA-2__chmod.py", sha256: 2d04d7e5ada53dba2c3dd35f800b2941f6b404528a8e2444735566b64eeef1e3}
+        - {path: "controls/V__732-IPA-2__chmod_keyword.py", sha256: 5545685948267f9b94b7637f935b74fdd93cb4137afbe76ce22390f9261bef62}
       safe:
         - {path: "controls/S2__732-IPA-2__osopen.py", sha256: 40e7221df986024b320d45ea2d6cc089ad017cc5eaef5d4863dbc1c459914586}
+      blind_spot:
+        - {path: "controls/B__732-IPA-2__pathlib.py", sha256: a6554b3c0d93b844cde92a68c0fe7683d299a1825bf32792f4182909ceee965b}
     secure_samples:
       - {path: "CWE-732/CWE-732_IPA-2a.py", sha256: a29f693767d151c241326ac6ecaebed4d76114fa0940750d0bf8c4ad4f6ad248}
       - {path: "CWE-732/CWE-732_IPA-2b.py", sha256: 9157dc17490cbc21a1ece435f074b784c0c45ae74bdbaf11fc24bc69abc9e95e}
@@ -310,10 +349,14 @@ families:
     controls:
       vulnerable:
         - {path: "controls/V__732-IPA-3__chmod.py", sha256: 8ba5b817ab2d2b43c8f38104d6e45f88be5ebb9566accebc1a906e2746618a68}
+        - {path: "controls/V__732-IPA-3__chmod_keyword.py", sha256: 6ff18951eac37e9caf63ef3f9a107599a826df7d0a0fa23700606646fe8be4f4}
+        - {path: "controls/V__732-IPA-3__chmod_variable.py", sha256: 04433ef6963d3f7719eec8b6332810ddd62c41deaaca95f60d93260a441a5724}
       safe:
         - {path: "controls/S2__732-IPA-3__own.py", sha256: faea9566d5eda4bb17e653d8f2fa5760450908de9913e3b64a6770b2d993c8a5}
       blind_spot:
         - {path: "controls/B__732-IPA-3__chmod_symbolic.py", sha256: 29c798097a7350cc5b9502f1d83312e112b070f04dceb8ee6b946099535ab214}
+        - {path: "controls/B__732-IPA-3__fchmod.py", sha256: 0e76b24d6ddd053a33c77a892c43d0fe466c7b1f17b411d933424eb2dcf591d5}
+        - {path: "controls/B__732-IPA-3__pathlib.py", sha256: 93ec1533e55edccfe755c73ba127981493c5e02be71a75303d75607cb8d30d6f}
   - family_id: 798-UHC-1
     cwe: CWE-798
     target_rules: []

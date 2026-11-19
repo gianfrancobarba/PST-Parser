@@ -60,9 +60,11 @@ def test_vulnerable_and_safe_controls_are_usable(control: dict[str, str]) -> Non
 def test_the_controls_are_the_expected_set() -> None:
     kinds = [control["kind"] for control in CONTROLS]
     assert {kind: kinds.count(kind) for kind in set(kinds)} == {
-        "vulnerable": 21,
+        # Q-19 (19/11/2026): three modellable vulnerable idioms per calibrated family
+        # and four more blind spots of CWE-732 (os.fchmod, Path.chmod).
+        "vulnerable": 58,
         "safe": 20,
-        "blind-spot": 2,
+        "blind-spot": 6,
         "probe": 4,
     }
 
@@ -214,7 +216,14 @@ def test_a_decorator_without_a_web_framework_is_not_a_route() -> None:
 def test_blind_spot_controls_are_usable_but_not_modellable() -> None:
     blind = [control for control in CONTROLS if control["kind"] == "blind-spot"]
 
-    assert sorted(control["family_id"] for control in blind) == ["732-IPA-3", "79-INI-1"]
+    assert sorted(control["family_id"] for control in blind) == [
+        "732-IPA-1",
+        "732-IPA-2",
+        "732-IPA-3",
+        "732-IPA-3",
+        "732-IPA-3",
+        "79-INI-1",
+    ]
     for control in blind:
         assert check_usable(control["code"], control["family_id"]) == (True, ())
         assert modellable(control["code"], control["family_id"]) is False

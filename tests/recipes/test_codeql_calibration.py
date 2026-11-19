@@ -83,7 +83,7 @@ def test_the_bundle_is_the_pinned_version(config: CodeQLConfig) -> None:
 
 
 def test_every_control_is_extracted_and_analysed_without_errors(report: dict[str, Any]) -> None:
-    assert len([row for row in report["controls"] if row["kind"] != "secure-sample"]) == 47
+    assert len([row for row in report["controls"] if row["kind"] != "secure-sample"]) == 88
     for row in report["controls"]:
         assert row["extracted"] is True and row["errors"] == [], row["name"]
 
@@ -105,8 +105,8 @@ def test_target_queries_report_the_vulnerable_controls_of_the_calibrated_familie
         for row in report["controls"]
         if row["kind"] == "vulnerable" and row["family_id"] in calibrated
     ]
-    # 16 calibrated families hold 17 vulnerable controls (two for 22-ILP-1).
-    assert len(detected) == 17 and all(row["target_findings"] for row in detected)
+    # 16 calibrated families hold 48 vulnerable controls (three each since Q-19).
+    assert len(detected) == 48 and all(row["target_findings"] for row in detected)
 
 
 def test_the_provisional_calibration_is_reproduced_one_database_per_program(
@@ -115,11 +115,12 @@ def test_the_provisional_calibration_is_reproduced_one_database_per_program(
     # Values of the collection settings. The provisional calibration (one
     # shared database) also ran py/tarslip-extended, which is not in the
     # targeted suite: there the tar controls of 22-ILP-3 gave 21/21 and 1/20.
+    # Since Q-19 the cards hold 58 vulnerable controls (protocol/oracles/codeql-calibration.json).
     totals = report["totals"]
-    assert totals["vulnerable_detected_by_target_rules"] == [20, 21]
+    assert totals["vulnerable_detected_by_target_rules"] == [57, 58]
     tar = next(row for row in report["controls"] if row["name"].endswith("V__22-ILP-3__tar.py"))
     assert tar["target_findings"] == [] and report["families"]["22-ILP-3"]["observed"] == "excluded"
-    assert totals["vulnerable_flagged_by_general_suite"] == [13, 21]
+    assert totals["vulnerable_flagged_by_general_suite"] == [38, 58]
     assert totals["safe_flagged_by_target_rules"] == [0, 20]
     assert totals["safe_flagged_by_general_suite"] == [0, 20]
     if os.environ.get("PST_LLMSECEVAL_SECURE"):
@@ -133,7 +134,7 @@ def test_observed_states_are_the_declared_ones(report: dict[str, Any]) -> None:
     observed = [row["observed"] for row in report["families"].values()]
     assert observed.count("no-query") == 15
     # Blind spots are not reported: they document a limit of the analyser.
-    assert report["totals"]["blind_spots_detected"] == [0, 2]
+    assert report["totals"]["blind_spots_detected"] == [0, 6]
 
 
 def test_probes_behave_as_documented(report: dict[str, Any]) -> None:

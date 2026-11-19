@@ -378,15 +378,15 @@ def test_calibration_command_reports_and_fails_on_a_mismatch(
     result = CliRunner().invoke(app, arguments)
 
     assert result.exit_code == 1
-    assert "47 controls; target queries report 0 of 21 vulnerable controls" in result.output
+    assert "88 controls; target queries report 0 of 58 vulnerable controls" in result.output
     assert "families whose observed state differs" in result.output
     report = json.loads((tmp_path / "calibration" / "calibration.json").read_text("utf-8"))
-    assert len(report["controls"]) == 47
+    assert len(report["controls"]) == 88
     assert len(report["mismatches"]) == 19
     manifest = json.loads(
         (tmp_path / "calibration" / "empirical-calibrate-security_manifest.json").read_text("utf-8")
     )
-    assert manifest["controls"] == 47 and manifest["secure_samples_included"] is False
+    assert manifest["controls"] == 88 and manifest["secure_samples_included"] is False
     assert (
         manifest["calibration_sha256"]
         == hashlib.sha256((tmp_path / "calibration" / "calibration.json").read_bytes()).hexdigest()

@@ -1,0 +1,3220 @@
+{
+  "settings": {
+    "image": "python@sha256:b18992999dbe963a45a8a4da40ac2b1975be1a776d939d098c647482bcad5cba",
+    "bundle_sha256": "355b50aec18f2ac10e9d24364bef94a49b2a893072294f4a83867c7a16affb29",
+    "cli_version": "2.22.1",
+    "pack": "codeql/python-queries@1.6.0",
+    "general_suite": "python-code-scanning",
+    "targeted_suite": "python-security-extended",
+    "targeted_threat_model": "local",
+    "threads": 1,
+    "ram_mb": 2048
+  },
+  "oracle_versions": {
+    "general": "codeql-2.22.1/python-queries-1.6.0/python-code-scanning/remote/usability-rules-v2",
+    "targeted": "codeql-2.22.1/python-queries-1.6.0/python-security-extended+local/qmap-v1/usability-rules-v2/modelability-v1"
+  },
+  "controls": [
+    {
+      "identifier": "c_30d74560629f917a432992c5",
+      "name": "controls/V__20-IIV-1__regex.py",
+      "kind": "vulnerable",
+      "family_id": "20-IIV-1",
+      "sha256": "140ca744d5f412206231fedc9c307151a9e2e3c6a7062f4b7f9a1ed2e461f302",
+      "general_alerts": [
+        "py/incomplete-hostname-regexp@4",
+        "py/url-redirection@9"
+      ],
+      "targeted_alerts": [
+        "py/incomplete-hostname-regexp@4",
+        "py/url-redirection@9"
+      ],
+      "target_findings": [
+        "py/incomplete-hostname-regexp@4"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 107.9
+    },
+    {
+      "identifier": "c_f61e4cd0918609c48a678c91",
+      "name": "controls/V__20-IIV-1__fullmatch.py",
+      "kind": "vulnerable",
+      "family_id": "20-IIV-1",
+      "sha256": "17df3cf53113b0f29b92c2220e6e577c301b69a7c38cc9245d5505deab11c21b",
+      "general_alerts": [
+        "py/incomplete-hostname-regexp@7",
+        "py/url-redirection@8"
+      ],
+      "targeted_alerts": [
+        "py/incomplete-hostname-regexp@7",
+        "py/url-redirection@8"
+      ],
+      "target_findings": [
+        "py/incomplete-hostname-regexp@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 104.7
+    },
+    {
+      "identifier": "c_b1a1ba8c6085b4d85a818036",
+      "name": "controls/V__20-IIV-1__search.py",
+      "kind": "vulnerable",
+      "family_id": "20-IIV-1",
+      "sha256": "86c4a5ff5a088118de9c4998c30c5dda88545cb50beed13905e910334349239a",
+      "general_alerts": [
+        "py/incomplete-hostname-regexp@7",
+        "py/url-redirection@8"
+      ],
+      "targeted_alerts": [
+        "py/incomplete-hostname-regexp@7",
+        "py/url-redirection@8"
+      ],
+      "target_findings": [
+        "py/incomplete-hostname-regexp@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 108.0
+    },
+    {
+      "identifier": "c_3356db891777903161045b14",
+      "name": "controls/S2__20-IIV-1__regex.py",
+      "kind": "safe",
+      "family_id": "20-IIV-1",
+      "sha256": "d1de0cd0cec61476a3082c5943b237e2cde7e107979cea6b77c757e894035a57",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 104.7
+    },
+    {
+      "identifier": "c_226a5697d757fe8666ff5eeb",
+      "name": "cwe-20/CWE-20_IIV-1a.py",
+      "kind": "secure-sample",
+      "family_id": "20-IIV-1",
+      "sha256": "75ee1cdd2fd3c5fa67f92420f4d549b7ae6d93c6887cb7205b21a8628799ce49",
+      "general_alerts": [
+        "py/url-redirection@39"
+      ],
+      "targeted_alerts": [
+        "py/url-redirection@39"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 89.4
+    },
+    {
+      "identifier": "c_b4c79a59a8c5904a65cd4cf6",
+      "name": "cwe-20/CWE-20_IIV-1b.py",
+      "kind": "secure-sample",
+      "family_id": "20-IIV-1",
+      "sha256": "7d3fe6a66dc471dff97bcebb67f8b35285c098beb78e22dfe364a383fd1d0bc5",
+      "general_alerts": [
+        "py/url-redirection@39"
+      ],
+      "targeted_alerts": [
+        "py/url-redirection@39"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 89.5
+    },
+    {
+      "identifier": "c_022095eab8c0a950e6d2c9ba",
+      "name": "cwe-20/CWE-20_IIV-1c.py",
+      "kind": "secure-sample",
+      "family_id": "20-IIV-1",
+      "sha256": "76672f065321b07f8c4fd28fbf0d2da717219ffdbf71e1b6afc353bec024e3fc",
+      "general_alerts": [
+        "py/url-redirection@39"
+      ],
+      "targeted_alerts": [
+        "py/url-redirection@39"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 91.8
+    },
+    {
+      "identifier": "c_972e926e9d1dc6845afb54b9",
+      "name": "controls/V__20-IIV-2__substring.py",
+      "kind": "vulnerable",
+      "family_id": "20-IIV-2",
+      "sha256": "d32bdc9c881255a102e0ad3959e2cef74ff9f59ce6bcbe2d87702a8d0026c57c",
+      "general_alerts": [
+        "py/incomplete-url-substring-sanitization@6",
+        "py/url-redirection@7"
+      ],
+      "targeted_alerts": [
+        "py/incomplete-url-substring-sanitization@6",
+        "py/url-redirection@7"
+      ],
+      "target_findings": [
+        "py/incomplete-url-substring-sanitization@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 91.4
+    },
+    {
+      "identifier": "c_736262a02c4d88119c318354",
+      "name": "controls/V__20-IIV-2__netloc.py",
+      "kind": "vulnerable",
+      "family_id": "20-IIV-2",
+      "sha256": "95bb15b9d4a59e9592633c2c1573d37ab08d92d311b794cf87d5c98eaba9e45d",
+      "general_alerts": [
+        "py/incomplete-url-substring-sanitization@6",
+        "py/url-redirection@7"
+      ],
+      "targeted_alerts": [
+        "py/incomplete-url-substring-sanitization@6",
+        "py/url-redirection@7"
+      ],
+      "target_findings": [
+        "py/incomplete-url-substring-sanitization@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 100.3
+    },
+    {
+      "identifier": "c_2b4f408e43b60227d28f0a7c",
+      "name": "controls/V__20-IIV-2__startswith.py",
+      "kind": "vulnerable",
+      "family_id": "20-IIV-2",
+      "sha256": "c5d168daf431f8cd8150b5d9be21f2eff929addcb22b084b92dc4e4686a24234",
+      "general_alerts": [
+        "py/incomplete-url-substring-sanitization@6",
+        "py/url-redirection@7"
+      ],
+      "targeted_alerts": [
+        "py/incomplete-url-substring-sanitization@6",
+        "py/url-redirection@7"
+      ],
+      "target_findings": [
+        "py/incomplete-url-substring-sanitization@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 100.3
+    },
+    {
+      "identifier": "c_bbf03aec5f36d395d258be44",
+      "name": "controls/S2__20-IIV-2__netloc.py",
+      "kind": "safe",
+      "family_id": "20-IIV-2",
+      "sha256": "1d886991cf2b4fea86f6b9bf197fd41f03329c3579c9e441405ebf875ba6f646",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 99.0
+    },
+    {
+      "identifier": "c_db9d71e3a99edb668a430d03",
+      "name": "cwe-20/CWE-20_IIV-2a.py",
+      "kind": "secure-sample",
+      "family_id": "20-IIV-2",
+      "sha256": "f5e41307d4f99bf919d440f27d47e2d4e9151fa4c682d611435ca4fba69e127d",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 98.6
+    },
+    {
+      "identifier": "c_fb734ed4ab31bcbbb6738a05",
+      "name": "cwe-20/CWE-20_IIV-2b.py",
+      "kind": "secure-sample",
+      "family_id": "20-IIV-2",
+      "sha256": "b962131db4d50a1f9c79babbd6e669ea67b8bd65e7b49a7b37176009f1d9c933",
+      "general_alerts": [
+        "py/url-redirection@33"
+      ],
+      "targeted_alerts": [
+        "py/url-redirection@33"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 93.1
+    },
+    {
+      "identifier": "c_c684c48d56fae49015170b46",
+      "name": "cwe-20/CWE-20_IIV-2c.py",
+      "kind": "secure-sample",
+      "family_id": "20-IIV-2",
+      "sha256": "417f3a3ef3540bb06e5736b75e044fd4b89245be577288bf10efe33e6f3939f8",
+      "general_alerts": [
+        "py/url-redirection@33"
+      ],
+      "targeted_alerts": [
+        "py/url-redirection@33"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 93.0
+    },
+    {
+      "identifier": "c_30c7766eaa014a0410d05e81",
+      "name": "controls/V__22-ILP-1__argv.py",
+      "kind": "vulnerable",
+      "family_id": "22-ILP-1",
+      "sha256": "bbd9d64c6fffdfc4789826f10ef7e45270c3f2c71e718bf7a9715bc98f5c1b24",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/path-injection@5"
+      ],
+      "target_findings": [
+        "py/path-injection@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 96.4
+    },
+    {
+      "identifier": "c_520f546d52569d17dd49da0f",
+      "name": "controls/V__22-ILP-1__web.py",
+      "kind": "vulnerable",
+      "family_id": "22-ILP-1",
+      "sha256": "6a56763cfe2fe032c12884e7f46a0c594d785420ac67dcd23d27e41a6e4a7590",
+      "general_alerts": [
+        "py/path-injection@7"
+      ],
+      "targeted_alerts": [
+        "py/path-injection@7",
+        "py/reflective-xss@8"
+      ],
+      "target_findings": [
+        "py/path-injection@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 96.6
+    },
+    {
+      "identifier": "c_666acf57ac99244ac201e858",
+      "name": "controls/V__22-ILP-1__pathlib.py",
+      "kind": "vulnerable",
+      "family_id": "22-ILP-1",
+      "sha256": "4d13d3d778ea9e8dd48d86c85a5c496f6813da7418565195c5f3e127afe65813",
+      "general_alerts": [
+        "py/path-injection@7"
+      ],
+      "targeted_alerts": [
+        "py/path-injection@7"
+      ],
+      "target_findings": [
+        "py/path-injection@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 94.9
+    },
+    {
+      "identifier": "c_a4e335d5069e6a37f32f7b5c",
+      "name": "controls/S2__22-ILP-1__argv.py",
+      "kind": "safe",
+      "family_id": "22-ILP-1",
+      "sha256": "ceecb8991a48e39d5afab6d206fa879114c16296d3d5030f525f089fda7dc9f6",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 94.5
+    },
+    {
+      "identifier": "c_7b01104352f4bf5ebd524edb",
+      "name": "cwe-22/CWE-22_ILP-1a.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-1",
+      "sha256": "1c17e819d8ae7921860b73d6e1053247748674712a505b25480fa7b979d15f38",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 93.0
+    },
+    {
+      "identifier": "c_db5e5b40b47ab91bc702300a",
+      "name": "cwe-22/CWE-22_ILP-1b.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-1",
+      "sha256": "16873f488b7eb62866f6aa9707eea29aec9bc64f93ffa3816359a29ca029ce0a",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 92.8
+    },
+    {
+      "identifier": "c_3d372a7a63bd97b7c217ab11",
+      "name": "cwe-22/CWE-22_ILP-1c.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-1",
+      "sha256": "b60ab4543f90a5250bda6fb3efd0354e8bfb8f6c6bae1473bb048d65d344de8c",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 122.8
+    },
+    {
+      "identifier": "c_ecdc329814d8edb181c6aa86",
+      "name": "controls/V__22-ILP-2__web.py",
+      "kind": "vulnerable",
+      "family_id": "22-ILP-2",
+      "sha256": "1de3397fce6ceba096afe79fa6938a10c5382faa1dfabd8babe1e0f41fe45173",
+      "general_alerts": [
+        "py/path-injection@6"
+      ],
+      "targeted_alerts": [
+        "py/path-injection@6",
+        "py/reflective-xss@6"
+      ],
+      "target_findings": [
+        "py/path-injection@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 123.3
+    },
+    {
+      "identifier": "c_4c4421a1b2f804f5e771d13e",
+      "name": "controls/V__22-ILP-2__fstring.py",
+      "kind": "vulnerable",
+      "family_id": "22-ILP-2",
+      "sha256": "0b5bc1feb567040bc570dffc9402c08d31d3edd4bfd5f94f4d300a47e641f199",
+      "general_alerts": [
+        "py/path-injection@5"
+      ],
+      "targeted_alerts": [
+        "py/path-injection@5",
+        "py/reflective-xss@6"
+      ],
+      "target_findings": [
+        "py/path-injection@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 118.3
+    },
+    {
+      "identifier": "c_1d286bcc033c76051fb4c369",
+      "name": "controls/V__22-ILP-2__send_file.py",
+      "kind": "vulnerable",
+      "family_id": "22-ILP-2",
+      "sha256": "87cec2a4e0e83bb9f08745f0ddd30214be0f0c1a4a9c7a6438092d38513fae88",
+      "general_alerts": [
+        "py/path-injection@7"
+      ],
+      "targeted_alerts": [
+        "py/path-injection@7"
+      ],
+      "target_findings": [
+        "py/path-injection@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 117.1
+    },
+    {
+      "identifier": "c_8a4c917ee1378b0ca31a0b0b",
+      "name": "controls/S2__22-ILP-2__senddir.py",
+      "kind": "safe",
+      "family_id": "22-ILP-2",
+      "sha256": "d6cdb3981bd46a6075720703c9898e68180889141e231639f85059631cbd992d",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 160.4
+    },
+    {
+      "identifier": "c_1fa25374d42b81ff0f0874ed",
+      "name": "cwe-22/CWE-22_ILP-2a.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-2",
+      "sha256": "f501aa4e281d4bdb8ed405b7705facaa89e29c93709f9d50a63aae274013313a",
+      "general_alerts": [
+        "py/path-injection@25"
+      ],
+      "targeted_alerts": [
+        "py/path-injection@25"
+      ],
+      "target_findings": [
+        "py/path-injection@25"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 160.9
+    },
+    {
+      "identifier": "c_60a14cf38711c471c0b53468",
+      "name": "cwe-22/CWE-22_ILP-2b.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-2",
+      "sha256": "1b6781bbd57ccdd05100e62556dec005e68bbdf3b33aef1d845acbd4288ed602",
+      "general_alerts": [
+        "py/path-injection@24",
+        "py/path-injection@28"
+      ],
+      "targeted_alerts": [
+        "py/path-injection@24",
+        "py/path-injection@28"
+      ],
+      "target_findings": [
+        "py/path-injection@24",
+        "py/path-injection@28"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 161.8
+    },
+    {
+      "identifier": "c_ebb4265aa09968963b15aa9f",
+      "name": "cwe-22/CWE-22_ILP-2c.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-2",
+      "sha256": "4763acf4257a5b7871679160d770bcee30427fb05d7d91192a8b19580105309c",
+      "general_alerts": [
+        "py/path-injection@25"
+      ],
+      "targeted_alerts": [
+        "py/path-injection@25",
+        "py/reflective-xss@27"
+      ],
+      "target_findings": [
+        "py/path-injection@25"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 160.7
+    },
+    {
+      "identifier": "c_95a1829e8d7e2b2078e8f033",
+      "name": "controls/V__22-ILP-3__tar.py",
+      "kind": "vulnerable",
+      "family_id": "22-ILP-3",
+      "sha256": "5522e97b324a0d8e4ee1ef02998a5d48c35ac73ca26c667b1808ef83c8969f2b",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 169.2
+    },
+    {
+      "identifier": "c_fa6c035661ed6e14be6c709f",
+      "name": "controls/S2__22-ILP-3__filter.py",
+      "kind": "safe",
+      "family_id": "22-ILP-3",
+      "sha256": "2b9273c06b6b8ad21e2273d33603aff9073e1af7dff700d02a6b47cc6a8c9c12",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 167.7
+    },
+    {
+      "identifier": "c_ed3fa024f787d6f6b27ba277",
+      "name": "cwe-22/CWE-22_ILP-3a.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-3",
+      "sha256": "da971df4faa3af5129aa84e0455959c9f06853b741f2ccc5f7525299c3733cc4",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 169.6
+    },
+    {
+      "identifier": "c_bd980895099b541dbbdb3ba2",
+      "name": "cwe-22/CWE-22_ILP-3b.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-3",
+      "sha256": "379feb708d83039593bd6288e2cd64dbf08a24fea6a96a9904184765cdc8beb3",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 168.7
+    },
+    {
+      "identifier": "c_4a54ba4c2726ccc0092030c1",
+      "name": "cwe-22/CWE-22_ILP-3c.py",
+      "kind": "secure-sample",
+      "family_id": "22-ILP-3",
+      "sha256": "d3059207e7d01ca4e96e077a7e81ab1e3baa1308a34ca256ce032cccbfd05eb9",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 138.7
+    },
+    {
+      "identifier": "c_8c0e6b4e76d694eaa7b37d9e",
+      "name": "controls/V__78-INS-1__argv.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-1",
+      "sha256": "6ffe92519839c6cdbde63f0e307ed131dad2dadcef3e623c2f77ec81fded6de5",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@4"
+      ],
+      "target_findings": [
+        "py/command-line-injection@4"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 138.3
+    },
+    {
+      "identifier": "c_348a380626466928814ec25f",
+      "name": "controls/V__78-INS-1__fstring_shell.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-1",
+      "sha256": "500dd5084de974aff9df75e3815c5681736cdedf1fabc0450aa0bdfa53be9049",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@4"
+      ],
+      "target_findings": [
+        "py/command-line-injection@4"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.2
+    },
+    {
+      "identifier": "c_1e725d1d2ebb88e204b777f9",
+      "name": "controls/V__78-INS-1__popen.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-1",
+      "sha256": "ef4ea74505e13fcd32f8a498835271152d373b7a6577c6f19e51d5fe3c6af336",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@4"
+      ],
+      "target_findings": [
+        "py/command-line-injection@4"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 140.9
+    },
+    {
+      "identifier": "c_24c8c215385aef567be9d724",
+      "name": "controls/S2__78-INS-1__list.py",
+      "kind": "safe",
+      "family_id": "78-INS-1",
+      "sha256": "e09bfbe88472d2ac0518d467d4b6b7349518dc757647e3405d32fedbdc19ff0d",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 148.8
+    },
+    {
+      "identifier": "c_64cafbe851f4550010d706fa",
+      "name": "cwe-78/CWE-78_INS-1a.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-1",
+      "sha256": "fe28dc338b476733b49ab9689056658cfe5bfc84dc2bcfe9e284ae3cf263bde3",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@32"
+      ],
+      "target_findings": [
+        "py/command-line-injection@32"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 151.1
+    },
+    {
+      "identifier": "c_556cc1330d3a58bf46ed455c",
+      "name": "cwe-78/CWE-78_INS-1b.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-1",
+      "sha256": "72c699e8e30e36fae26ddcc9d717fd9fceb71c565f07b7c5d8c891b21ad37b31",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@33"
+      ],
+      "target_findings": [
+        "py/command-line-injection@33"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 146.2
+    },
+    {
+      "identifier": "c_62556da93cb2fca36bc0be25",
+      "name": "cwe-78/CWE-78_INS-1c.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-1",
+      "sha256": "820656d966444d49b83c6e798abdcbdd76f869eff440aab1932afddcd4a8afd9",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@33"
+      ],
+      "target_findings": [
+        "py/command-line-injection@33"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 144.6
+    },
+    {
+      "identifier": "c_6139160ceb3792c7720d474b",
+      "name": "controls/V__78-INS-2__web.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-2",
+      "sha256": "69c4cdbb5ec6146feefbcfb8353f36e418531232e9114f864be27b4915b007b5",
+      "general_alerts": [
+        "py/command-line-injection@7"
+      ],
+      "targeted_alerts": [
+        "py/command-line-injection@7"
+      ],
+      "target_findings": [
+        "py/command-line-injection@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 146.0
+    },
+    {
+      "identifier": "c_3bd06541b99dff0d062d7f37",
+      "name": "controls/V__78-INS-2__popen.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-2",
+      "sha256": "63bde530eacb58ac21f5744d9ef72d2dbd16023b5e349d0be8978fe41927a26d",
+      "general_alerts": [
+        "py/command-line-injection@6"
+      ],
+      "targeted_alerts": [
+        "py/command-line-injection@6"
+      ],
+      "target_findings": [
+        "py/command-line-injection@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 143.8
+    },
+    {
+      "identifier": "c_d6de2534575426e5c8f9ca1e",
+      "name": "controls/V__78-INS-2__subprocess.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-2",
+      "sha256": "8adb2dd609a5ac81415d0b5bf6a97177030358a9b4ee3b6438d05a037df7a5d7",
+      "general_alerts": [
+        "py/command-line-injection@7"
+      ],
+      "targeted_alerts": [
+        "py/command-line-injection@7"
+      ],
+      "target_findings": [
+        "py/command-line-injection@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 148.0
+    },
+    {
+      "identifier": "c_b8c97bf566ee6c79ff0e5ff1",
+      "name": "controls/S2__78-INS-2__list.py",
+      "kind": "safe",
+      "family_id": "78-INS-2",
+      "sha256": "37701c55af434751224bcfff931c0879c0377df01d11bc884f7af33054696657",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 147.7
+    },
+    {
+      "identifier": "c_ce4a4e71593cb9445dc622c3",
+      "name": "cwe-78/CWE-78_INS-2a.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-2",
+      "sha256": "06645b3ad98be474e871e19be9ccbef26d50458893adfd386442591bf70a5b38",
+      "general_alerts": [
+        "py/stack-trace-exposure@35",
+        "py/stack-trace-exposure@37"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@35",
+        "py/stack-trace-exposure@37"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 150.6
+    },
+    {
+      "identifier": "c_876912b6f0dee4bd43512564",
+      "name": "cwe-78/CWE-78_INS-2b.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-2",
+      "sha256": "e6c5fb8da7812cd1994eabf31ff2f7382cbeca7a5ad53d36d9423f2a4f58a3e7",
+      "general_alerts": [
+        "py/stack-trace-exposure@35",
+        "py/stack-trace-exposure@37"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@35",
+        "py/stack-trace-exposure@37"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 149.4
+    },
+    {
+      "identifier": "c_215e823b26c87e85a6bb1d6b",
+      "name": "cwe-78/CWE-78_INS-2c.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-2",
+      "sha256": "6424e50de8ce16dbcc3e6422abd8911d936fc47e79ef3f2c7333552430839ec2",
+      "general_alerts": [
+        "py/reflective-xss@35",
+        "py/reflective-xss@37",
+        "py/stack-trace-exposure@39",
+        "py/stack-trace-exposure@41"
+      ],
+      "targeted_alerts": [
+        "py/reflective-xss@35",
+        "py/reflective-xss@37",
+        "py/stack-trace-exposure@39",
+        "py/stack-trace-exposure@41"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 155.7
+    },
+    {
+      "identifier": "c_90e2ceacc665c19cdd822b5c",
+      "name": "controls/V__78-INS-3__argv.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-3",
+      "sha256": "c7b506cee6acb873eea1062ada7a6842f20bc9af127f12b7891640f92839fec6",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@4"
+      ],
+      "target_findings": [
+        "py/command-line-injection@4"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 154.7
+    },
+    {
+      "identifier": "c_9f3a05828eb13904fdcd25ff",
+      "name": "controls/V__78-INS-3__format.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-3",
+      "sha256": "a6c464b218226118194e46271cdb3816e19cc025f098d09e6f94d31b04d1b355",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@3"
+      ],
+      "target_findings": [
+        "py/command-line-injection@3"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.5
+    },
+    {
+      "identifier": "c_9d9c7775d46cea0eec018bfa",
+      "name": "controls/V__78-INS-3__subprocess.py",
+      "kind": "vulnerable",
+      "family_id": "78-INS-3",
+      "sha256": "adaa260faf1894be7df1008cd6f1c3719f4fd727da5116cd3b04c30158be69e0",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/command-line-injection@3"
+      ],
+      "target_findings": [
+        "py/command-line-injection@3"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.4
+    },
+    {
+      "identifier": "c_a96f61b6cf75b0c443e16c89",
+      "name": "controls/S2__78-INS-3__const.py",
+      "kind": "safe",
+      "family_id": "78-INS-3",
+      "sha256": "60a827464530a2de948bbb3e35072e21334355bb52583c2c8f18164d175d2ad9",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 146.2
+    },
+    {
+      "identifier": "c_a9ef0e3a7d87573256633861",
+      "name": "cwe-78/CWE-78_INS-3a.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-3",
+      "sha256": "7ad10c2f54caee20736d97bf421b4c4b4984d90cbf19f835fcb83c550102ae2c",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 145.8
+    },
+    {
+      "identifier": "c_ad5cd94bea00e1a951c5e4a5",
+      "name": "cwe-78/CWE-78_INS-3b.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-3",
+      "sha256": "788c3b7c2543c434eee46f3d8f8882b416ee12b318d3bcd084fabc6f31036352",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.8
+    },
+    {
+      "identifier": "c_0a2be14d307015f11b91ef40",
+      "name": "cwe-78/CWE-78_INS-3c.py",
+      "kind": "secure-sample",
+      "family_id": "78-INS-3",
+      "sha256": "1ab9c1bc0b971ac30fc3858c2c09a517eab2db44d982f31dc0633fbae45145d6",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.7
+    },
+    {
+      "identifier": "c_adcacc0f8b4b1a8ad69fc8b6",
+      "name": "controls/V__79-INI-1__web.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-1",
+      "sha256": "49626957dc03c457731184b06c93d1c2ed5f20af5c4c6da45af7967f5890c7dd",
+      "general_alerts": [
+        "py/reflective-xss@6"
+      ],
+      "targeted_alerts": [
+        "py/reflective-xss@6"
+      ],
+      "target_findings": [
+        "py/reflective-xss@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 142.8
+    },
+    {
+      "identifier": "c_9e49b4a916c14710675e7a00",
+      "name": "controls/V__79-INI-1__fstring.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-1",
+      "sha256": "12d2ca439a02cb89a43996e1023fdd0bc08a777df34f9f1be6f32a190189a9a2",
+      "general_alerts": [
+        "py/reflective-xss@6"
+      ],
+      "targeted_alerts": [
+        "py/reflective-xss@6"
+      ],
+      "target_findings": [
+        "py/reflective-xss@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 142.2
+    },
+    {
+      "identifier": "c_e00781f10b8f52aa3852a344",
+      "name": "controls/V__79-INI-1__make_response.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-1",
+      "sha256": "e30967051c09bb553d0d582d3547ce9e4343af8d16e0fcb713ca762b11be0f4d",
+      "general_alerts": [
+        "py/reflective-xss@6"
+      ],
+      "targeted_alerts": [
+        "py/reflective-xss@6"
+      ],
+      "target_findings": [
+        "py/reflective-xss@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 143.5
+    },
+    {
+      "identifier": "c_abdee9fba025c077eb7e00fb",
+      "name": "controls/S2__79-INI-1__escape.py",
+      "kind": "safe",
+      "family_id": "79-INI-1",
+      "sha256": "b853217377f409cfe0307560d41ffaaae21b143c99a3062bfd13fcda39af6dd4",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 142.9
+    },
+    {
+      "identifier": "c_bd51dffd8e78c0eb00dba9d7",
+      "name": "controls/B__79-INI-1__streams.py",
+      "kind": "blind-spot",
+      "family_id": "79-INI-1",
+      "sha256": "ebe1ccfd1041c73567041ab42b555ade9dcc7f30ca5d647e50bdd79f1fe6de52",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 139.3
+    },
+    {
+      "identifier": "c_e7f6d341cf3232809c0d6a30",
+      "name": "cwe-79/CWE-79_INI-1a.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-1",
+      "sha256": "225ac57f581795157a361bf967aa2230f96c40ded2bd420ec88baaf79ff38d87",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 139.9
+    },
+    {
+      "identifier": "c_072eea0b454f8d778e3cfcaa",
+      "name": "cwe-79/CWE-79_INI-1b.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-1",
+      "sha256": "2a18eb9280580c7817d822024069cd5ce0ac2b4ca5137d2021239a0a3394ac94",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 139.6
+    },
+    {
+      "identifier": "c_4f3c2a034d58a9b2c7b61c2e",
+      "name": "cwe-79/CWE-79_INI-1c.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-1",
+      "sha256": "58bae5a37fb076760b8d75dcedd3afb214de32ce9633b64194ee42cc12703d9d",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 138.8
+    },
+    {
+      "identifier": "c_fa6ef20ff1d17223fd927722",
+      "name": "controls/V__79-INI-2__jinja.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-2",
+      "sha256": "c4a1696c8deaf003e8eab87fffef21255717aa1a41b768a5fd94cac243956389",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/jinja2/autoescape-false@4"
+      ],
+      "target_findings": [
+        "py/jinja2/autoescape-false@4"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 140.7
+    },
+    {
+      "identifier": "c_96cdf684be8a3c95e8d598eb",
+      "name": "controls/V__79-INI-2__dictloader.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-2",
+      "sha256": "812d0127903b22949a0b779fed66019d2ef2739342158d29629071838dc65f07",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/jinja2/autoescape-false@4"
+      ],
+      "target_findings": [
+        "py/jinja2/autoescape-false@4"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 139.6
+    },
+    {
+      "identifier": "c_7b5f837431449e61929e8f28",
+      "name": "controls/V__79-INI-2__from_string.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-2",
+      "sha256": "46652cf14149fbbb48c83716523e9188d89e28f859ff34442d3c15223f923708",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/jinja2/autoescape-false@4"
+      ],
+      "target_findings": [
+        "py/jinja2/autoescape-false@4"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 137.4
+    },
+    {
+      "identifier": "c_029eb2286ccf873a0da12a97",
+      "name": "controls/S2__79-INI-2__autoescape.py",
+      "kind": "safe",
+      "family_id": "79-INI-2",
+      "sha256": "c685e73fb757b44777936aee7e9c32edb63174792fe5abe432917cd3d64d3d4f",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 137.2
+    },
+    {
+      "identifier": "c_c8b1db24a5a5eafc19d1ee0e",
+      "name": "cwe-79/CWE-79_INI-2a.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-2",
+      "sha256": "9da6b4db36676490947a8d2de0934be882c395c518527e89c7ab8db7752ee5b1",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.7
+    },
+    {
+      "identifier": "c_4a5d6e94cf5a09889d5038b4",
+      "name": "cwe-79/CWE-79_INI-2b.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-2",
+      "sha256": "9da6b4db36676490947a8d2de0934be882c395c518527e89c7ab8db7752ee5b1",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.7
+    },
+    {
+      "identifier": "c_1dc3a9281b269fb47428aca2",
+      "name": "cwe-79/CWE-79_INI-2c.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-2",
+      "sha256": "9ba0f766024b2fd23ba419b6842c963a4f565144a9f680897d50819bba942356",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.3
+    },
+    {
+      "identifier": "c_f6ea66427d5048b872c436a3",
+      "name": "controls/V__79-INI-3__web.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-3",
+      "sha256": "491786f0cfea67a7b2ccb225c31c5c74d6f278d13a9e5aa67bb7ee8319b83c72",
+      "general_alerts": [
+        "py/reflective-xss@5"
+      ],
+      "targeted_alerts": [
+        "py/reflective-xss@5"
+      ],
+      "target_findings": [
+        "py/reflective-xss@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.7
+    },
+    {
+      "identifier": "c_ab77ebc25beb8e8270f5682f",
+      "name": "controls/V__79-INI-3__concat.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-3",
+      "sha256": "d8b5ddad1728b41e74cf6756297bf72da495f46d01b5cd3577f22a6eb0b10f5a",
+      "general_alerts": [
+        "py/reflective-xss@5"
+      ],
+      "targeted_alerts": [
+        "py/reflective-xss@5"
+      ],
+      "target_findings": [
+        "py/reflective-xss@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 130.9
+    },
+    {
+      "identifier": "c_94a0ce4d6ebc3ec79d041ade",
+      "name": "controls/V__79-INI-3__format.py",
+      "kind": "vulnerable",
+      "family_id": "79-INI-3",
+      "sha256": "7d7ab23a3fa96b8e0149a0cb99abf4eb9b4be1d5c6d53b69559d8f932c029bc7",
+      "general_alerts": [
+        "py/reflective-xss@5"
+      ],
+      "targeted_alerts": [
+        "py/reflective-xss@5"
+      ],
+      "target_findings": [
+        "py/reflective-xss@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 130.3
+    },
+    {
+      "identifier": "c_251af99a8d8f0765f976d460",
+      "name": "controls/S2__79-INI-3__template.py",
+      "kind": "safe",
+      "family_id": "79-INI-3",
+      "sha256": "bc77dab04b38e2c4ba8f147ccc79ab6f8c4090eb5adc11ac15c28e18c2aaebd7",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 139.2
+    },
+    {
+      "identifier": "c_ebb71629b18489e21d1cdcd7",
+      "name": "cwe-79/CWE-79_INI-3a.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-3",
+      "sha256": "9a6b070e5e67ae8de920f52d2a724d7c91f7c19984b3899029f6dff0913052a3",
+      "general_alerts": [
+        "py/flask-debug@28"
+      ],
+      "targeted_alerts": [
+        "py/flask-debug@28"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 138.8
+    },
+    {
+      "identifier": "c_d33120656e7f3ac0ca61fbc1",
+      "name": "cwe-79/CWE-79_INI-3b.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-3",
+      "sha256": "b3b8f18e569b5f323f6cf276f4e02931fbee78c3f0e443208a135a38a700c45b",
+      "general_alerts": [
+        "py/flask-debug@28"
+      ],
+      "targeted_alerts": [
+        "py/flask-debug@28"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 133.9
+    },
+    {
+      "identifier": "c_dfa4092bf3f1274b22838b68",
+      "name": "cwe-79/CWE-79_INI-3c.py",
+      "kind": "secure-sample",
+      "family_id": "79-INI-3",
+      "sha256": "cd2036e1960c199a2eec14b453e0d4df32dbf6453d233628212d53983a0d3d74",
+      "general_alerts": [
+        "py/flask-debug@27"
+      ],
+      "targeted_alerts": [
+        "py/flask-debug@27"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 134.3
+    },
+    {
+      "identifier": "c_452cf6ddca8820128a2a80fc",
+      "name": "controls/V__89-SQI-1__web.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-1",
+      "sha256": "cb627c35cd21546d82b23c96b54f47e64582ebda38517ec734c2f12af001ea54",
+      "general_alerts": [
+        "py/sql-injection@9",
+        "py/sql-injection@11"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@9",
+        "py/sql-injection@11"
+      ],
+      "target_findings": [
+        "py/sql-injection@9",
+        "py/sql-injection@11"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.7
+    },
+    {
+      "identifier": "c_9231d1b0a8127d15a7df5ec2",
+      "name": "controls/V__89-SQI-1__format.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-1",
+      "sha256": "9087cfa2566986d65f8a177d34d232f66fe55e07c9bf043e3468dc12559f751d",
+      "general_alerts": [
+        "py/sql-injection@9",
+        "py/sql-injection@11"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@9",
+        "py/sql-injection@11"
+      ],
+      "target_findings": [
+        "py/sql-injection@9",
+        "py/sql-injection@11"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.6
+    },
+    {
+      "identifier": "c_d1a2f2126fd23c9a2d2d22af",
+      "name": "controls/V__89-SQI-1__fstring.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-1",
+      "sha256": "74bd0d058903a9c21ddbfe6ef0a8bcb5a6e3661824bf8d535b36de85f541d294",
+      "general_alerts": [
+        "py/sql-injection@8"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@8"
+      ],
+      "target_findings": [
+        "py/sql-injection@8"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.5
+    },
+    {
+      "identifier": "c_1e7cfcd59ce11fcb9540209e",
+      "name": "controls/S2__89-SQI-1__param.py",
+      "kind": "safe",
+      "family_id": "89-SQI-1",
+      "sha256": "d14729f73990d1e65c60fb6b235febf88907f3d5a2475d90050c95850f97eb04",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 140.5
+    },
+    {
+      "identifier": "c_c29decbd04776869a8602ab1",
+      "name": "cwe-89/CWE-89_SQI-1a.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-1",
+      "sha256": "cea6f63727256acb7aa4b80db9e862aae610ca9608c70cb28e4c56526818d967",
+      "general_alerts": [
+        "py/polynomial-redos@20"
+      ],
+      "targeted_alerts": [
+        "py/polynomial-redos@20"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.9
+    },
+    {
+      "identifier": "c_694dff6cabc751345f97c4dd",
+      "name": "cwe-89/CWE-89_SQI-1b.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-1",
+      "sha256": "bb26a0d0ce8d08828519fc149f78c94fdd2d7e71c2e905e6720f0b055eb0c36f",
+      "general_alerts": [
+        "py/polynomial-redos@20"
+      ],
+      "targeted_alerts": [
+        "py/polynomial-redos@20"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.8
+    },
+    {
+      "identifier": "c_1625a1797bcdbcdf1944ae97",
+      "name": "cwe-89/CWE-89_SQI-1c.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-1",
+      "sha256": "fad9028657ada41dc1bab40271e1dc213c6dfd2f51118dd78ed8e99b42829eb1",
+      "general_alerts": [
+        "py/polynomial-redos@19"
+      ],
+      "targeted_alerts": [
+        "py/polynomial-redos@19"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 144.8
+    },
+    {
+      "identifier": "c_e0b85a5933cbf0d907ea78c5",
+      "name": "controls/V__89-SQI-2__web.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-2",
+      "sha256": "8ccc856fee06128659e52af2003ed6c95e87c4828aaf80f0bc9136fa291655d0",
+      "general_alerts": [
+        "py/sql-injection@9"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@9"
+      ],
+      "target_findings": [
+        "py/sql-injection@9"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 143.9
+    },
+    {
+      "identifier": "c_c485eda4528edf7be1f8390c",
+      "name": "controls/V__89-SQI-2__concat.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-2",
+      "sha256": "462b7e017ef828ce65dbc2e7e828b2c1cb232cf42bce21739d39316d0c43b358",
+      "general_alerts": [
+        "py/sql-injection@8"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@8"
+      ],
+      "target_findings": [
+        "py/sql-injection@8"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.9
+    },
+    {
+      "identifier": "c_f3ef47172df71f35d42f4207",
+      "name": "controls/V__89-SQI-2__percent.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-2",
+      "sha256": "b662bde0eb867ec22351203e447411c2e76479f2cd3d4622557ca2f48fef19ee",
+      "general_alerts": [
+        "py/sql-injection@9"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@9"
+      ],
+      "target_findings": [
+        "py/sql-injection@9"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.8
+    },
+    {
+      "identifier": "c_0d6ce1faeed97e8c5d5f1900",
+      "name": "controls/S2__89-SQI-2__param.py",
+      "kind": "safe",
+      "family_id": "89-SQI-2",
+      "sha256": "3b9d109924c277ea00ef823be8f1ddea8c0c0865ad649b0f158fc2c7a313a240",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 143.3
+    },
+    {
+      "identifier": "c_8dee15e7697a56ac4f26aac8",
+      "name": "cwe-89/CWE-89_SQI-2a.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-2",
+      "sha256": "db79d29c30251bf60903644df67c5afe29c96b87c9ab95df924be32bf891a913",
+      "general_alerts": [
+        "py/stack-trace-exposure@39"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@39"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 143.5
+    },
+    {
+      "identifier": "c_d76dae4de1f6879bd334d71b",
+      "name": "cwe-89/CWE-89_SQI-2b.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-2",
+      "sha256": "f0d102c68b86eb4e223680f99af5be09a991fd79cda75ca058b8ca88ee4395f4",
+      "general_alerts": [
+        "py/stack-trace-exposure@39"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@39"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.2
+    },
+    {
+      "identifier": "c_c4625b8f71ae16214d94ecc3",
+      "name": "cwe-89/CWE-89_SQI-2c.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-2",
+      "sha256": "978ba79ec67291a935112765bdfbba8b7f4e69399a1e6cb83a6f3d04dfba7510",
+      "general_alerts": [
+        "py/stack-trace-exposure@39"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@39"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.2
+    },
+    {
+      "identifier": "c_35dd7338b38043a14117c194",
+      "name": "controls/V__89-SQI-3__web.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-3",
+      "sha256": "9710e263517dc3508c270e1ce122cbcaee184c7e564a9e9d2659c0301977beb6",
+      "general_alerts": [
+        "py/sql-injection@6"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@6"
+      ],
+      "target_findings": [
+        "py/sql-injection@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.5
+    },
+    {
+      "identifier": "c_98efa9d638cfbbe6bfc7a5f9",
+      "name": "controls/V__89-SQI-3__fstring.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-3",
+      "sha256": "1a1f8bd96312ee47059d06ffe1d65c229f66c19aabc4b8d03d1882d6328e8513",
+      "general_alerts": [
+        "py/sql-injection@8"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@8"
+      ],
+      "target_findings": [
+        "py/sql-injection@8"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.8
+    },
+    {
+      "identifier": "c_598f2c9b6fb2d63f7f64194a",
+      "name": "controls/V__89-SQI-3__percent.py",
+      "kind": "vulnerable",
+      "family_id": "89-SQI-3",
+      "sha256": "4ddce660347155ff3f96464c18773623e518aa923a4b979fbd135cbb0435819a",
+      "general_alerts": [
+        "py/sql-injection@7"
+      ],
+      "targeted_alerts": [
+        "py/sql-injection@7"
+      ],
+      "target_findings": [
+        "py/sql-injection@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 134.4
+    },
+    {
+      "identifier": "c_4771ef5b27ca9b5b2815a2f4",
+      "name": "controls/S2__89-SQI-3__param.py",
+      "kind": "safe",
+      "family_id": "89-SQI-3",
+      "sha256": "e697b4fe7dcc6adf5a518db3ce81282d0b5da1f4a80e5a136c4b3b57cc9535c5",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 134.0
+    },
+    {
+      "identifier": "c_0fd58026b6439118aa223c14",
+      "name": "cwe-89/CWE-89_SQI-3a.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-3",
+      "sha256": "f8ef639dfbd6fc8ba082bcd459f2ab34b93074e2f8b58746c30994c5c48fedfd",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/reflective-xss@62"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.4
+    },
+    {
+      "identifier": "c_f717f8c62e32904608cc927f",
+      "name": "cwe-89/CWE-89_SQI-3b.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-3",
+      "sha256": "112bd5a2a5e5fc0d7261e74098864a7049fd593ce6de1fbf1d374a938f66c87e",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/reflective-xss@62"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 134.8
+    },
+    {
+      "identifier": "c_1f400f35629fcf89f40c0205",
+      "name": "cwe-89/CWE-89_SQI-3c.py",
+      "kind": "secure-sample",
+      "family_id": "89-SQI-3",
+      "sha256": "f509b296a8d7594c4e15f8a7b173cef8c875f1ea53fb5d50f9005ead11ca209f",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/reflective-xss@63"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.5
+    },
+    {
+      "identifier": "c_eb35bf4f03f580066ef2964a",
+      "name": "controls/V__502-DUD-1__yaml.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-1",
+      "sha256": "93af5872b7a12979cd4fc87f996e5c8d85bf0310252aa9b4d163fb4f1ae47baa",
+      "general_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.4
+    },
+    {
+      "identifier": "c_4e510c73532255434db666c8",
+      "name": "controls/V__502-DUD-1__marshal.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-1",
+      "sha256": "0505caa4016476d5110fcbdf9f83ff4cffd31e926a1fead3dd07b43e3697be03",
+      "general_alerts": [
+        "py/unsafe-deserialization@6",
+        "py/reflective-xss@7"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@6",
+        "py/reflective-xss@7"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.5
+    },
+    {
+      "identifier": "c_7bb7f4e10a58736c82b3ab35",
+      "name": "controls/V__502-DUD-1__pickle.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-1",
+      "sha256": "a09259823b95e456d23abb0eceb1cb5a262a6d48909e87a05bc514f2c2c500fd",
+      "general_alerts": [
+        "py/unsafe-deserialization@6",
+        "py/reflective-xss@7"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@6",
+        "py/reflective-xss@7"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.8
+    },
+    {
+      "identifier": "c_1731d6dc01f29c99b52f438e",
+      "name": "controls/S2__502-DUD-1__safeload.py",
+      "kind": "safe",
+      "family_id": "502-DUD-1",
+      "sha256": "9b8697c872e52c80e934d522b2d7a02f570594bb0caabf1014911fdb0bed3864",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 137.0
+    },
+    {
+      "identifier": "c_73203caf5ac452e2e76dc7d2",
+      "name": "CWE-502/CWE-502_DUD-1a.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-1",
+      "sha256": "08da6f012566abc24cd49a6acc7d24e9ac41061b58686086d7d0123442e4abf4",
+      "general_alerts": [
+        "py/stack-trace-exposure@29",
+        "py/reflective-xss@34"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@29",
+        "py/reflective-xss@34"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 137.2
+    },
+    {
+      "identifier": "c_2425dec380183169636e225a",
+      "name": "CWE-502/CWE-502_DUD-1b.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-1",
+      "sha256": "4ad947469a9122ab35a742e4bc17b8627c4213f1657e13972306419ff6a0baed",
+      "general_alerts": [
+        "py/stack-trace-exposure@31",
+        "py/reflective-xss@36"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@31",
+        "py/reflective-xss@36"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.8
+    },
+    {
+      "identifier": "c_3b5789fec2f2d17a3b74d2b9",
+      "name": "CWE-502/CWE-502_DUD-1c.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-1",
+      "sha256": "1a7d53547a04e5ae7e38148ec5bd6602e3afb8a95ca1cc51962bfada0ac64905",
+      "general_alerts": [
+        "py/stack-trace-exposure@30",
+        "py/reflective-xss@39"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@30",
+        "py/reflective-xss@39"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.3
+    },
+    {
+      "identifier": "c_b9cbd596f9325661ca8810c3",
+      "name": "controls/V__502-DUD-2__yaml.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-2",
+      "sha256": "fbe7535c5114e70ac12fa1828caac593c4c479a0292907711da95542746798e2",
+      "general_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 142.7
+    },
+    {
+      "identifier": "c_4e6fa209fa4c785ae2228d43",
+      "name": "controls/V__502-DUD-2__marshal.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-2",
+      "sha256": "c2ef45f086c4d40f2d3398d4f24d840b2a1107ad96bc15e7e10c6068513a0d7e",
+      "general_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 142.0
+    },
+    {
+      "identifier": "c_5213f693e5033c59f2d25009",
+      "name": "controls/V__502-DUD-2__pickle_stream.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-2",
+      "sha256": "efe6e2d45383be1853e32035bff37616afc5142e072526d22d3eca0a773ff77f",
+      "general_alerts": [
+        "py/unsafe-deserialization@6",
+        "py/reflective-xss@7"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@6",
+        "py/reflective-xss@7"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 150.4
+    },
+    {
+      "identifier": "c_a533f66e5dcc218a8d4f6775",
+      "name": "controls/S2__502-DUD-2__json.py",
+      "kind": "safe",
+      "family_id": "502-DUD-2",
+      "sha256": "3d55a7e500513b9c06b22653f913983c2156788ca46ec67f90e43967fad8e926",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 149.5
+    },
+    {
+      "identifier": "c_f1ac2b09017c9185c592a17e",
+      "name": "CWE-502/CWE-502_DUD-2a.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-2",
+      "sha256": "6b5898ae21f71bdc92c90f24409365fe9efa53c0dfc6e5e269e270d4f0f2b00c",
+      "general_alerts": [
+        "py/stack-trace-exposure@31"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@31",
+        "py/reflective-xss@54"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 137.8
+    },
+    {
+      "identifier": "c_7c09b53432d81fdccacca894",
+      "name": "CWE-502/CWE-502_DUD-2b.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-2",
+      "sha256": "bdc2418aefc0f8c3f7ba52aa6a4b862b0cb88efee685b3ec7619e5f9d9b81761",
+      "general_alerts": [
+        "py/stack-trace-exposure@31"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@31",
+        "py/reflective-xss@56"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 137.8
+    },
+    {
+      "identifier": "c_552d20a7f05bc9451009890a",
+      "name": "CWE-502/CWE-502_DUD-2c.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-2",
+      "sha256": "45feaefe19228c370302961361e0fff7c162b4e919fe5aaa09bb888c95ea76b6",
+      "general_alerts": [
+        "py/stack-trace-exposure@32"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@32",
+        "py/reflective-xss@55"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 137.3
+    },
+    {
+      "identifier": "c_b35a450bcf73d35ed839a076",
+      "name": "controls/V__502-DUD-3__pickle.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-3",
+      "sha256": "ecffb18eafd5ec3d3f421f267f058cd2acc151f90e2deae1009a3bb2f0068b61",
+      "general_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.5
+    },
+    {
+      "identifier": "c_b40c8463f44b95c3b587f6b0",
+      "name": "controls/V__502-DUD-3__marshal.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-3",
+      "sha256": "fd809de9906d294f030cf8f4590d3fc3dc9d68b117d60d506dccc7e908a569ef",
+      "general_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.3
+    },
+    {
+      "identifier": "c_53b2419860a491994f403d06",
+      "name": "controls/V__502-DUD-3__yaml.py",
+      "kind": "vulnerable",
+      "family_id": "502-DUD-3",
+      "sha256": "f40427156d33dab4b4d93ece3472ba258b1c680bf7e093f8714fdeb4cab1cf5f",
+      "general_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "targeted_alerts": [
+        "py/unsafe-deserialization@7",
+        "py/reflective-xss@8"
+      ],
+      "target_findings": [
+        "py/unsafe-deserialization@7"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.4
+    },
+    {
+      "identifier": "c_7e3f07209a533ba9a716a169",
+      "name": "controls/S2__502-DUD-3__safeload.py",
+      "kind": "safe",
+      "family_id": "502-DUD-3",
+      "sha256": "a1f2c558e5afdff3de9c00458aedaae315d1885d2cf119b7455f18ed30331e2c",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.2
+    },
+    {
+      "identifier": "c_bb96b9d7df2d9aae2cb8006b",
+      "name": "CWE-502/CWE-502_DUD-3a.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-3",
+      "sha256": "7cfa531ca03d38767dcbc1a0cfa32e052ce3e585130cb4909c25f2a42209eaef",
+      "general_alerts": [
+        "py/stack-trace-exposure@40"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@40"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 141.7
+    },
+    {
+      "identifier": "c_824db4b9d0cf892ea66afc57",
+      "name": "CWE-502/CWE-502_DUD-3b.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-3",
+      "sha256": "a8d148bb5524f003597235f036b03d6093abecb9b3bd9d819f9343cd7fa70388",
+      "general_alerts": [
+        "py/stack-trace-exposure@40"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@40"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.2
+    },
+    {
+      "identifier": "c_b24255d790e8367e582ca8d6",
+      "name": "CWE-502/CWE-502_DUD-3c.py",
+      "kind": "secure-sample",
+      "family_id": "502-DUD-3",
+      "sha256": "7e1a2facc9c1d3b4cb6d16fd7d02d0031f803704d84cd9333f3bf1c7a07177b0",
+      "general_alerts": [
+        "py/stack-trace-exposure@45"
+      ],
+      "targeted_alerts": [
+        "py/stack-trace-exposure@45"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 135.0
+    },
+    {
+      "identifier": "c_938cd51680c4485879a38292",
+      "name": "controls/V__732-IPA-1__osopen.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-1",
+      "sha256": "b6b6115d08369ef6c6f3a91b5def0475939b0dc8b9111fbd6a60d26e141fdf3d",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@3"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@3"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 129.9
+    },
+    {
+      "identifier": "c_358c878d37b0a2d2392434dc",
+      "name": "controls/V__732-IPA-1__chmod.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-1",
+      "sha256": "d9c3087354a6fa7ecf2d12699cec3145e190a51675e8753e9f060de7a740aa0f",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@5"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 129.4
+    },
+    {
+      "identifier": "c_8eb312d866fa836cb0826089",
+      "name": "controls/V__732-IPA-1__chmod_variable.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-1",
+      "sha256": "b8237a17a008e51a8f00853dd25eca7a4748019eff9c54242a3f7e1e5a82df4e",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@6"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 128.8
+    },
+    {
+      "identifier": "c_09cc91921e9a890acff562b6",
+      "name": "controls/S2__732-IPA-1__osopen.py",
+      "kind": "safe",
+      "family_id": "732-IPA-1",
+      "sha256": "47d40b40507dc33ed9f0b8d199f042dae97323afa6eb0994d7d8479ca9a9593e",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 128.8
+    },
+    {
+      "identifier": "c_78af3b4293c72970d0b88fa8",
+      "name": "controls/B__732-IPA-1__fchmod.py",
+      "kind": "blind-spot",
+      "family_id": "732-IPA-1",
+      "sha256": "68d12caaffc406f9eb9e8222b2357020e93446f967fcd5d402ae5c09872a1fbb",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 133.7
+    },
+    {
+      "identifier": "c_ef99cd87847e14ca2254c3ed",
+      "name": "CWE-732/CWE-732_IPA-1a.py",
+      "kind": "secure-sample",
+      "family_id": "732-IPA-1",
+      "sha256": "71657546aab034faad7311f609a4e61fcf4571b0de5cf8e916b6797bc02d0196",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 133.8
+    },
+    {
+      "identifier": "c_a610539cb8a17ab2a22b6590",
+      "name": "CWE-732/CWE-732_IPA-1b.py",
+      "kind": "secure-sample",
+      "family_id": "732-IPA-1",
+      "sha256": "6f68a1188af7260268d196e044515a2ef8b7457ab3fd1c9751da5b5265d41f91",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 133.1
+    },
+    {
+      "identifier": "c_8769f9962163809ad7b624b7",
+      "name": "controls/V__732-IPA-2__osopen.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-2",
+      "sha256": "ed6f8b2a4937e8f6dbc98442836f6f602a272d2a993a8f98006cc69e87030558",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@3"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@3"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 133.2
+    },
+    {
+      "identifier": "c_3be397b281271885684eb674",
+      "name": "controls/V__732-IPA-2__chmod.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-2",
+      "sha256": "2d04d7e5ada53dba2c3dd35f800b2941f6b404528a8e2444735566b64eeef1e3",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@6"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 133.9
+    },
+    {
+      "identifier": "c_523432b2fd01bf378b518eb4",
+      "name": "controls/V__732-IPA-2__chmod_keyword.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-2",
+      "sha256": "5545685948267f9b94b7637f935b74fdd93cb4137afbe76ce22390f9261bef62",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@5"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 133.7
+    },
+    {
+      "identifier": "c_227223999f73aed06efe6b2c",
+      "name": "controls/S2__732-IPA-2__osopen.py",
+      "kind": "safe",
+      "family_id": "732-IPA-2",
+      "sha256": "40e7221df986024b320d45ea2d6cc089ad017cc5eaef5d4863dbc1c459914586",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.1
+    },
+    {
+      "identifier": "c_7e71dd694b1737de9312e28c",
+      "name": "controls/B__732-IPA-2__pathlib.py",
+      "kind": "blind-spot",
+      "family_id": "732-IPA-2",
+      "sha256": "a6554b3c0d93b844cde92a68c0fe7683d299a1825bf32792f4182909ceee965b",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 136.1
+    },
+    {
+      "identifier": "c_292d46fed522bbaa6b28a83f",
+      "name": "CWE-732/CWE-732_IPA-2a.py",
+      "kind": "secure-sample",
+      "family_id": "732-IPA-2",
+      "sha256": "a29f693767d151c241326ac6ecaebed4d76114fa0940750d0bf8c4ad4f6ad248",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 136.3
+    },
+    {
+      "identifier": "c_2dc46763eeab1f11f22bb7fe",
+      "name": "CWE-732/CWE-732_IPA-2b.py",
+      "kind": "secure-sample",
+      "family_id": "732-IPA-2",
+      "sha256": "9157dc17490cbc21a1ece435f074b784c0c45ae74bdbaf11fc24bc69abc9e95e",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@23"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@23"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 136.3
+    },
+    {
+      "identifier": "c_b4ff6d0c8cec5241afe0a452",
+      "name": "CWE-732/CWE-732_IPA-2c.py",
+      "kind": "secure-sample",
+      "family_id": "732-IPA-2",
+      "sha256": "2b9022464f32b8c39cb99a0f8ecbf4456a2af35a085dbad06be507b7ec5e549e",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 134.4
+    },
+    {
+      "identifier": "c_899dc4084d10ce93bc5b5ca1",
+      "name": "controls/V__732-IPA-3__chmod.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-3",
+      "sha256": "8ba5b817ab2d2b43c8f38104d6e45f88be5ebb9566accebc1a906e2746618a68",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@5"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 134.4
+    },
+    {
+      "identifier": "c_27c9775408f2f4dad72b1ac9",
+      "name": "controls/V__732-IPA-3__chmod_keyword.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-3",
+      "sha256": "6ff18951eac37e9caf63ef3f9a107599a826df7d0a0fa23700606646fe8be4f4",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@5"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@5"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 133.7
+    },
+    {
+      "identifier": "c_d309ee59e22c20ffd775a3d8",
+      "name": "controls/V__732-IPA-3__chmod_variable.py",
+      "kind": "vulnerable",
+      "family_id": "732-IPA-3",
+      "sha256": "04433ef6963d3f7719eec8b6332810ddd62c41deaaca95f60d93260a441a5724",
+      "general_alerts": [],
+      "targeted_alerts": [
+        "py/overly-permissive-file@6"
+      ],
+      "target_findings": [
+        "py/overly-permissive-file@6"
+      ],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 134.3
+    },
+    {
+      "identifier": "c_87aec58a29efebb14ba61f09",
+      "name": "controls/S2__732-IPA-3__own.py",
+      "kind": "safe",
+      "family_id": "732-IPA-3",
+      "sha256": "faea9566d5eda4bb17e653d8f2fa5760450908de9913e3b64a6770b2d993c8a5",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": true,
+      "elapsed_seconds": 129.8
+    },
+    {
+      "identifier": "c_0493b173c25944593f35a675",
+      "name": "controls/B__732-IPA-3__chmod_symbolic.py",
+      "kind": "blind-spot",
+      "family_id": "732-IPA-3",
+      "sha256": "29c798097a7350cc5b9502f1d83312e112b070f04dceb8ee6b946099535ab214",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 129.4
+    },
+    {
+      "identifier": "c_44012961ea3a8ab3f67f357e",
+      "name": "controls/B__732-IPA-3__fchmod.py",
+      "kind": "blind-spot",
+      "family_id": "732-IPA-3",
+      "sha256": "0e76b24d6ddd053a33c77a892c43d0fe466c7b1f17b411d933424eb2dcf591d5",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 131.5
+    },
+    {
+      "identifier": "c_f16cb08501b59e583267878c",
+      "name": "controls/B__732-IPA-3__pathlib.py",
+      "kind": "blind-spot",
+      "family_id": "732-IPA-3",
+      "sha256": "93ec1533e55edccfe755c73ba127981493c5e02be71a75303d75607cb8d30d6f",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": true,
+      "usability_reasons": [],
+      "modellable": false,
+      "elapsed_seconds": 131.0
+    },
+    {
+      "identifier": "c_f8e9c39f3f29fffdc5ac9906",
+      "name": "controls/M__comment_only_stub.py",
+      "kind": "probe",
+      "family_id": null,
+      "sha256": "a1984fcb6db48a01e3a667242678a307ea1e8a0ec7c6df27ce18d550efcde076",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": null,
+      "usability_reasons": [],
+      "modellable": null,
+      "elapsed_seconds": 138.3
+    },
+    {
+      "identifier": "c_d5b86cb935d03ccf521923d1",
+      "name": "controls/M__flask_debug_only.py",
+      "kind": "probe",
+      "family_id": null,
+      "sha256": "59a84d4b084cabd749697f61036ede4bb9714c3aa09958dc9ea57ab890c92024",
+      "general_alerts": [
+        "py/flask-debug@7"
+      ],
+      "targeted_alerts": [
+        "py/flask-debug@7"
+      ],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": null,
+      "usability_reasons": [],
+      "modellable": null,
+      "elapsed_seconds": 138.8
+    },
+    {
+      "identifier": "c_638eedba9186d4d1a3f3a2ac",
+      "name": "controls/M__noop.py",
+      "kind": "probe",
+      "family_id": null,
+      "sha256": "cde0429ba5478089419b8a36797f74089554914623c732054e04dd6eb2e49afd",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": null,
+      "usability_reasons": [],
+      "modellable": null,
+      "elapsed_seconds": 138.2
+    },
+    {
+      "identifier": "c_6ef06c2147d3020bb37e5ab2",
+      "name": "controls/M__sqli_param.py",
+      "kind": "probe",
+      "family_id": null,
+      "sha256": "b5221f164b071a27be2252f57ea0c01ec252bc3a120d3ac9963a8a0672c73e7a",
+      "general_alerts": [],
+      "targeted_alerts": [],
+      "target_findings": [],
+      "extracted": true,
+      "errors": [],
+      "usable": null,
+      "usability_reasons": [],
+      "modellable": null,
+      "elapsed_seconds": 138.5
+    }
+  ],
+  "families": {
+    "20-IIV-1": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "20-IIV-2": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "22-ILP-1": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "22-ILP-2": {
+      "declared": "calibrated-with-false-positives",
+      "observed": "calibrated-with-false-positives",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 3,
+      "samples": 3
+    },
+    "22-ILP-3": {
+      "declared": "excluded",
+      "observed": "excluded",
+      "vulnerable_detected": 0,
+      "vulnerable": 1,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "78-INS-1": {
+      "declared": "calibrated-with-false-positives",
+      "observed": "calibrated-with-false-positives",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 3,
+      "samples": 3
+    },
+    "78-INS-2": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "78-INS-3": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "79-INI-1": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "79-INI-2": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "79-INI-3": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "89-SQI-1": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "89-SQI-2": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "89-SQI-3": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "200-ESI-1": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "200-ESI-2": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "200-ESI-3": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "306-MAC-1": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "306-MAC-2": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "306-MAC-3": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "434-UUF-1": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "434-UUF-2": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "434-UUF-3": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "502-DUD-1": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "502-DUD-2": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "502-DUD-3": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 3
+    },
+    "522-IPC-1": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "522-IPC-2": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "522-IPC-3": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "732-IPA-1": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 2
+    },
+    "732-IPA-2": {
+      "declared": "calibrated-with-false-positives",
+      "observed": "calibrated-with-false-positives",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 1,
+      "samples": 3
+    },
+    "732-IPA-3": {
+      "declared": "calibrated",
+      "observed": "calibrated",
+      "vulnerable_detected": 3,
+      "vulnerable": 3,
+      "safe_flagged": 0,
+      "safe": 1,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "798-UHC-1": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "798-UHC-2": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    },
+    "798-UHC-3": {
+      "declared": "no-query",
+      "observed": "no-query",
+      "vulnerable_detected": 0,
+      "vulnerable": 0,
+      "safe_flagged": 0,
+      "safe": 0,
+      "samples_flagged": 0,
+      "samples": 0
+    }
+  },
+  "totals": {
+    "vulnerable_detected_by_target_rules": [
+      57,
+      58
+    ],
+    "vulnerable_flagged_by_general_suite": [
+      38,
+      58
+    ],
+    "safe_flagged_by_target_rules": [
+      0,
+      20
+    ],
+    "safe_flagged_by_general_suite": [
+      0,
+      20
+    ],
+    "samples_flagged_by_target_rules": [
+      7,
+      56
+    ],
+    "samples_flagged_by_general_suite": [
+      29,
+      56
+    ],
+    "blind_spots_detected": [
+      0,
+      6
+    ]
+  },
+  "mismatches": []
+}
