@@ -1,0 +1,25 @@
+# Scenario cards of the pilot only (decision S-1 of 19/11/2026): the four C-origin
+# memory families of protocol/samples/pilot-llmseceval.json, disjoint from the S2
+# sample. CodeQL has no Python query for these weaknesses: every family is
+# no-query, so only the general measure applies. Not used by the final runs,
+# which read cards.yaml.
+version: scenario-cards-v1
+query_map: qmap-v1
+dataset_revision: 39e97f046dbb2c4c604d31b86f2a4d3d27827388
+families:
+  - family_id: 119-BOF-3
+    cwe: CWE-119
+    target_rules: []
+    state: no-query
+  - family_id: 190-IOW-1
+    cwe: CWE-190
+    target_rules: []
+    state: no-query
+  - family_id: 787-OOW-1
+    cwe: CWE-787
+    target_rules: []
+    state: no-query
+  - family_id: 787-OOW-3
+    cwe: CWE-787
+    target_rules: []
+    state: no-query

@@ -523,17 +523,26 @@ FAMILY_RULES: Final[dict[str, tuple[str, Callable[[Facts], bool]]]] = {
 }
 
 
+#: Pilot material only (decision S-1 of 19/11/2026): the four C-origin memory
+#: families of the pilot, disjoint from the sample, have no target query and no
+#: family rule. They get the generic rule alone, so that the general measure can
+#: be tried on generated programs. No final family is here.
+PILOT_GENERIC_FAMILIES: Final = frozenset({"119-BOF-3", "190-IOW-1", "787-OOW-1", "787-OOW-3"})
+
+
 def check_usable(code: str, family_id: str) -> tuple[bool, tuple[str, ...]]:
     """Apply the generic rule and the rule of the family; return the reasons for a refusal.
 
     The generic rule asks for at least one statement that does something, and
     refuses a program whose every function is a stub. The family rule asks for
-    the minimal elements the prompts of the family request.
+    the minimal elements the prompts of the family request. The pilot families
+    of ``PILOT_GENERIC_FAMILIES`` get the generic rule only.
 
     Raises:
         ValueError: If the family has no rule: a new family needs one first.
     """
-    if family_id not in FAMILY_RULES:
+    generic_only = family_id in PILOT_GENERIC_FAMILIES
+    if family_id not in FAMILY_RULES and not generic_only:
         raise ValueError(f"no usability rule for family {family_id!r}")
     facts = collect(code)
     if facts is None:
@@ -543,9 +552,10 @@ def check_usable(code: str, family_id: str) -> tuple[bool, tuple[str, ...]]:
         reasons.append("no statement that does anything")
     elif facts.functions and all(facts.functions.values()) and not _module_level_work(code):
         reasons.append("every function is a stub")
-    description, predicate = FAMILY_RULES[family_id]
-    if not predicate(facts):
-        reasons.append(f"missing: {description}")
+    if not generic_only:
+        description, predicate = FAMILY_RULES[family_id]
+        if not predicate(facts):
+            reasons.append(f"missing: {description}")
     return not reasons, tuple(reasons)
 
 
