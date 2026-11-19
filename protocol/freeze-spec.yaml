@@ -44,9 +44,12 @@ items:
   - protocol/configs/pilot/lse-greedy.json
   - protocol/configs/pilot/lse-sampled.json
   - protocol/analysis/contamination.json
+  - protocol/analysis/plan.md
   - protocol/freeze-spec.yaml
+  - protocol/guidelines/gold-v2.0.md
   - protocol/hauto/gate-thresholds.json
   - protocol/hauto/parser.json
+  - protocol/model.json
   - protocol/oracles/bcb-exclusions.json
   - protocol/oracles/codeql-calibration.json
   - protocol/oracles/codeql.json
@@ -56,6 +59,7 @@ items:
   - protocol/reannotation/bcb/reannotation-bcb.json
   - protocol/reannotation/lse/empirical-sample-reannotation_manifest.json
   - protocol/reannotation/lse/reannotation-lse.json
+  - protocol/rules/prompt-as-data.md
   - protocol/samples/bcb-final.json
   - protocol/samples/bcb-full.json
   - protocol/samples/bcb-permutation.json
@@ -160,7 +164,6 @@ items:
   - protocol/security/controls/V__89-SQI-3__percent.py
   - protocol/security/controls/V__89-SQI-3__web.py
   # TO ADD before the freeze F4, once they exist (all committed first):
-  # - protocol/guidelines/<gold guidelines, copied by hand>
   # - the BigCodeBench gold of S_gold and the LLMSecEval gold (reviewed, status frozen);
   #   S_gold is the 600-task prefix (protocol/samples/prefix-600/bcb-prefix-600.json), or the
   #   nested 400-task prefix if the prespecified time rule applies (plan of 18/11/2026, P-02).
@@ -169,12 +172,11 @@ items:
   #   bcb-final keeps the 800 drafts, the draft side of gold-diff
   # - protocol/variants/<benchmark>.variants.jsonl and their render records (T, H-gold, E, F)
   # - protocol/covariates/<benchmark>.covariates.jsonl (output of covariates)
-  # - protocol/model.json (generator digests) and protocol/hauto/parser-model.json (parser digests)
+  # - protocol/hauto/parser-model.json (parser digests; protocol/model.json is listed above)
   # - protocol/hauto/: the v1 conversion of the pilot tasks read by the C-22 rule (D-01), the
   #   S_parse document of the primary policy on S_gold, its failures, the H-auto variants, the
   #   score results.json of the same predictions and the record of their SHA-256. The prefix is
   #   parsed as a pilot run before F4; the gate report is computed after F4 (parser-gate
   #   --purpose final --freeze --c22), before any analysis: its outcome only applies a frozen rule
-  # - protocol/analysis/plan.md, design-*.json and the time rules (checkpoints and prespecified cuts)
-  # - protocol/rules/prompt-as-data.md
+  # - protocol/analysis/design-*.json; the values of plan.md marked TO FILL (pilot, power)
   # Every other file of the repository is hashed by the freeze itself (protocol-freeze-v2).
