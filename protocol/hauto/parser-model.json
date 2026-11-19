@@ -1,0 +1,13 @@
+{
+  "format": "model-digests-v1",
+  "name": "unsloth/Meta-Llama-3.1-8B-Instruct-unsloth-bnb-4bit",
+  "revision": "0db785ab56c082e30ae7dea3645d45465fbb5797",
+  "files": {
+    "config.json": "a385aec424b23ce5ec344c920888505dd69b100a10ca106c0dcf4355d5553014",
+    "generation_config.json": "280388b9a56fc9ad1f05d9096dc399ff6b5cf4a9c0a0a48d9ccc1dbc15290f7f",
+    "model.safetensors": "578111bf52c95d05f728dbf6ddddabeaec275c99267e15b74222bd3c77547928",
+    "special_tokens_map.json": "94e708c3f5e64acf85bbe5ad01467a1248faadb73e83b41793087ecced586e8f",
+    "tokenizer.json": "6b9e4e7fb171f92fd137b777cc2714bf87d11576700a1dcd7a399e7bbe39537b",
+    "tokenizer_config.json": "4d18eae3017839b17cb3598f589b62ec212652d183582ee0fc33a4f1e8b3da67"
+  }
+}

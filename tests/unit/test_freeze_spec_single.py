@@ -1,7 +1,9 @@
 """The freeze specification describes the single freeze F4 (plan of 18/11/2026, P-09, C-07).
 
-One internal freeze before the final generations, one OSF deposit under embargo
-at the freeze; the supervisor acknowledgement is the export of messages M1/M2.
+One internal freeze before the final generations; no public registry (decision of
+19/11/2026): the preregistration is the dated email to the supervisor carrying the
+SHA-256 of the freeze (message M3). The supervisor acknowledgement is the export of
+messages M1/M2.
 """
 
 from pathlib import Path
@@ -28,13 +30,13 @@ def test_the_spec_lists_the_configurations_and_the_parser_identity() -> None:
     assert {"protocol/hauto/parser.json", "protocol/hauto/gate-thresholds.json"} <= set(items)
 
 
-def test_the_metadata_describe_one_freeze_and_one_osf_deposit() -> None:
+def test_the_metadata_describe_one_freeze_and_the_email_preregistration() -> None:
     _, meta = read_spec(SPEC)
     assert meta["preregistration"] == {
-        "registry": "OSF",
-        "deposit": "single, under embargo, at the freeze F4",
-        "osf_url": None,
-        "embargo_until": None,
+        "registry": None,
+        "record": "dated email to the supervisor with the SHA-256 of protocol-freeze.json (M3)",
+        "sent_at": None,
+        "export": None,
     }
     assert meta["supervisor_ack"]["record"] is None
     assert meta["supervisor_ack"]["messages"] == ["M1", "M2"]
@@ -51,6 +53,6 @@ def test_the_metadata_describe_one_freeze_and_one_osf_deposit() -> None:
 
 def test_no_separate_h_auto_freeze_or_two_phase_osf_is_left() -> None:
     text = SPEC.read_text(encoding="utf-8")
-    for stale in ("F8", "H-auto freeze", "phase1", "phase2", "e-mail"):
+    for stale in ("F8", "H-auto freeze", "phase1", "phase2", "OSF", "embargo"):
         assert stale not in text, stale
     assert yaml.safe_load(text)["format"] == "freeze-spec-v1"

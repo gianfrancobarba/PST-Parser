@@ -1,0 +1,12 @@
+{
+  "run_id": "hauto-prefix-01",
+  "source_archive_sha256": "6d89695cc36539d814b68b83b5c32c5911e865360e90d5a4db90e0b9c4cc7193",
+  "source_tree": "6461106d36af4ca3bafde2dfdbdd55035c9425c1",
+  "freeze_sha256": null,
+  "purpose": "pilot",
+  "sources_sha256": "76b12e233839af90dbad7902647f826bbd379e79b944f6295a97454441426ce1",
+  "parser_identity_sha256": "2d615db70fa58a51887b4ea2127b513d9ee8e1734b16b9303998aabc85e98e15",
+  "model_name": "unsloth/Meta-Llama-3.1-8B-Instruct-unsloth-bnb-4bit",
+  "model_revision": "0db785ab56c082e30ae7dea3645d45465fbb5797",
+  "adapter": "/content/drive/MyDrive/pst-parser-runs/parser-2026-11-12-r3/training/adapter"
+}

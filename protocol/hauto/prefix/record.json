@@ -1,0 +1,24 @@
+{
+  "format": "hauto-prefix-record-v1",
+  "run_id": "hauto-prefix-01",
+  "policy": "auto-strict-v1",
+  "require_status": "frozen",
+  "gold_sha256": "bc4be6f3691f63f544d7ad3eb157217a8b83ddcdcedc7417e8454310efdff51f",
+  "received": {
+    "predictions_sha256": "7df5f9c347782903964152dffe3ae9ebdb1b86ee0aa73ae63c8c4bf183f9da8f",
+    "sources_sha256": "76b12e233839af90dbad7902647f826bbd379e79b944f6295a97454441426ce1"
+  },
+  "parser_model_sha256": "c687bcb704e8aaa67ee71a849b43a74b0ef9a79d56ca5aa7269b75cd02529653",
+  "score_config": "configs/experiments/hauto-parser.yaml",
+  "files": {
+    "s-parse-auto-strict-v1.json": "d22c8a4bdd2b1e7f6a10b3a6a65725cadf47427cbe4163c1d9c20576760a6081",
+    "failures-auto-strict-v1.jsonl": "7eec71c5d58465172e3a513de9a4ba4026df94cf6cf8c9031522689bc322d6ba",
+    "hauto-auto-strict-v1.jsonl": "8d0b3e5ba2a81cd8102b7d095c2be34e5423629826cd0476a9b13155e3b8ea11",
+    "empirical-auto-annotate_manifest.json": "8c0f971bed26c127e87fdf8ffa0e531b659f896d444de5bbb46c95d35255458d",
+    "predictions.jsonl": "c00fdd7c9e50095679e808243949a0ab46ec180c030601bd59f705ea5f8b98db",
+    "id-map.json": "72a82968b4995c87274b1da993fe0de8af4563060f9d444b19ac9994e103bfcd",
+    "score-results.json": "ff68dffbc635ca6838c419f4d8c933268ee0fb0d208579c810649e5d296c229c",
+    "run-identity.json": "1bd7edf4abbdbe3d216728bdc7cc3195199898558e7c1e83ebb30e38a0bb6ac7"
+  },
+  "note": "predictions.jsonl is the retargeted file (retarget-predictions --require-status frozen)"
+}
