@@ -1,0 +1,10 @@
+{
+  "format": "gold-freeze-record-v1",
+  "set": "lse-final",
+  "frozen_by": "studente",
+  "frozen_at": "2026-11-19T11:34:50+01:00",
+  "change": "status reviewed -> frozen on every row; nothing else",
+  "rows": 100,
+  "reviewed_sha256": "ac04c2c2de0fbaca4c8c4c0d030a2cb8f179ecdfa6cd3485aae6db2418c13eb4",
+  "frozen_sha256": "5dda7d5a34cd6a1d4d3e12d60ed3577bffa18ec2a920a7c29514c9947c4cae13"
+}

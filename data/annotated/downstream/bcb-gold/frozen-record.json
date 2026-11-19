@@ -1,0 +1,10 @@
+{
+  "format": "gold-freeze-record-v1",
+  "set": "bcb-gold",
+  "frozen_by": "studente",
+  "frozen_at": "2026-11-19T11:34:43+01:00",
+  "change": "status reviewed -> frozen on every row; nothing else",
+  "rows": 600,
+  "reviewed_sha256": "272895309f01581a0bf40d41eff9b89777538db3fe8923d4d4d843ee399a7e58",
+  "frozen_sha256": "bc4be6f3691f63f544d7ad3eb157217a8b83ddcdcedc7417e8454310efdff51f"
+}
