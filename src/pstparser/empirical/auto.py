@@ -387,6 +387,29 @@ def hauto_ledgers(
     return primary, end_to_end
 
 
+def s_parse_ledger(records: Sequence[OutcomeRecord], s_parse: Sequence[str]) -> list[OutcomeRecord]:
+    """Every condition of the S_parse tasks, for RQ3c and the decomposition of Δ_auto.
+
+    The ``analysis_id`` gets the suffix ``-s-parse-all``; the analyses pick their
+    pair with ``analyze --ledger-conditions``.
+
+    Raises:
+        ValueError: If the ledger holds more than one ``analysis_id`` or an
+            S_parse task lacks H-auto.
+    """
+    identifiers = {record.analysis_id for record in records}
+    if len(identifiers) != 1:
+        raise ValueError("the ledger must hold one analysis_id")
+    (identifier,) = identifiers
+    parsed = set(s_parse)
+    with_hauto = {r.task_id for r in records if r.condition == "H-auto"}
+    if not parsed <= with_hauto:
+        raise ValueError("H-auto must be recorded for every S_parse task")
+    return [
+        replace(r, analysis_id=f"{identifier}-s-parse-all") for r in records if r.task_id in parsed
+    ]
+
+
 def macro_f1(field_f1: Mapping[str, Mapping[str, Any]]) -> tuple[float | None, list[str]]:
     """Mean F1 over the leaves with gold support, as ``score`` reports them (00 T-7)."""
     leaves = sorted(name for name, value in field_f1.items() if value["support"] > 0)

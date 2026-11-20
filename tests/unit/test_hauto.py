@@ -493,3 +493,26 @@ def test_the_cli_writes_the_two_h3_ledgers(tmp_path: Path, monkeypatch) -> None:
     assert {r.analysis_id for r in primary} == {"a-s-parse"}
     assert {r.analysis_id for r in end_to_end} == {"a-end-to-end"}
     assert len(primary) == 4 and len(end_to_end) == 8
+    every = read_outcomes(tmp_path / "h3" / "outcomes-s-parse-all.jsonl")
+    assert {r.analysis_id for r in every} == {"a-s-parse-all"}
+    assert {r.task_id for r in every} == {r.task_id for r in primary}
+
+
+# Finding of the dress rehearsal (19/11/2026): RQ3c (H-auto - H-gold) and the
+# decomposition of Delta_auto are estimated on S_parse, so a third ledger keeps
+# every condition of the S_parse tasks.
+
+
+def test_the_s_parse_ledger_keeps_every_condition_of_the_s_parse_tasks() -> None:
+    from pstparser.empirical.auto import s_parse_ledger
+
+    records = [
+        OutcomeRecord("a", "functional", task, condition, 0, "pass")
+        for task in ("BigCodeBench/1", "BigCodeBench/2")
+        for condition in ("T", "H-gold", "E")
+    ] + [OutcomeRecord("a", "functional", "BigCodeBench/1", "H-auto", 0, "fail")]
+    kept = s_parse_ledger(records, ["BigCodeBench/1"])
+    assert {r.analysis_id for r in kept} == {"a-s-parse-all"}
+    assert sorted(r.condition for r in kept) == ["E", "H-auto", "H-gold", "T"]
+    with pytest.raises(ValueError, match="H-auto"):
+        s_parse_ledger(records, ["BigCodeBench/1", "BigCodeBench/2"])

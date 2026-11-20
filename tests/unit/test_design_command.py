@@ -150,3 +150,111 @@ def test_final_thesis_tables_refuse_an_exploratory_analysis(tmp_path: Path) -> N
     )
     assert isinstance(result.exception, ValueError)
     assert "final" in str(result.exception)
+
+
+# Finding of the dress rehearsal (19/11/2026): H3 is analysed on S_parse, whose
+# document lists the tasks as strings; the design reads it through load_s_parse.
+
+
+def s_parse_document(root: Path, tasks: list[str], tamper: bool = False) -> Path:
+    from pstparser.empirical.auto import S_PARSE_FORMAT, tasks_digest
+
+    digest = tasks_digest(tasks)
+    return write(
+        root / "s-parse.json",
+        {
+            "format": S_PARSE_FORMAT,
+            "policy": "auto-strict-v1",
+            "tasks": tasks,
+            "tasks_sha256": "0" * 64 if tamper else digest,
+        },
+    )
+
+
+def test_a_functional_design_on_s_parse_keeps_its_order(tmp_path: Path) -> None:
+    tasks = ["BigCodeBench/77", "BigCodeBench/3"]
+    out = tmp_path / "d" / "design.json"
+    result = run_design(
+        str(s_parse_document(tmp_path, tasks)),
+        "--analysis-id",
+        "final-bcb-s-parse",
+        "--endpoint",
+        "functional",
+        "--conditions",
+        "T,H-auto",
+        "--out",
+        str(out),
+    )
+    assert result.exit_code == 0, result.exception
+    design = json.loads(out.read_text(encoding="utf-8"))
+    assert design["tasks"] == [{"task_id": t} for t in tasks]
+    assert design["conditions"] == ["T", "H-auto"]
+
+
+def test_a_tampered_s_parse_gives_no_design(tmp_path: Path) -> None:
+    out = tmp_path / "d" / "design.json"
+    result = run_design(
+        str(s_parse_document(tmp_path, ["BigCodeBench/3"], tamper=True)),
+        "--analysis-id",
+        "x",
+        "--endpoint",
+        "functional",
+        "--conditions",
+        "T,H-auto",
+        "--out",
+        str(out),
+    )
+    assert result.exit_code != 0 and not out.exists()
+
+
+# Finding of the dress rehearsal (19/11/2026): the targeted measure judges only the
+# families in the calibrated states, so its design keeps only their prompts.
+
+
+def cards_file(root: Path) -> Path:
+    path = root / "cards.yaml"
+    path.write_text(
+        "version: scenario-cards-v1\n"
+        "query_map: qmap-v1\n"
+        "families:\n"
+        "  - {family_id: 119-BOF-1, cwe: CWE-119, target_rules: [r/a], state: calibrated}\n"
+        "  - {family_id: 20-IIV-1, cwe: CWE-20, target_rules: [r/b],"
+        " state: calibrated-with-false-positives}\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def security_design(root: Path, *extra: str) -> object:
+    return run_design(
+        str(lse_map(root)),
+        "--analysis-id",
+        "lse-targeted",
+        "--endpoint",
+        "security",
+        "--conditions",
+        "T,H-gold",
+        "--selection",
+        "S2",
+        "--out",
+        str(root / "d" / "design.json"),
+        *extra,
+    )
+
+
+def test_the_targeted_design_keeps_the_calibrated_families(tmp_path: Path) -> None:
+    result = security_design(tmp_path, "--cards", str(cards_file(tmp_path)))
+    assert result.exit_code == 0, result.exception
+    design = json.loads((tmp_path / "d" / "design.json").read_text(encoding="utf-8"))
+    assert [t["task_id"] for t in design["tasks"]] == ["LSE-000", "LSE-001"]
+
+
+def test_the_targeted_sensitivity_adds_the_families_with_false_positives(tmp_path: Path) -> None:
+    result = security_design(tmp_path, "--cards", str(cards_file(tmp_path)), "--sensitivity")
+    assert result.exit_code == 0, result.exception
+    design = json.loads((tmp_path / "d" / "design.json").read_text(encoding="utf-8"))
+    assert [t["task_id"] for t in design["tasks"]] == ["LSE-000", "LSE-001", "LSE-002"]
+
+
+def test_the_sensitivity_needs_the_cards(tmp_path: Path) -> None:
+    assert security_design(tmp_path, "--sensitivity").exit_code != 0

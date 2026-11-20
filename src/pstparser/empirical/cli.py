@@ -1842,7 +1842,8 @@ def design(
     sample: Annotated[
         Path,
         typer.Argument(
-            help="Frozen sample (prefix-600/bcb-prefix-600.json) or LLMSecEval identifier map."
+            help="Frozen sample (prefix-600/bcb-prefix-600.json), S_parse document,"
+            " or LLMSecEval identifier map."
         ),
     ],
     analysis_id: Annotated[str, typer.Option(help="analysis_id of the outcome ledger.")],
@@ -1853,13 +1854,25 @@ def design(
         str | None, typer.Option(help="Selection of the identifier map (security), e.g. S2.")
     ] = None,
     replicates: Annotated[str, typer.Option(help="Replicate IDs, e.g. 0 or 0,1,2,3,4,5.")] = "0",
+    cards: Annotated[
+        Path | None,
+        typer.Option(help="Targeted measure: scenario cards; keep the calibrated families only."),
+    ] = None,
+    sensitivity: Annotated[
+        bool,
+        typer.Option(help="Targeted measure: add the families with documented false positives."),
+    ] = False,
 ) -> None:
     """Write the analysis design of a frozen sample (R-STA-04): tasks, families, replicates.
 
     Functional designs take the tasks of a frozen sample, in its order, without
     families; security designs take the prompts of one selection of the
-    LLMSecEval identifier map with their family, the unit of inference.
+    LLMSecEval identifier map with their family, the unit of inference. With
+    ``--cards`` the design is the one of the targeted measure: only the families
+    whose state that measure judges (``check-security --measure targeted``,
+    with the same ``--sensitivity``).
     """
+    from pstparser.empirical.auto import S_PARSE_FORMAT, load_s_parse
     from pstparser.repro.manifest import (
         digest_file,
         ensure_stage_outputs,
@@ -1875,7 +1888,11 @@ def design(
     if endpoint == "functional":
         if "tasks" not in document or selection is not None:
             raise ValueError("a functional design reads a frozen sample, without --selection")
-        tasks = [{"task_id": row["task_id"]} for row in document["tasks"]]
+        if document.get("format") == S_PARSE_FORMAT:
+            # H3 is analysed on S_parse, a list of task identifiers checked by its hash.
+            tasks = [{"task_id": task} for task in load_s_parse(document)]
+        else:
+            tasks = [{"task_id": row["task_id"]} for row in document["tasks"]]
     elif endpoint == "security":
         if "records" not in document or selection is None:
             raise ValueError("a security design reads the identifier map with --selection")
@@ -1884,8 +1901,25 @@ def design(
             for row in document["records"]
             if selection in row["selections"]
         ]
+        if cards is not None:
+            from pstparser.empirical import codeql as oracle
+
+            states = (
+                (oracle.CALIBRATED, oracle.CALIBRATED_FP) if sensitivity else (oracle.CALIBRATED,)
+            )
+            scenario_cards = oracle.read_cards(cards)
+            tasks = [
+                task
+                for task in tasks
+                if task["family_id"] in scenario_cards
+                and scenario_cards[task["family_id"]].state in states
+            ]
     else:
         raise ValueError("endpoint must be functional or security")
+    if sensitivity and cards is None:
+        raise ValueError("--sensitivity applies to the targeted design, with --cards")
+    if cards is not None and endpoint != "security":
+        raise ValueError("--cards applies to the security design only")
     if not tasks:
         raise ValueError("the sample has no task for this design")
     payload = {
@@ -1910,6 +1944,8 @@ def design(
             "stage": "empirical-design",
             "sample_sha256": digest_file(sample),
             "selection": selection,
+            "cards_sha256": digest_file(cards) if cards is not None else None,
+            "targeted_sensitivity": sensitivity,
             "design_sha256": digest_file(out),
             "source": source_snapshot(),
         },
@@ -2928,11 +2964,15 @@ def hauto_ledgers_command(
     outcomes: Annotated[Path, typer.Argument(help="Outcome ledger with T and H-auto rows.")],
     s_parse: Annotated[Path, typer.Option(help="S_parse document of the strict conversion.")],
     failures: Annotated[Path, typer.Option(help="Parser failures of the same conversion.")],
-    directory: Annotated[Path, typer.Option(help="New directory for the two ledgers.")],
+    directory: Annotated[Path, typer.Option(help="New directory for the three ledgers.")],
 ) -> None:
-    """Write the ledgers of the two H3 estimates: on S_parse, and end-to-end."""
+    """Write the ledgers of the two H3 estimates (on S_parse, end-to-end) and of S_parse.
+
+    The third ledger keeps every condition of the S_parse tasks, for RQ3c and
+    the decomposition of Δ_auto.
+    """
     from pstparser.empirical.analysis import write_outcomes
-    from pstparser.empirical.auto import hauto_ledgers, load_s_parse
+    from pstparser.empirical.auto import hauto_ledgers, load_s_parse, s_parse_ledger
     from pstparser.repro.manifest import (
         digest_file,
         ensure_stage_outputs,
@@ -2940,13 +2980,14 @@ def hauto_ledgers_command(
         write_manifest,
     )
 
-    names = ["outcomes-s-parse.jsonl", "outcomes-end-to-end.jsonl"]
+    names = ["outcomes-s-parse.jsonl", "outcomes-end-to-end.jsonl", "outcomes-s-parse-all.jsonl"]
     ensure_stage_outputs(directory, "empirical-hauto-ledgers", names)
-    primary, end_to_end = hauto_ledgers(
-        read_outcomes(outcomes), load_s_parse(_read_document(s_parse)), _json_lines(failures)
-    )
+    records = read_outcomes(outcomes)
+    tasks = load_s_parse(_read_document(s_parse))
+    primary, end_to_end = hauto_ledgers(records, tasks, _json_lines(failures))
     write_outcomes(primary, directory / names[0])
     write_outcomes(end_to_end, directory / names[1])
+    write_outcomes(s_parse_ledger(records, tasks), directory / names[2])
     write_manifest(
         {
             "stage": "empirical-hauto-ledgers",
@@ -2955,6 +2996,7 @@ def hauto_ledgers_command(
             "failures_sha256": digest_file(failures),
             "s_parse_ledger_sha256": digest_file(directory / names[0]),
             "end_to_end_ledger_sha256": digest_file(directory / names[1]),
+            "s_parse_all_ledger_sha256": digest_file(directory / names[2]),
             "source": source_snapshot(),
         },
         directory,

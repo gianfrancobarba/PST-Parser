@@ -477,41 +477,56 @@ def paired_tables(
     Every report also gets the TOST at +/-5 pp on its 90% interval and the
     four-way reading E1-E4 (00 A-4), crossed with the primary test at 0.05.
     """
-    by_id = {report["analysis_id"]: report for report in reports.values()}
-    if len(by_id) != len(reports):
-        raise ValueError("two reports share an analysis_id")
-    decisions: dict[str, str] = {}
-    levels: dict[str, float] = {}
+    # A report is its analysis_id and its two conditions: the exploratory contrasts
+    # of the core ledger (E - T, H-gold - E) share the analysis_id of H1.
+    by_key: dict[tuple[str, ...], Mapping[str, Any]] = {}
+    for report in reports.values():
+        key = (report["analysis_id"], *report["conditions"])
+        if key in by_key:
+            raise ValueError("two reports share an analysis_id and conditions")
+        by_key[key] = report
+    decisions: dict[tuple[str, ...], str] = {}
+    levels: dict[tuple[str, ...], float] = {}
     if confirmatory:
-        _check_family(by_id, confirmatory, gate)
+        members: dict[str, tuple[str, ...]] = {}
+        for hypothesis, identifier in confirmatory.items():
+            wanted = (identifier, *CONFIRMATORY_REPORTS.get(hypothesis, ("", [], ""))[1])
+            same_id = [key for key in by_key if key[0] == identifier]
+            if wanted in by_key:
+                members[hypothesis] = wanted
+            elif len(same_id) == 1:
+                members[hypothesis] = same_id[0]
+        _check_family(
+            {confirmatory[name]: by_key[key] for name, key in members.items()},
+            confirmatory,
+            gate,
+        )
         p_values: dict[str, float | None] = {}
         for hypothesis in CONFIRMATORY_WEIGHTS:
-            identifier = confirmatory.get(hypothesis)
-            if identifier is None:
+            if hypothesis not in confirmatory:
                 p_values[hypothesis] = None
                 continue
-            if identifier not in by_id:
-                raise ValueError(f"{hypothesis}: no report with analysis_id {identifier!r}")
-            p_values[hypothesis] = _primary_p(by_id[identifier])
+            p_values[hypothesis] = _primary_p(by_key[members[hypothesis]])
             if p_values[hypothesis] is None:
                 raise ValueError(f"{hypothesis}: the report has no primary p-value")
         result = weighted_holm(p_values, CONFIRMATORY_WEIGHTS)
         # The difference of a confirmatory row is read at the level the weighted
         # Holm assigned it, not at 0.05 (R-STA-02).
         levels = {
-            confirmatory[name]: level
+            members[name]: level
             for name, level in weighted_holm_levels(p_values, CONFIRMATORY_WEIGHTS).items()
             if name in confirmatory and level is not None
         }
         decisions = {
-            confirmatory[name]: f"{name} {decision}"
+            members[name]: f"{name} {decision}"
             for name, decision in result.items()
             if name in confirmatory
         }
     main = []
     sensitivity = []
-    for identifier in sorted(by_id):
-        report = by_id[identifier]
+    for key in sorted(by_key):
+        identifier = key[0]
+        report = by_key[key]
         table = report.get("mcnemar_table") or {}
         tango = _bounds(report.get("tango_ci"))
         tango_90 = _bounds(report.get("tango_ci_90"))
@@ -521,7 +536,7 @@ def paired_tables(
         equivalence = _equivalence_interval(report)
         primary = _primary_p(report)
         equivalent = tost(equivalence) if equivalence is not None else None
-        level = levels.get(identifier)
+        level = levels.get(key)
         reading = (
             four_way_reading(primary, equivalence, alpha=level if level is not None else 0.05)
             if primary is not None and equivalence is not None
@@ -577,7 +592,7 @@ def paired_tables(
                 *other,
                 level,
                 *holm_ci,
-                decisions.get(identifier, "exploratory"),
+                decisions.get(key, "exploratory"),
             )
         )
         for key, value in sorted(report["sensitivity"].items()):

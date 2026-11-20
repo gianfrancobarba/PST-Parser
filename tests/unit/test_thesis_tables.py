@@ -425,3 +425,22 @@ def test_the_protocol_family_decides_h1_alone_through_the_command(
     refused = run_thesis(run, tmp_path / "out-2")
     assert isinstance(refused.exception, ValueError)
     assert "confirmatory-family-v1" in str(refused.exception)
+
+
+# Finding of the dress rehearsal (19/11/2026): the exploratory contrasts E - T and
+# H-gold - E are analysed on the same core ledger as H1, so their reports share
+# its analysis_id; a report is identified by its analysis_id and its conditions.
+
+
+def test_reports_of_one_ledger_differ_by_their_conditions() -> None:
+    h1 = report_with("bcb-h1", 0.035)
+    e_t = {**report_with("bcb-h1", 0.5), "conditions": ["T", "E"]}
+    (main, _) = paired_tables({"a": h1, "b": e_t}, {"H1": "bcb-h1"}, gate("descriptive"))
+    rows = {(row[0], row[2], row[3]): row for row in main.rows}
+    assert rows[("bcb-h1", "T", "H-gold")][-1] == "H1 rejected"
+    assert rows[("bcb-h1", "T", "E")][-1] == "exploratory"
+
+
+def test_two_reports_with_the_same_id_and_conditions_are_refused() -> None:
+    with pytest.raises(ValueError, match="share"):
+        paired_tables({"a": report_with("x", 0.1), "b": report_with("x", 0.2)})
