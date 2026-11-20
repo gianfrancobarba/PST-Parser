@@ -11,6 +11,7 @@ Everything the study is frozen on before any final generation, versioned with LF
 - `analysis/`: the prespecified analysis plan with the time rules (`plan.md`) and frozen parameters of the analyses (for example the contamination threshold).
 - `guidelines/`: the gold guidelines `gold-v2.0` the reviewed and frozen gold follows, with the declared procedure (rule drafts, LLM proposals on the judgement units, decision of the student).
 - `rules/`: rules stated as text next to the code that applies them (`prompt-as-data.md`).
+- `determinism/`: the whole tasks of the determinism check (seed 7319, at least 5% of the greedy correctness requests), drawn before the freeze from the frozen variants, one variant file per correctness journal (`record.json`).
 - `freeze-spec.yaml`: the list of files the single freeze covers; `protocol-freeze.json` is written from it once, by `python -m pstparser.empirical freeze`, and checked by `freeze-verify`.
 - After the freeze no listed file changes in place: a correction is a new file and an entry in `deviations.md`.
-- The freeze proves what was fixed, not when: the date comes from the dated email to the supervisor carrying the SHA-256 of `protocol-freeze.json` (message M3) and from the exported messages to the supervisors, kept in `acks/`. No public registry is used.
+- The freeze proves what was fixed, not when: the date comes from the push of the commit that adds `protocol-freeze.json` to the public remote (GitHub), made before the first final generation. No public registry is used.

@@ -1,18 +1,18 @@
 # Freeze specification (freeze-spec-v1). DRAFT: not frozen yet.
 # One freeze, F4, before the final generations (plan of 18/11/2026, P-09): gold, samples,
 # gate thresholds, parser identity, S_parse and its predictions, model digests, calibrations
-# and time rules. Before F4: add the files marked TO ADD, set the pilot block and the
-# supervisor acknowledgement (export of messages M1 and M2), commit everything, then run
+# and time rules. Before F4: commit everything, then run on an extraction of git archive
 #   python -m pstparser.empirical freeze --spec protocol/freeze-spec.yaml --out protocol/protocol-freeze.json
-# Its SHA-256 goes into the dated email to the supervisor (message M3), which is the
-# preregistration: no public registry is used (decision of 19/11/2026).
+# The commit adding protocol-freeze.json is pushed to the public remote before the first
+# final generation: that push dates the freeze (decision of 20/11/2026). No public registry
+# (decision of 19/11/2026); no supervisor acknowledgement is recorded (deviations.md).
 format: freeze-spec-v1
 protocol_version: downstream-1.0.0
 frozen_by: studente
-supervisor_ack: {messages: [M1, M2], date: null, channel: chat, record: null}
+supervisor_ack: null
 preregistration:
   registry: null
-  record: dated email to the supervisor with the SHA-256 of protocol-freeze.json (M3)
+  record: push of the commit adding protocol/protocol-freeze.json to the public remote (origin, GitHub) before the first final generation
   sent_at: null
   export: null
 pilot: {run_ids: [ds-pilot-01], report_sha256: "801560af1107c77f01bbe25f28a48133396fe63bb9f991d99020a657b9647881", changelog_sha256: "6fc38dc580444b79a2349e1f592fd9e72e7bcf4894ba9f33aa3c323bb69bbfc6"}
@@ -106,6 +106,10 @@ items:
   - protocol/pilot/report-lse-sampled.json
   - protocol/pilot/summary.json
   - protocol/pilot/time-rules.json
+  - protocol/determinism/bcb-hauto.variants.jsonl
+  - protocol/determinism/bcb-rest.variants.jsonl
+  - protocol/determinism/empirical-determinism-sample_manifest.json
+  - protocol/determinism/record.json
   - protocol/freeze-spec.yaml
   - protocol/guidelines/gold-v2.0.md
   - protocol/hauto/d01/empirical-auto-annotate_manifest.json
@@ -237,8 +241,6 @@ items:
   - protocol/security/controls/V__89-SQI-3__fstring.py
   - protocol/security/controls/V__89-SQI-3__percent.py
   - protocol/security/controls/V__89-SQI-3__web.py
-  # TO ADD before the freeze F4, once they exist (all committed first):
   # (protocol/hauto/: listed above. The gate report is computed after F4, parser-gate
   #  --purpose final --freeze --c22, before any analysis: its outcome only applies a frozen rule)
-  # - supervisor_ack above (after M2 and its deadline, 21/11 12:00)
   # Every other file of the repository is hashed by the freeze itself (protocol-freeze-v2).

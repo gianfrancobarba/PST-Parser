@@ -1,0 +1,62 @@
+{
+  "format": "determinism-variants-v1",
+  "decision": "R-7 option B, seed 7319, drawn before the freeze",
+  "seed": 7319,
+  "planned_requests": 2906,
+  "wanted_requests": 146,
+  "planned_sha256": "a501a480da4ef43176dd847bfffdcb381a5fc081158d48d2764fe7a3e4571715",
+  "tasks": [
+    "BigCodeBench/1031",
+    "BigCodeBench/1037",
+    "BigCodeBench/1044",
+    "BigCodeBench/1070",
+    "BigCodeBench/1089",
+    "BigCodeBench/1098",
+    "BigCodeBench/1107",
+    "BigCodeBench/1132",
+    "BigCodeBench/144",
+    "BigCodeBench/15",
+    "BigCodeBench/162",
+    "BigCodeBench/178",
+    "BigCodeBench/241",
+    "BigCodeBench/309",
+    "BigCodeBench/379",
+    "BigCodeBench/383",
+    "BigCodeBench/4",
+    "BigCodeBench/420",
+    "BigCodeBench/462",
+    "BigCodeBench/532",
+    "BigCodeBench/549",
+    "BigCodeBench/568",
+    "BigCodeBench/63",
+    "BigCodeBench/768",
+    "BigCodeBench/771",
+    "BigCodeBench/835",
+    "BigCodeBench/856",
+    "BigCodeBench/858",
+    "BigCodeBench/865",
+    "BigCodeBench/933",
+    "BigCodeBench/945"
+  ],
+  "journals": {
+    "bcb-hauto": {
+      "variants": "protocol/determinism/bcb-hauto.variants.jsonl",
+      "variants_sha256": "32df4f611e09890fc1f373b1e5f954e9808f3206ab65001dc48a081f4307b0cf",
+      "source": "protocol/variants/bcb-hauto.variants.jsonl",
+      "source_sha256": "830c19614ec16f1b83aae5e9e93d560204386b94f05487acfaf5e6e6baeafb16",
+      "configuration": "protocol/configs/final/bcb-greedy-hauto-f.json",
+      "tasks": 25,
+      "requests": 125
+    },
+    "bcb-rest": {
+      "variants": "protocol/determinism/bcb-rest.variants.jsonl",
+      "variants_sha256": "5981f512163be66613b8689ec47a6c5878362b9db63631ac65e70ce659275ccb",
+      "source": "protocol/variants/bcb-rest.variants.jsonl",
+      "source_sha256": "f268b526d286355d54e28c90d13c2fe510179b64384392c11cc0fc9ee028756a",
+      "configuration": "protocol/configs/final/bcb-greedy-f.json",
+      "tasks": 6,
+      "requests": 24
+    }
+  },
+  "requests": 149
+}

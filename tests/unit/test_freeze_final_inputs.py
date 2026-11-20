@@ -52,6 +52,30 @@ def test_every_h_gold_variant_comes_from_a_listed_rendering_of_frozen_gold() -> 
         _require_frozen_gold(document, ROOT, ROOT / f"protocol/variants/{name}.variants.jsonl")
 
 
+def test_the_determinism_variants_are_listed_whole_tasks_of_the_frozen_journals() -> None:
+    folder = ROOT / "protocol/determinism"
+    files = {p.relative_to(ROOT).as_posix() for p in folder.iterdir() if p.is_file()}
+    assert files <= _listed()
+    record = json.loads((folder / "record.json").read_text("utf-8"))
+    assert record["seed"] == 7319
+    assert record["requests"] >= record["wanted_requests"] >= 0.05 * record["planned_requests"]
+    document = {"items": {name: _sha(ROOT / name) for name in _listed()}}
+    for name, journal in record["journals"].items():
+        source = ROOT / f"protocol/variants/{name}.variants.jsonl"
+        assert journal["source_sha256"] == _sha(source)
+        kept = [
+            line for line in (ROOT / journal["variants"]).read_bytes().decode().split("\n") if line
+        ]
+        chosen = {json.loads(line)["task_id"] for line in kept}
+        whole = [
+            line
+            for line in source.read_bytes().decode().split("\n")
+            if line and json.loads(line)["task_id"] in chosen
+        ]
+        assert kept == whole
+        _require_frozen_gold(document, ROOT, ROOT / journal["variants"])
+
+
 def test_the_s_parse_journal_joins_its_two_renderings() -> None:
     parts = ROOT / "protocol/variants/parts"
     joined = (parts / "bcb-sparse/variants.jsonl").read_bytes() + (
