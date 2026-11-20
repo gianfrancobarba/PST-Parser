@@ -1,0 +1,66 @@
+{
+  "agreement_version": "char-agreement-v1",
+  "judgement_units_rule": "judgement-units-v2",
+  "first_date": "2026-11-18",
+  "second_date": "2026-11-20",
+  "interval_days": 2,
+  "tasks": 30,
+  "judgement_units": {
+    "char_kappa": 0.6168485131309849,
+    "boundary_f1": 1.0
+  },
+  "tasks_without_judgement_units": 0,
+  "by_unit_type": {
+    "first": {
+      "tasks_with_units": 30,
+      "char_kappa": 1.0,
+      "boundary_f1": 1.0
+    },
+    "prose": {
+      "tasks_with_units": 30,
+      "char_kappa": 0.6168485131309849,
+      "boundary_f1": 1.0
+    },
+    "notes": {
+      "tasks_with_units": 0,
+      "char_kappa": null,
+      "boundary_f1": null
+    }
+  },
+  "all_characters": {
+    "char_kappa": 0.6694609158640905,
+    "boundary_f1": 1.0
+  },
+  "per_task_judgement_kappa": {
+    "LSE-029": 0.3744378354852749,
+    "LSE-032": 0.19291408325952164,
+    "LSE-034": 0.25452550740537583,
+    "LSE-037": 1.0,
+    "LSE-050": 0.0,
+    "LSE-051": -0.003119689552844526,
+    "LSE-053": 0.39420652050437355,
+    "LSE-057": 1.0,
+    "LSE-063": 1.0,
+    "LSE-068": 0.0,
+    "LSE-081": 1.0,
+    "LSE-086": 1.0,
+    "LSE-087": 1.0,
+    "LSE-092": 1.0,
+    "LSE-093": 1.0,
+    "LSE-096": 1.0,
+    "LSE-099": 1.0,
+    "LSE-103": 0.24583333333333332,
+    "LSE-106": 1.0,
+    "LSE-108": 1.0,
+    "LSE-111": 1.0,
+    "LSE-113": 0.1835477551350151,
+    "LSE-125": 1.0,
+    "LSE-130": 0.0,
+    "LSE-131": 1.0,
+    "LSE-134": 0.5067300079176563,
+    "LSE-138": 1.0,
+    "LSE-140": 1.0,
+    "LSE-142": 0.6596540439457689,
+    "LSE-149": 0.0
+  }
+}

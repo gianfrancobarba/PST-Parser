@@ -1,0 +1,66 @@
+{
+  "agreement_version": "char-agreement-v1",
+  "judgement_units_rule": "judgement-units-v2",
+  "first_date": "2026-11-18",
+  "second_date": "2026-11-20",
+  "interval_days": 2,
+  "tasks": 30,
+  "judgement_units": {
+    "char_kappa": 0.855589021691503,
+    "boundary_f1": 1.0
+  },
+  "tasks_without_judgement_units": 0,
+  "by_unit_type": {
+    "first": {
+      "tasks_with_units": 30,
+      "char_kappa": 1.0,
+      "boundary_f1": 1.0
+    },
+    "prose": {
+      "tasks_with_units": 26,
+      "char_kappa": 0.8313841683834731,
+      "boundary_f1": 1.0
+    },
+    "notes": {
+      "tasks_with_units": 7,
+      "char_kappa": 0.0,
+      "boundary_f1": 1.0
+    }
+  },
+  "all_characters": {
+    "char_kappa": 0.9652868881244515,
+    "boundary_f1": 1.0
+  },
+  "per_task_judgement_kappa": {
+    "BigCodeBench/1001": 0.0,
+    "BigCodeBench/1015": 1.0,
+    "BigCodeBench/1057": 1.0,
+    "BigCodeBench/1075": 1.0,
+    "BigCodeBench/1090": 1.0,
+    "BigCodeBench/143": 1.0,
+    "BigCodeBench/150": 1.0,
+    "BigCodeBench/153": 0.0,
+    "BigCodeBench/221": 1.0,
+    "BigCodeBench/265": 1.0,
+    "BigCodeBench/310": 1.0,
+    "BigCodeBench/338": 1.0,
+    "BigCodeBench/4": 1.0,
+    "BigCodeBench/577": 1.0,
+    "BigCodeBench/587": 1.0,
+    "BigCodeBench/62": 1.0,
+    "BigCodeBench/644": 1.0,
+    "BigCodeBench/656": 0.0,
+    "BigCodeBench/658": 1.0,
+    "BigCodeBench/674": 1.0,
+    "BigCodeBench/721": 1.0,
+    "BigCodeBench/748": 1.0,
+    "BigCodeBench/761": 1.0,
+    "BigCodeBench/782": 0.0,
+    "BigCodeBench/816": 1.0,
+    "BigCodeBench/882": 1.0,
+    "BigCodeBench/905": 0.513177542183067,
+    "BigCodeBench/975": 0.0,
+    "BigCodeBench/99": 1.0,
+    "BigCodeBench/990": 1.0
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "format_version": 1,
+  "rule": "near-duplicates-jaccard-v1",
+  "threshold": 0.8,
+  "tasks": 600,
+  "groups": [
+    [
+      "BigCodeBench/330",
+      "BigCodeBench/333"
+    ]
+  ]
+}

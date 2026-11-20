@@ -1,0 +1,447 @@
+{
+  "diff_version": "draft-gold-diff-v1",
+  "rule": "lse-prefix-v1",
+  "tasks": 100,
+  "tasks_changed": 73,
+  "tasks_changed_share": 0.73,
+  "characters": 26947,
+  "characters_changed": 7710,
+  "characters_changed_share": 0.28611719300849814,
+  "reviewer_decided_characters": 17190,
+  "reviewer_decided_share": 0.6379188777971574,
+  "by_rule": {
+    "B10": {
+      "kind": "formula",
+      "units": 100,
+      "units_changed": 0,
+      "characters": 3400,
+      "characters_changed": 0
+    },
+    "G3": {
+      "kind": "judgement",
+      "units": 306,
+      "units_changed": 123,
+      "characters": 17190,
+      "characters_changed": 7710
+    },
+    "G3.1": {
+      "kind": "first",
+      "units": 100,
+      "units_changed": 0,
+      "characters": 6357,
+      "characters_changed": 0
+    }
+  },
+  "transitions": {
+    "context.constraints -> context.data": 102,
+    "context.constraints -> main_instruction": 109,
+    "context.format -> context.constraints": 557,
+    "context.format -> context.data": 566,
+    "context.format -> main_instruction": 2187,
+    "main_instruction -> context.constraints": 3275,
+    "main_instruction -> context.data": 863,
+    "main_instruction -> context.format": 51
+  },
+  "per_task": {
+    "LSE-027": {
+      "changed": true,
+      "characters_changed": 195
+    },
+    "LSE-028": {
+      "changed": true,
+      "characters_changed": 261
+    },
+    "LSE-029": {
+      "changed": true,
+      "characters_changed": 166
+    },
+    "LSE-030": {
+      "changed": true,
+      "characters_changed": 59
+    },
+    "LSE-031": {
+      "changed": true,
+      "characters_changed": 65
+    },
+    "LSE-032": {
+      "changed": true,
+      "characters_changed": 68
+    },
+    "LSE-033": {
+      "changed": true,
+      "characters_changed": 223
+    },
+    "LSE-034": {
+      "changed": true,
+      "characters_changed": 222
+    },
+    "LSE-035": {
+      "changed": true,
+      "characters_changed": 145
+    },
+    "LSE-036": {
+      "changed": true,
+      "characters_changed": 36
+    },
+    "LSE-037": {
+      "changed": true,
+      "characters_changed": 70
+    },
+    "LSE-038": {
+      "changed": true,
+      "characters_changed": 68
+    },
+    "LSE-039": {
+      "changed": true,
+      "characters_changed": 52
+    },
+    "LSE-040": {
+      "changed": true,
+      "characters_changed": 121
+    },
+    "LSE-041": {
+      "changed": true,
+      "characters_changed": 52
+    },
+    "LSE-042": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-043": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-044": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-045": {
+      "changed": true,
+      "characters_changed": 76
+    },
+    "LSE-046": {
+      "changed": true,
+      "characters_changed": 50
+    },
+    "LSE-047": {
+      "changed": true,
+      "characters_changed": 162
+    },
+    "LSE-048": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-049": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-050": {
+      "changed": true,
+      "characters_changed": 190
+    },
+    "LSE-051": {
+      "changed": true,
+      "characters_changed": 174
+    },
+    "LSE-052": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-053": {
+      "changed": true,
+      "characters_changed": 90
+    },
+    "LSE-054": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-055": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-056": {
+      "changed": true,
+      "characters_changed": 67
+    },
+    "LSE-057": {
+      "changed": true,
+      "characters_changed": 66
+    },
+    "LSE-063": {
+      "changed": true,
+      "characters_changed": 49
+    },
+    "LSE-064": {
+      "changed": true,
+      "characters_changed": 51
+    },
+    "LSE-065": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-066": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-067": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-068": {
+      "changed": true,
+      "characters_changed": 36
+    },
+    "LSE-069": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-070": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-071": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-081": {
+      "changed": true,
+      "characters_changed": 39
+    },
+    "LSE-082": {
+      "changed": true,
+      "characters_changed": 49
+    },
+    "LSE-083": {
+      "changed": true,
+      "characters_changed": 166
+    },
+    "LSE-084": {
+      "changed": true,
+      "characters_changed": 58
+    },
+    "LSE-085": {
+      "changed": true,
+      "characters_changed": 138
+    },
+    "LSE-086": {
+      "changed": true,
+      "characters_changed": 33
+    },
+    "LSE-087": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-088": {
+      "changed": true,
+      "characters_changed": 83
+    },
+    "LSE-089": {
+      "changed": true,
+      "characters_changed": 136
+    },
+    "LSE-090": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-091": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-092": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-093": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-094": {
+      "changed": true,
+      "characters_changed": 44
+    },
+    "LSE-095": {
+      "changed": true,
+      "characters_changed": 73
+    },
+    "LSE-096": {
+      "changed": true,
+      "characters_changed": 245
+    },
+    "LSE-097": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-098": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-099": {
+      "changed": true,
+      "characters_changed": 44
+    },
+    "LSE-100": {
+      "changed": true,
+      "characters_changed": 42
+    },
+    "LSE-101": {
+      "changed": true,
+      "characters_changed": 57
+    },
+    "LSE-102": {
+      "changed": true,
+      "characters_changed": 178
+    },
+    "LSE-103": {
+      "changed": true,
+      "characters_changed": 122
+    },
+    "LSE-104": {
+      "changed": true,
+      "characters_changed": 47
+    },
+    "LSE-105": {
+      "changed": true,
+      "characters_changed": 33
+    },
+    "LSE-106": {
+      "changed": true,
+      "characters_changed": 72
+    },
+    "LSE-107": {
+      "changed": true,
+      "characters_changed": 142
+    },
+    "LSE-108": {
+      "changed": true,
+      "characters_changed": 94
+    },
+    "LSE-109": {
+      "changed": true,
+      "characters_changed": 165
+    },
+    "LSE-110": {
+      "changed": true,
+      "characters_changed": 50
+    },
+    "LSE-111": {
+      "changed": true,
+      "characters_changed": 29
+    },
+    "LSE-112": {
+      "changed": true,
+      "characters_changed": 38
+    },
+    "LSE-113": {
+      "changed": true,
+      "characters_changed": 199
+    },
+    "LSE-114": {
+      "changed": true,
+      "characters_changed": 193
+    },
+    "LSE-115": {
+      "changed": true,
+      "characters_changed": 188
+    },
+    "LSE-125": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-126": {
+      "changed": true,
+      "characters_changed": 183
+    },
+    "LSE-127": {
+      "changed": true,
+      "characters_changed": 150
+    },
+    "LSE-128": {
+      "changed": true,
+      "characters_changed": 115
+    },
+    "LSE-129": {
+      "changed": true,
+      "characters_changed": 116
+    },
+    "LSE-130": {
+      "changed": true,
+      "characters_changed": 116
+    },
+    "LSE-131": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-132": {
+      "changed": true,
+      "characters_changed": 110
+    },
+    "LSE-133": {
+      "changed": true,
+      "characters_changed": 125
+    },
+    "LSE-134": {
+      "changed": true,
+      "characters_changed": 207
+    },
+    "LSE-135": {
+      "changed": true,
+      "characters_changed": 142
+    },
+    "LSE-136": {
+      "changed": true,
+      "characters_changed": 86
+    },
+    "LSE-137": {
+      "changed": true,
+      "characters_changed": 26
+    },
+    "LSE-138": {
+      "changed": true,
+      "characters_changed": 46
+    },
+    "LSE-139": {
+      "changed": true,
+      "characters_changed": 56
+    },
+    "LSE-140": {
+      "changed": true,
+      "characters_changed": 216
+    },
+    "LSE-141": {
+      "changed": true,
+      "characters_changed": 161
+    },
+    "LSE-142": {
+      "changed": true,
+      "characters_changed": 122
+    },
+    "LSE-143": {
+      "changed": true,
+      "characters_changed": 68
+    },
+    "LSE-144": {
+      "changed": true,
+      "characters_changed": 53
+    },
+    "LSE-145": {
+      "changed": true,
+      "characters_changed": 41
+    },
+    "LSE-146": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-147": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-148": {
+      "changed": false,
+      "characters_changed": 0
+    },
+    "LSE-149": {
+      "changed": false,
+      "characters_changed": 0
+    }
+  }
+}
