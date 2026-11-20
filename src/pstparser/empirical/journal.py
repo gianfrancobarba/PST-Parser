@@ -180,6 +180,11 @@ def run_journal(
 #: session: the conditions (H-auto only on S_parse) and the variant file.
 MERGE_FREE_KEYS = frozenset({"conditions", "variant_file_sha256"})
 
+#: Also free when every journal is a pilot: there each journal points at the
+#: render record of its own variant file (finding of the pilot ds-pilot-01). A
+#: final run points every journal at the same protocol freeze, which stays checked.
+MERGE_FREE_KEYS_PILOT = MERGE_FREE_KEYS | {"review_record_sha256"}
+
 
 def _journal_rows(directory: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     manifest = json.loads(
@@ -204,7 +209,8 @@ def merge_journals(directories: Sequence[Path], sample_tasks: Sequence[str]) -> 
     The core conditions are those of every journal; their rows must cover each
     task of ``sample_tasks`` exactly once, a task belonging to one journal only.
     The other conditions (H-auto) go to the extra rows. The configurations may
-    differ only in :data:`MERGE_FREE_KEYS`, and every row must come from the
+    differ only in :data:`MERGE_FREE_KEYS` (:data:`MERGE_FREE_KEYS_PILOT`
+    when every journal is a pilot), and every row must come from the
     declared GPU with one frozen environment.
 
     Raises:
@@ -219,8 +225,10 @@ def merge_journals(directories: Sequence[Path], sample_tasks: Sequence[str]) -> 
     configurations = [manifest["configuration"] for manifest, _ in loaded]
     if any("assistant_prefill" in configuration for configuration in configurations):
         raise ValueError("journals with an assistant prefill are not merged")
+    pilot = all(configuration.get("purpose") == "pilot" for configuration in configurations)
+    free = MERGE_FREE_KEYS_PILOT if pilot else MERGE_FREE_KEYS
     fixed = [
-        {key: value for key, value in configuration.items() if key not in MERGE_FREE_KEYS}
+        {key: value for key, value in configuration.items() if key not in free}
         for configuration in configurations
     ]
     if any(other != fixed[0] for other in fixed[1:]):

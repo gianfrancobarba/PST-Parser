@@ -182,3 +182,35 @@ def test_s_parse_is_read_as_the_sample_of_the_h_auto_rows(tmp_path: Path) -> Non
     _write(s_parse, {"format": S_PARSE_FORMAT, "tasks": S_PARSE, "tasks_sha256": "0" * 64})
     with pytest.raises(ValueError, match="hash"):
         _sample_ids(s_parse, None)
+
+
+# Finding of the pilot ds-pilot-01: in a pilot each journal points at the render
+# record of its own variant file; in a final run every journal points at one freeze.
+
+
+def _pair(tmp_path: Path, purpose: str, first: str, second: str) -> list[Path]:
+    return [
+        journal(tmp_path / "a", range(3), True, purpose=purpose, review_record_sha256=first),
+        journal(tmp_path / "b", range(3, 7), False, purpose=purpose, review_record_sha256=second),
+    ]
+
+
+def test_a_pilot_merges_journals_with_their_own_render_records(tmp_path: Path) -> None:
+    merged = merge_journals(_pair(tmp_path, "pilot", "1" * 64, "2" * 64), SAMPLE)
+    assert len(merged["core"]) == 21
+
+
+def test_a_final_run_needs_one_freeze_for_every_journal(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="configuration"):
+        merge_journals(_pair(tmp_path, "final", "1" * 64, "2" * 64), SAMPLE)
+    merged = merge_journals(_pair(tmp_path / "same", "final", "3" * 64, "3" * 64), SAMPLE)
+    assert len(merged["core"]) == 21
+
+
+def test_journals_of_a_pilot_and_of_a_final_run_are_not_merged(tmp_path: Path) -> None:
+    paths = [
+        journal(tmp_path / "a", range(3), True, purpose="pilot", review_record_sha256="1" * 64),
+        journal(tmp_path / "b", range(3, 7), False, purpose="final", review_record_sha256="2" * 64),
+    ]
+    with pytest.raises(ValueError, match="configuration"):
+        merge_journals(paths, SAMPLE)
