@@ -34,6 +34,6 @@
   "protocol_version": "downstream-1.0.0",
   "dataset_revision": "bigcodebench v0.1.4 @b74c0d0bf70d2c0bc459be537895cca163007f1a",
   "purpose": "final",
-  "review_record": "protocol-freeze.json",
+  "review_record": "../../protocol-freeze.json",
   "gpu": "NVIDIA L4"
 }

@@ -32,6 +32,6 @@
   "protocol_version": "downstream-1.0.0",
   "dataset_revision": "llmseceval @39e97f046dbb2c4c604d31b86f2a4d3d27827388",
   "purpose": "final",
-  "review_record": "protocol-freeze.json",
+  "review_record": "../../protocol-freeze.json",
   "gpu": "NVIDIA L4"
 }

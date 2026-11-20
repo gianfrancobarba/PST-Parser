@@ -47,7 +47,9 @@ FILES = {
     "lse-sampled.json": ["T", "H-gold"],
 }
 PILOT = {name: c for name, c in FILES.items() if name.startswith("lse") or "-f" in name}
-REVIEW = {"final": "protocol-freeze.json", "pilot": "render-record.json"}
+# R-6 (19/11/2026): a final configuration in protocol/configs/final/ reaches the repository
+# freeze protocol/protocol-freeze.json; a pilot one names the render record next to it.
+REVIEW = {"final": "../../protocol-freeze.json", "pilot": "render-record.json"}
 
 
 def load(purpose: str, name: str) -> dict:
