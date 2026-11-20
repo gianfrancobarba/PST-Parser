@@ -1,0 +1,1813 @@
+{
+  "analysis_id": "final-bcb-core",
+  "endpoint": "functional",
+  "tasks": [
+    {
+      "task_id": "BigCodeBench/458"
+    },
+    {
+      "task_id": "BigCodeBench/828"
+    },
+    {
+      "task_id": "BigCodeBench/209"
+    },
+    {
+      "task_id": "BigCodeBench/1034"
+    },
+    {
+      "task_id": "BigCodeBench/644"
+    },
+    {
+      "task_id": "BigCodeBench/500"
+    },
+    {
+      "task_id": "BigCodeBench/197"
+    },
+    {
+      "task_id": "BigCodeBench/976"
+    },
+    {
+      "task_id": "BigCodeBench/640"
+    },
+    {
+      "task_id": "BigCodeBench/506"
+    },
+    {
+      "task_id": "BigCodeBench/154"
+    },
+    {
+      "task_id": "BigCodeBench/1067"
+    },
+    {
+      "task_id": "BigCodeBench/1135"
+    },
+    {
+      "task_id": "BigCodeBench/973"
+    },
+    {
+      "task_id": "BigCodeBench/658"
+    },
+    {
+      "task_id": "BigCodeBench/463"
+    },
+    {
+      "task_id": "BigCodeBench/537"
+    },
+    {
+      "task_id": "BigCodeBench/841"
+    },
+    {
+      "task_id": "BigCodeBench/701"
+    },
+    {
+      "task_id": "BigCodeBench/386"
+    },
+    {
+      "task_id": "BigCodeBench/910"
+    },
+    {
+      "task_id": "BigCodeBench/1001"
+    },
+    {
+      "task_id": "BigCodeBench/655"
+    },
+    {
+      "task_id": "BigCodeBench/466"
+    },
+    {
+      "task_id": "BigCodeBench/737"
+    },
+    {
+      "task_id": "BigCodeBench/899"
+    },
+    {
+      "task_id": "BigCodeBench/89"
+    },
+    {
+      "task_id": "BigCodeBench/685"
+    },
+    {
+      "task_id": "BigCodeBench/745"
+    },
+    {
+      "task_id": "BigCodeBench/1015"
+    },
+    {
+      "task_id": "BigCodeBench/470"
+    },
+    {
+      "task_id": "BigCodeBench/213"
+    },
+    {
+      "task_id": "BigCodeBench/1118"
+    },
+    {
+      "task_id": "BigCodeBench/1131"
+    },
+    {
+      "task_id": "BigCodeBench/709"
+    },
+    {
+      "task_id": "BigCodeBench/359"
+    },
+    {
+      "task_id": "BigCodeBench/905"
+    },
+    {
+      "task_id": "BigCodeBench/925"
+    },
+    {
+      "task_id": "BigCodeBench/157"
+    },
+    {
+      "task_id": "BigCodeBench/912"
+    },
+    {
+      "task_id": "BigCodeBench/82"
+    },
+    {
+      "task_id": "BigCodeBench/541"
+    },
+    {
+      "task_id": "BigCodeBench/44"
+    },
+    {
+      "task_id": "BigCodeBench/368"
+    },
+    {
+      "task_id": "BigCodeBench/409"
+    },
+    {
+      "task_id": "BigCodeBench/155"
+    },
+    {
+      "task_id": "BigCodeBench/913"
+    },
+    {
+      "task_id": "BigCodeBench/496"
+    },
+    {
+      "task_id": "BigCodeBench/883"
+    },
+    {
+      "task_id": "BigCodeBench/116"
+    },
+    {
+      "task_id": "BigCodeBench/661"
+    },
+    {
+      "task_id": "BigCodeBench/92"
+    },
+    {
+      "task_id": "BigCodeBench/47"
+    },
+    {
+      "task_id": "BigCodeBench/649"
+    },
+    {
+      "task_id": "BigCodeBench/433"
+    },
+    {
+      "task_id": "BigCodeBench/628"
+    },
+    {
+      "task_id": "BigCodeBench/91"
+    },
+    {
+      "task_id": "BigCodeBench/662"
+    },
+    {
+      "task_id": "BigCodeBench/1127"
+    },
+    {
+      "task_id": "BigCodeBench/150"
+    },
+    {
+      "task_id": "BigCodeBench/166"
+    },
+    {
+      "task_id": "BigCodeBench/591"
+    },
+    {
+      "task_id": "BigCodeBench/907"
+    },
+    {
+      "task_id": "BigCodeBench/452"
+    },
+    {
+      "task_id": "BigCodeBench/247"
+    },
+    {
+      "task_id": "BigCodeBench/1103"
+    },
+    {
+      "task_id": "BigCodeBench/41"
+    },
+    {
+      "task_id": "BigCodeBench/465"
+    },
+    {
+      "task_id": "BigCodeBench/669"
+    },
+    {
+      "task_id": "BigCodeBench/1133"
+    },
+    {
+      "task_id": "BigCodeBench/46"
+    },
+    {
+      "task_id": "BigCodeBench/391"
+    },
+    {
+      "task_id": "BigCodeBench/867"
+    },
+    {
+      "task_id": "BigCodeBench/333"
+    },
+    {
+      "task_id": "BigCodeBench/190"
+    },
+    {
+      "task_id": "BigCodeBench/460"
+    },
+    {
+      "task_id": "BigCodeBench/917"
+    },
+    {
+      "task_id": "BigCodeBench/822"
+    },
+    {
+      "task_id": "BigCodeBench/1020"
+    },
+    {
+      "task_id": "BigCodeBench/1046"
+    },
+    {
+      "task_id": "BigCodeBench/372"
+    },
+    {
+      "task_id": "BigCodeBench/529"
+    },
+    {
+      "task_id": "BigCodeBench/923"
+    },
+    {
+      "task_id": "BigCodeBench/268"
+    },
+    {
+      "task_id": "BigCodeBench/336"
+    },
+    {
+      "task_id": "BigCodeBench/874"
+    },
+    {
+      "task_id": "BigCodeBench/308"
+    },
+    {
+      "task_id": "BigCodeBench/67"
+    },
+    {
+      "task_id": "BigCodeBench/415"
+    },
+    {
+      "task_id": "BigCodeBench/863"
+    },
+    {
+      "task_id": "BigCodeBench/338"
+    },
+    {
+      "task_id": "BigCodeBench/132"
+    },
+    {
+      "task_id": "BigCodeBench/307"
+    },
+    {
+      "task_id": "BigCodeBench/1070"
+    },
+    {
+      "task_id": "BigCodeBench/631"
+    },
+    {
+      "task_id": "BigCodeBench/856"
+    },
+    {
+      "task_id": "BigCodeBench/761"
+    },
+    {
+      "task_id": "BigCodeBench/963"
+    },
+    {
+      "task_id": "BigCodeBench/599"
+    },
+    {
+      "task_id": "BigCodeBench/1088"
+    },
+    {
+      "task_id": "BigCodeBench/782"
+    },
+    {
+      "task_id": "BigCodeBench/494"
+    },
+    {
+      "task_id": "BigCodeBench/1068"
+    },
+    {
+      "task_id": "BigCodeBench/379"
+    },
+    {
+      "task_id": "BigCodeBench/1076"
+    },
+    {
+      "task_id": "BigCodeBench/28"
+    },
+    {
+      "task_id": "BigCodeBench/163"
+    },
+    {
+      "task_id": "BigCodeBench/650"
+    },
+    {
+      "task_id": "BigCodeBench/310"
+    },
+    {
+      "task_id": "BigCodeBench/725"
+    },
+    {
+      "task_id": "BigCodeBench/74"
+    },
+    {
+      "task_id": "BigCodeBench/592"
+    },
+    {
+      "task_id": "BigCodeBench/252"
+    },
+    {
+      "task_id": "BigCodeBench/848"
+    },
+    {
+      "task_id": "BigCodeBench/586"
+    },
+    {
+      "task_id": "BigCodeBench/974"
+    },
+    {
+      "task_id": "BigCodeBench/783"
+    },
+    {
+      "task_id": "BigCodeBench/620"
+    },
+    {
+      "task_id": "BigCodeBench/331"
+    },
+    {
+      "task_id": "BigCodeBench/820"
+    },
+    {
+      "task_id": "BigCodeBench/23"
+    },
+    {
+      "task_id": "BigCodeBench/516"
+    },
+    {
+      "task_id": "BigCodeBench/844"
+    },
+    {
+      "task_id": "BigCodeBench/646"
+    },
+    {
+      "task_id": "BigCodeBench/742"
+    },
+    {
+      "task_id": "BigCodeBench/168"
+    },
+    {
+      "task_id": "BigCodeBench/239"
+    },
+    {
+      "task_id": "BigCodeBench/420"
+    },
+    {
+      "task_id": "BigCodeBench/302"
+    },
+    {
+      "task_id": "BigCodeBench/1092"
+    },
+    {
+      "task_id": "BigCodeBench/1060"
+    },
+    {
+      "task_id": "BigCodeBench/499"
+    },
+    {
+      "task_id": "BigCodeBench/502"
+    },
+    {
+      "task_id": "BigCodeBench/847"
+    },
+    {
+      "task_id": "BigCodeBench/357"
+    },
+    {
+      "task_id": "BigCodeBench/667"
+    },
+    {
+      "task_id": "BigCodeBench/450"
+    },
+    {
+      "task_id": "BigCodeBench/557"
+    },
+    {
+      "task_id": "BigCodeBench/688"
+    },
+    {
+      "task_id": "BigCodeBench/428"
+    },
+    {
+      "task_id": "BigCodeBench/918"
+    },
+    {
+      "task_id": "BigCodeBench/378"
+    },
+    {
+      "task_id": "BigCodeBench/692"
+    },
+    {
+      "task_id": "BigCodeBench/718"
+    },
+    {
+      "task_id": "BigCodeBench/901"
+    },
+    {
+      "task_id": "BigCodeBench/143"
+    },
+    {
+      "task_id": "BigCodeBench/886"
+    },
+    {
+      "task_id": "BigCodeBench/929"
+    },
+    {
+      "task_id": "BigCodeBench/893"
+    },
+    {
+      "task_id": "BigCodeBench/31"
+    },
+    {
+      "task_id": "BigCodeBench/1010"
+    },
+    {
+      "task_id": "BigCodeBench/1018"
+    },
+    {
+      "task_id": "BigCodeBench/992"
+    },
+    {
+      "task_id": "BigCodeBench/797"
+    },
+    {
+      "task_id": "BigCodeBench/573"
+    },
+    {
+      "task_id": "BigCodeBench/1050"
+    },
+    {
+      "task_id": "BigCodeBench/24"
+    },
+    {
+      "task_id": "BigCodeBench/657"
+    },
+    {
+      "task_id": "BigCodeBench/469"
+    },
+    {
+      "task_id": "BigCodeBench/562"
+    },
+    {
+      "task_id": "BigCodeBench/1112"
+    },
+    {
+      "task_id": "BigCodeBench/2"
+    },
+    {
+      "task_id": "BigCodeBench/860"
+    },
+    {
+      "task_id": "BigCodeBench/871"
+    },
+    {
+      "task_id": "BigCodeBench/365"
+    },
+    {
+      "task_id": "BigCodeBench/1021"
+    },
+    {
+      "task_id": "BigCodeBench/285"
+    },
+    {
+      "task_id": "BigCodeBench/265"
+    },
+    {
+      "task_id": "BigCodeBench/568"
+    },
+    {
+      "task_id": "BigCodeBench/897"
+    },
+    {
+      "task_id": "BigCodeBench/1097"
+    },
+    {
+      "task_id": "BigCodeBench/601"
+    },
+    {
+      "task_id": "BigCodeBench/889"
+    },
+    {
+      "task_id": "BigCodeBench/619"
+    },
+    {
+      "task_id": "BigCodeBench/816"
+    },
+    {
+      "task_id": "BigCodeBench/39"
+    },
+    {
+      "task_id": "BigCodeBench/198"
+    },
+    {
+      "task_id": "BigCodeBench/565"
+    },
+    {
+      "task_id": "BigCodeBench/487"
+    },
+    {
+      "task_id": "BigCodeBench/850"
+    },
+    {
+      "task_id": "BigCodeBench/1033"
+    },
+    {
+      "task_id": "BigCodeBench/980"
+    },
+    {
+      "task_id": "BigCodeBench/763"
+    },
+    {
+      "task_id": "BigCodeBench/577"
+    },
+    {
+      "task_id": "BigCodeBench/774"
+    },
+    {
+      "task_id": "BigCodeBench/536"
+    },
+    {
+      "task_id": "BigCodeBench/295"
+    },
+    {
+      "task_id": "BigCodeBench/215"
+    },
+    {
+      "task_id": "BigCodeBench/934"
+    },
+    {
+      "task_id": "BigCodeBench/99"
+    },
+    {
+      "task_id": "BigCodeBench/140"
+    },
+    {
+      "task_id": "BigCodeBench/276"
+    },
+    {
+      "task_id": "BigCodeBench/517"
+    },
+    {
+      "task_id": "BigCodeBench/835"
+    },
+    {
+      "task_id": "BigCodeBench/719"
+    },
+    {
+      "task_id": "BigCodeBench/1082"
+    },
+    {
+      "task_id": "BigCodeBench/489"
+    },
+    {
+      "task_id": "BigCodeBench/211"
+    },
+    {
+      "task_id": "BigCodeBench/687"
+    },
+    {
+      "task_id": "BigCodeBench/648"
+    },
+    {
+      "task_id": "BigCodeBench/1007"
+    },
+    {
+      "task_id": "BigCodeBench/545"
+    },
+    {
+      "task_id": "BigCodeBench/492"
+    },
+    {
+      "task_id": "BigCodeBench/300"
+    },
+    {
+      "task_id": "BigCodeBench/711"
+    },
+    {
+      "task_id": "BigCodeBench/1057"
+    },
+    {
+      "task_id": "BigCodeBench/772"
+    },
+    {
+      "task_id": "BigCodeBench/52"
+    },
+    {
+      "task_id": "BigCodeBench/4"
+    },
+    {
+      "task_id": "BigCodeBench/756"
+    },
+    {
+      "task_id": "BigCodeBench/192"
+    },
+    {
+      "task_id": "BigCodeBench/1101"
+    },
+    {
+      "task_id": "BigCodeBench/508"
+    },
+    {
+      "task_id": "BigCodeBench/617"
+    },
+    {
+      "task_id": "BigCodeBench/882"
+    },
+    {
+      "task_id": "BigCodeBench/1035"
+    },
+    {
+      "task_id": "BigCodeBench/62"
+    },
+    {
+      "task_id": "BigCodeBench/979"
+    },
+    {
+      "task_id": "BigCodeBench/344"
+    },
+    {
+      "task_id": "BigCodeBench/686"
+    },
+    {
+      "task_id": "BigCodeBench/449"
+    },
+    {
+      "task_id": "BigCodeBench/656"
+    },
+    {
+      "task_id": "BigCodeBench/275"
+    },
+    {
+      "task_id": "BigCodeBench/690"
+    },
+    {
+      "task_id": "BigCodeBench/807"
+    },
+    {
+      "task_id": "BigCodeBench/896"
+    },
+    {
+      "task_id": "BigCodeBench/840"
+    },
+    {
+      "task_id": "BigCodeBench/1016"
+    },
+    {
+      "task_id": "BigCodeBench/738"
+    },
+    {
+      "task_id": "BigCodeBench/674"
+    },
+    {
+      "task_id": "BigCodeBench/149"
+    },
+    {
+      "task_id": "BigCodeBench/424"
+    },
+    {
+      "task_id": "BigCodeBench/327"
+    },
+    {
+      "task_id": "BigCodeBench/58"
+    },
+    {
+      "task_id": "BigCodeBench/77"
+    },
+    {
+      "task_id": "BigCodeBench/932"
+    },
+    {
+      "task_id": "BigCodeBench/169"
+    },
+    {
+      "task_id": "BigCodeBench/593"
+    },
+    {
+      "task_id": "BigCodeBench/373"
+    },
+    {
+      "task_id": "BigCodeBench/779"
+    },
+    {
+      "task_id": "BigCodeBench/846"
+    },
+    {
+      "task_id": "BigCodeBench/793"
+    },
+    {
+      "task_id": "BigCodeBench/214"
+    },
+    {
+      "task_id": "BigCodeBench/262"
+    },
+    {
+      "task_id": "BigCodeBench/855"
+    },
+    {
+      "task_id": "BigCodeBench/972"
+    },
+    {
+      "task_id": "BigCodeBench/975"
+    },
+    {
+      "task_id": "BigCodeBench/608"
+    },
+    {
+      "task_id": "BigCodeBench/695"
+    },
+    {
+      "task_id": "BigCodeBench/395"
+    },
+    {
+      "task_id": "BigCodeBench/328"
+    },
+    {
+      "task_id": "BigCodeBench/159"
+    },
+    {
+      "task_id": "BigCodeBench/951"
+    },
+    {
+      "task_id": "BigCodeBench/347"
+    },
+    {
+      "task_id": "BigCodeBench/616"
+    },
+    {
+      "task_id": "BigCodeBench/554"
+    },
+    {
+      "task_id": "BigCodeBench/553"
+    },
+    {
+      "task_id": "BigCodeBench/757"
+    },
+    {
+      "task_id": "BigCodeBench/999"
+    },
+    {
+      "task_id": "BigCodeBench/374"
+    },
+    {
+      "task_id": "BigCodeBench/532"
+    },
+    {
+      "task_id": "BigCodeBench/290"
+    },
+    {
+      "task_id": "BigCodeBench/1006"
+    },
+    {
+      "task_id": "BigCodeBench/448"
+    },
+    {
+      "task_id": "BigCodeBench/436"
+    },
+    {
+      "task_id": "BigCodeBench/817"
+    },
+    {
+      "task_id": "BigCodeBench/226"
+    },
+    {
+      "task_id": "BigCodeBench/402"
+    },
+    {
+      "task_id": "BigCodeBench/968"
+    },
+    {
+      "task_id": "BigCodeBench/35"
+    },
+    {
+      "task_id": "BigCodeBench/660"
+    },
+    {
+      "task_id": "BigCodeBench/887"
+    },
+    {
+      "task_id": "BigCodeBench/447"
+    },
+    {
+      "task_id": "BigCodeBench/457"
+    },
+    {
+      "task_id": "BigCodeBench/721"
+    },
+    {
+      "task_id": "BigCodeBench/832"
+    },
+    {
+      "task_id": "BigCodeBench/266"
+    },
+    {
+      "task_id": "BigCodeBench/1073"
+    },
+    {
+      "task_id": "BigCodeBench/518"
+    },
+    {
+      "task_id": "BigCodeBench/418"
+    },
+    {
+      "task_id": "BigCodeBench/282"
+    },
+    {
+      "task_id": "BigCodeBench/270"
+    },
+    {
+      "task_id": "BigCodeBench/909"
+    },
+    {
+      "task_id": "BigCodeBench/872"
+    },
+    {
+      "task_id": "BigCodeBench/868"
+    },
+    {
+      "task_id": "BigCodeBench/564"
+    },
+    {
+      "task_id": "BigCodeBench/296"
+    },
+    {
+      "task_id": "BigCodeBench/152"
+    },
+    {
+      "task_id": "BigCodeBench/220"
+    },
+    {
+      "task_id": "BigCodeBench/222"
+    },
+    {
+      "task_id": "BigCodeBench/228"
+    },
+    {
+      "task_id": "BigCodeBench/60"
+    },
+    {
+      "task_id": "BigCodeBench/330"
+    },
+    {
+      "task_id": "BigCodeBench/953"
+    },
+    {
+      "task_id": "BigCodeBench/587"
+    },
+    {
+      "task_id": "BigCodeBench/341"
+    },
+    {
+      "task_id": "BigCodeBench/582"
+    },
+    {
+      "task_id": "BigCodeBench/195"
+    },
+    {
+      "task_id": "BigCodeBench/427"
+    },
+    {
+      "task_id": "BigCodeBench/14"
+    },
+    {
+      "task_id": "BigCodeBench/858"
+    },
+    {
+      "task_id": "BigCodeBench/555"
+    },
+    {
+      "task_id": "BigCodeBench/813"
+    },
+    {
+      "task_id": "BigCodeBench/621"
+    },
+    {
+      "task_id": "BigCodeBench/298"
+    },
+    {
+      "task_id": "BigCodeBench/94"
+    },
+    {
+      "task_id": "BigCodeBench/1075"
+    },
+    {
+      "task_id": "BigCodeBench/615"
+    },
+    {
+      "task_id": "BigCodeBench/462"
+    },
+    {
+      "task_id": "BigCodeBench/895"
+    },
+    {
+      "task_id": "BigCodeBench/596"
+    },
+    {
+      "task_id": "BigCodeBench/407"
+    },
+    {
+      "task_id": "BigCodeBench/770"
+    },
+    {
+      "task_id": "BigCodeBench/243"
+    },
+    {
+      "task_id": "BigCodeBench/321"
+    },
+    {
+      "task_id": "BigCodeBench/230"
+    },
+    {
+      "task_id": "BigCodeBench/1090"
+    },
+    {
+      "task_id": "BigCodeBench/421"
+    },
+    {
+      "task_id": "BigCodeBench/1110"
+    },
+    {
+      "task_id": "BigCodeBench/1069"
+    },
+    {
+      "task_id": "BigCodeBench/273"
+    },
+    {
+      "task_id": "BigCodeBench/1044"
+    },
+    {
+      "task_id": "BigCodeBench/691"
+    },
+    {
+      "task_id": "BigCodeBench/1084"
+    },
+    {
+      "task_id": "BigCodeBench/744"
+    },
+    {
+      "task_id": "BigCodeBench/937"
+    },
+    {
+      "task_id": "BigCodeBench/538"
+    },
+    {
+      "task_id": "BigCodeBench/405"
+    },
+    {
+      "task_id": "BigCodeBench/696"
+    },
+    {
+      "task_id": "BigCodeBench/543"
+    },
+    {
+      "task_id": "BigCodeBench/160"
+    },
+    {
+      "task_id": "BigCodeBench/767"
+    },
+    {
+      "task_id": "BigCodeBench/806"
+    },
+    {
+      "task_id": "BigCodeBench/504"
+    },
+    {
+      "task_id": "BigCodeBench/292"
+    },
+    {
+      "task_id": "BigCodeBench/75"
+    },
+    {
+      "task_id": "BigCodeBench/996"
+    },
+    {
+      "task_id": "BigCodeBench/550"
+    },
+    {
+      "task_id": "BigCodeBench/705"
+    },
+    {
+      "task_id": "BigCodeBench/367"
+    },
+    {
+      "task_id": "BigCodeBench/221"
+    },
+    {
+      "task_id": "BigCodeBench/618"
+    },
+    {
+      "task_id": "BigCodeBench/1062"
+    },
+    {
+      "task_id": "BigCodeBench/981"
+    },
+    {
+      "task_id": "BigCodeBench/653"
+    },
+    {
+      "task_id": "BigCodeBench/284"
+    },
+    {
+      "task_id": "BigCodeBench/453"
+    },
+    {
+      "task_id": "BigCodeBench/18"
+    },
+    {
+      "task_id": "BigCodeBench/571"
+    },
+    {
+      "task_id": "BigCodeBench/947"
+    },
+    {
+      "task_id": "BigCodeBench/694"
+    },
+    {
+      "task_id": "BigCodeBench/559"
+    },
+    {
+      "task_id": "BigCodeBench/880"
+    },
+    {
+      "task_id": "BigCodeBench/200"
+    },
+    {
+      "task_id": "BigCodeBench/255"
+    },
+    {
+      "task_id": "BigCodeBench/610"
+    },
+    {
+      "task_id": "BigCodeBench/153"
+    },
+    {
+      "task_id": "BigCodeBench/406"
+    },
+    {
+      "task_id": "BigCodeBench/1089"
+    },
+    {
+      "task_id": "BigCodeBench/417"
+    },
+    {
+      "task_id": "BigCodeBench/38"
+    },
+    {
+      "task_id": "BigCodeBench/337"
+    },
+    {
+      "task_id": "BigCodeBench/1038"
+    },
+    {
+      "task_id": "BigCodeBench/1095"
+    },
+    {
+      "task_id": "BigCodeBench/885"
+    },
+    {
+      "task_id": "BigCodeBench/478"
+    },
+    {
+      "task_id": "BigCodeBench/1024"
+    },
+    {
+      "task_id": "BigCodeBench/134"
+    },
+    {
+      "task_id": "BigCodeBench/1011"
+    },
+    {
+      "task_id": "BigCodeBench/1087"
+    },
+    {
+      "task_id": "BigCodeBench/138"
+    },
+    {
+      "task_id": "BigCodeBench/625"
+    },
+    {
+      "task_id": "BigCodeBench/162"
+    },
+    {
+      "task_id": "BigCodeBench/881"
+    },
+    {
+      "task_id": "BigCodeBench/144"
+    },
+    {
+      "task_id": "BigCodeBench/683"
+    },
+    {
+      "task_id": "BigCodeBench/156"
+    },
+    {
+      "task_id": "BigCodeBench/990"
+    },
+    {
+      "task_id": "BigCodeBench/484"
+    },
+    {
+      "task_id": "BigCodeBench/950"
+    },
+    {
+      "task_id": "BigCodeBench/256"
+    },
+    {
+      "task_id": "BigCodeBench/26"
+    },
+    {
+      "task_id": "BigCodeBench/748"
+    },
+    {
+      "task_id": "BigCodeBench/849"
+    },
+    {
+      "task_id": "BigCodeBench/398"
+    },
+    {
+      "task_id": "BigCodeBench/13"
+    },
+    {
+      "task_id": "BigCodeBench/607"
+    },
+    {
+      "task_id": "BigCodeBench/393"
+    },
+    {
+      "task_id": "BigCodeBench/800"
+    },
+    {
+      "task_id": "BigCodeBench/180"
+    },
+    {
+      "task_id": "BigCodeBench/1023"
+    },
+    {
+      "task_id": "BigCodeBench/747"
+    },
+    {
+      "task_id": "BigCodeBench/510"
+    },
+    {
+      "task_id": "BigCodeBench/36"
+    },
+    {
+      "task_id": "BigCodeBench/356"
+    },
+    {
+      "task_id": "BigCodeBench/531"
+    },
+    {
+      "task_id": "BigCodeBench/843"
+    },
+    {
+      "task_id": "BigCodeBench/600"
+    },
+    {
+      "task_id": "BigCodeBench/196"
+    },
+    {
+      "task_id": "BigCodeBench/699"
+    },
+    {
+      "task_id": "BigCodeBench/731"
+    },
+    {
+      "task_id": "BigCodeBench/735"
+    },
+    {
+      "task_id": "BigCodeBench/259"
+    },
+    {
+      "task_id": "BigCodeBench/830"
+    },
+    {
+      "task_id": "BigCodeBench/96"
+    },
+    {
+      "task_id": "BigCodeBench/854"
+    },
+    {
+      "task_id": "BigCodeBench/165"
+    },
+    {
+      "task_id": "BigCodeBench/364"
+    },
+    {
+      "task_id": "BigCodeBench/267"
+    },
+    {
+      "task_id": "BigCodeBench/249"
+    },
+    {
+      "task_id": "BigCodeBench/795"
+    },
+    {
+      "task_id": "BigCodeBench/48"
+    },
+    {
+      "task_id": "BigCodeBench/716"
+    },
+    {
+      "task_id": "BigCodeBench/105"
+    },
+    {
+      "task_id": "BigCodeBench/178"
+    },
+    {
+      "task_id": "BigCodeBench/471"
+    },
+    {
+      "task_id": "BigCodeBench/930"
+    },
+    {
+      "task_id": "BigCodeBench/320"
+    },
+    {
+      "task_id": "BigCodeBench/98"
+    },
+    {
+      "task_id": "BigCodeBench/826"
+    },
+    {
+      "task_id": "BigCodeBench/227"
+    },
+    {
+      "task_id": "BigCodeBench/383"
+    },
+    {
+      "task_id": "BigCodeBench/291"
+    },
+    {
+      "task_id": "BigCodeBench/811"
+    },
+    {
+      "task_id": "BigCodeBench/765"
+    },
+    {
+      "task_id": "BigCodeBench/1031"
+    },
+    {
+      "task_id": "BigCodeBench/351"
+    },
+    {
+      "task_id": "BigCodeBench/544"
+    },
+    {
+      "task_id": "BigCodeBench/468"
+    },
+    {
+      "task_id": "BigCodeBench/404"
+    },
+    {
+      "task_id": "BigCodeBench/908"
+    },
+    {
+      "task_id": "BigCodeBench/122"
+    },
+    {
+      "task_id": "BigCodeBench/771"
+    },
+    {
+      "task_id": "BigCodeBench/403"
+    },
+    {
+      "task_id": "BigCodeBench/810"
+    },
+    {
+      "task_id": "BigCodeBench/381"
+    },
+    {
+      "task_id": "BigCodeBench/483"
+    },
+    {
+      "task_id": "BigCodeBench/437"
+    },
+    {
+      "task_id": "BigCodeBench/84"
+    },
+    {
+      "task_id": "BigCodeBench/775"
+    },
+    {
+      "task_id": "BigCodeBench/706"
+    },
+    {
+      "task_id": "BigCodeBench/798"
+    },
+    {
+      "task_id": "BigCodeBench/712"
+    },
+    {
+      "task_id": "BigCodeBench/818"
+    },
+    {
+      "task_id": "BigCodeBench/1132"
+    },
+    {
+      "task_id": "BigCodeBench/73"
+    },
+    {
+      "task_id": "BigCodeBench/430"
+    },
+    {
+      "task_id": "BigCodeBench/15"
+    },
+    {
+      "task_id": "BigCodeBench/148"
+    },
+    {
+      "task_id": "BigCodeBench/585"
+    },
+    {
+      "task_id": "BigCodeBench/726"
+    },
+    {
+      "task_id": "BigCodeBench/954"
+    },
+    {
+      "task_id": "BigCodeBench/1100"
+    },
+    {
+      "task_id": "BigCodeBench/861"
+    },
+    {
+      "task_id": "BigCodeBench/827"
+    },
+    {
+      "task_id": "BigCodeBench/729"
+    },
+    {
+      "task_id": "BigCodeBench/957"
+    },
+    {
+      "task_id": "BigCodeBench/768"
+    },
+    {
+      "task_id": "BigCodeBench/289"
+    },
+    {
+      "task_id": "BigCodeBench/668"
+    },
+    {
+      "task_id": "BigCodeBench/1037"
+    },
+    {
+      "task_id": "BigCodeBench/313"
+    },
+    {
+      "task_id": "BigCodeBench/998"
+    },
+    {
+      "task_id": "BigCodeBench/778"
+    },
+    {
+      "task_id": "BigCodeBench/354"
+    },
+    {
+      "task_id": "BigCodeBench/589"
+    },
+    {
+      "task_id": "BigCodeBench/978"
+    },
+    {
+      "task_id": "BigCodeBench/997"
+    },
+    {
+      "task_id": "BigCodeBench/1013"
+    },
+    {
+      "task_id": "BigCodeBench/994"
+    },
+    {
+      "task_id": "BigCodeBench/1065"
+    },
+    {
+      "task_id": "BigCodeBench/865"
+    },
+    {
+      "task_id": "BigCodeBench/794"
+    },
+    {
+      "task_id": "BigCodeBench/890"
+    },
+    {
+      "task_id": "BigCodeBench/939"
+    },
+    {
+      "task_id": "BigCodeBench/76"
+    },
+    {
+      "task_id": "BigCodeBench/624"
+    },
+    {
+      "task_id": "BigCodeBench/741"
+    },
+    {
+      "task_id": "BigCodeBench/684"
+    },
+    {
+      "task_id": "BigCodeBench/352"
+    },
+    {
+      "task_id": "BigCodeBench/914"
+    },
+    {
+      "task_id": "BigCodeBench/119"
+    },
+    {
+      "task_id": "BigCodeBench/513"
+    },
+    {
+      "task_id": "BigCodeBench/413"
+    },
+    {
+      "task_id": "BigCodeBench/945"
+    },
+    {
+      "task_id": "BigCodeBench/434"
+    },
+    {
+      "task_id": "BigCodeBench/1120"
+    },
+    {
+      "task_id": "BigCodeBench/641"
+    },
+    {
+      "task_id": "BigCodeBench/345"
+    },
+    {
+      "task_id": "BigCodeBench/941"
+    },
+    {
+      "task_id": "BigCodeBench/64"
+    },
+    {
+      "task_id": "BigCodeBench/1008"
+    },
+    {
+      "task_id": "BigCodeBench/891"
+    },
+    {
+      "task_id": "BigCodeBench/370"
+    },
+    {
+      "task_id": "BigCodeBench/681"
+    },
+    {
+      "task_id": "BigCodeBench/1116"
+    },
+    {
+      "task_id": "BigCodeBench/435"
+    },
+    {
+      "task_id": "BigCodeBench/137"
+    },
+    {
+      "task_id": "BigCodeBench/11"
+    },
+    {
+      "task_id": "BigCodeBench/173"
+    },
+    {
+      "task_id": "BigCodeBench/595"
+    },
+    {
+      "task_id": "BigCodeBench/1019"
+    },
+    {
+      "task_id": "BigCodeBench/7"
+    },
+    {
+      "task_id": "BigCodeBench/760"
+    },
+    {
+      "task_id": "BigCodeBench/958"
+    },
+    {
+      "task_id": "BigCodeBench/598"
+    },
+    {
+      "task_id": "BigCodeBench/524"
+    },
+    {
+      "task_id": "BigCodeBench/167"
+    },
+    {
+      "task_id": "BigCodeBench/519"
+    },
+    {
+      "task_id": "BigCodeBench/318"
+    },
+    {
+      "task_id": "BigCodeBench/360"
+    },
+    {
+      "task_id": "BigCodeBench/1066"
+    },
+    {
+      "task_id": "BigCodeBench/637"
+    },
+    {
+      "task_id": "BigCodeBench/933"
+    },
+    {
+      "task_id": "BigCodeBench/174"
+    },
+    {
+      "task_id": "BigCodeBench/636"
+    },
+    {
+      "task_id": "BigCodeBench/903"
+    },
+    {
+      "task_id": "BigCodeBench/127"
+    },
+    {
+      "task_id": "BigCodeBench/53"
+    },
+    {
+      "task_id": "BigCodeBench/977"
+    },
+    {
+      "task_id": "BigCodeBench/549"
+    },
+    {
+      "task_id": "BigCodeBench/812"
+    },
+    {
+      "task_id": "BigCodeBench/498"
+    },
+    {
+      "task_id": "BigCodeBench/1098"
+    },
+    {
+      "task_id": "BigCodeBench/654"
+    },
+    {
+      "task_id": "BigCodeBench/584"
+    },
+    {
+      "task_id": "BigCodeBench/319"
+    },
+    {
+      "task_id": "BigCodeBench/606"
+    },
+    {
+      "task_id": "BigCodeBench/95"
+    },
+    {
+      "task_id": "BigCodeBench/479"
+    },
+    {
+      "task_id": "BigCodeBench/309"
+    },
+    {
+      "task_id": "BigCodeBench/727"
+    },
+    {
+      "task_id": "BigCodeBench/1081"
+    },
+    {
+      "task_id": "BigCodeBench/588"
+    },
+    {
+      "task_id": "BigCodeBench/786"
+    },
+    {
+      "task_id": "BigCodeBench/1107"
+    },
+    {
+      "task_id": "BigCodeBench/305"
+    },
+    {
+      "task_id": "BigCodeBench/962"
+    },
+    {
+      "task_id": "BigCodeBench/740"
+    },
+    {
+      "task_id": "BigCodeBench/575"
+    },
+    {
+      "task_id": "BigCodeBench/704"
+    },
+    {
+      "task_id": "BigCodeBench/1056"
+    },
+    {
+      "task_id": "BigCodeBench/1096"
+    },
+    {
+      "task_id": "BigCodeBench/493"
+    },
+    {
+      "task_id": "BigCodeBench/752"
+    },
+    {
+      "task_id": "BigCodeBench/1063"
+    },
+    {
+      "task_id": "BigCodeBench/261"
+    },
+    {
+      "task_id": "BigCodeBench/19"
+    },
+    {
+      "task_id": "BigCodeBench/733"
+    },
+    {
+      "task_id": "BigCodeBench/145"
+    },
+    {
+      "task_id": "BigCodeBench/842"
+    },
+    {
+      "task_id": "BigCodeBench/1115"
+    },
+    {
+      "task_id": "BigCodeBench/264"
+    },
+    {
+      "task_id": "BigCodeBench/78"
+    },
+    {
+      "task_id": "BigCodeBench/63"
+    },
+    {
+      "task_id": "BigCodeBench/853"
+    },
+    {
+      "task_id": "BigCodeBench/1009"
+    },
+    {
+      "task_id": "BigCodeBench/677"
+    },
+    {
+      "task_id": "BigCodeBench/569"
+    },
+    {
+      "task_id": "BigCodeBench/900"
+    },
+    {
+      "task_id": "BigCodeBench/477"
+    },
+    {
+      "task_id": "BigCodeBench/1072"
+    },
+    {
+      "task_id": "BigCodeBench/984"
+    },
+    {
+      "task_id": "BigCodeBench/283"
+    },
+    {
+      "task_id": "BigCodeBench/241"
+    },
+    {
+      "task_id": "BigCodeBench/107"
+    },
+    {
+      "task_id": "BigCodeBench/597"
+    },
+    {
+      "task_id": "BigCodeBench/444"
+    },
+    {
+      "task_id": "BigCodeBench/609"
+    },
+    {
+      "task_id": "BigCodeBench/120"
+    },
+    {
+      "task_id": "BigCodeBench/86"
+    },
+    {
+      "task_id": "BigCodeBench/334"
+    },
+    {
+      "task_id": "BigCodeBench/237"
+    },
+    {
+      "task_id": "BigCodeBench/651"
+    },
+    {
+      "task_id": "BigCodeBench/1052"
+    },
+    {
+      "task_id": "BigCodeBench/1003"
+    },
+    {
+      "task_id": "BigCodeBench/946"
+    },
+    {
+      "task_id": "BigCodeBench/1086"
+    },
+    {
+      "task_id": "BigCodeBench/139"
+    },
+    {
+      "task_id": "BigCodeBench/42"
+    },
+    {
+      "task_id": "BigCodeBench/769"
+    },
+    {
+      "task_id": "BigCodeBench/784"
+    },
+    {
+      "task_id": "BigCodeBench/802"
+    },
+    {
+      "task_id": "BigCodeBench/133"
+    },
+    {
+      "task_id": "BigCodeBench/666"
+    },
+    {
+      "task_id": "BigCodeBench/520"
+    },
+    {
+      "task_id": "BigCodeBench/316"
+    },
+    {
+      "task_id": "BigCodeBench/530"
+    },
+    {
+      "task_id": "BigCodeBench/702"
+    },
+    {
+      "task_id": "BigCodeBench/193"
+    },
+    {
+      "task_id": "BigCodeBench/377"
+    },
+    {
+      "task_id": "BigCodeBench/397"
+    },
+    {
+      "task_id": "BigCodeBench/730"
+    },
+    {
+      "task_id": "BigCodeBench/680"
+    },
+    {
+      "task_id": "BigCodeBench/1104"
+    },
+    {
+      "task_id": "BigCodeBench/481"
+    },
+    {
+      "task_id": "BigCodeBench/361"
+    },
+    {
+      "task_id": "BigCodeBench/682"
+    },
+    {
+      "task_id": "BigCodeBench/1117"
+    },
+    {
+      "task_id": "BigCodeBench/20"
+    }
+  ],
+  "replicate_ids": [
+    0
+  ],
+  "conditions": [
+    "F",
+    "H-gold"
+  ]
+}

@@ -15,7 +15,7 @@ preregistration:
   record: dated email to the supervisor with the SHA-256 of protocol-freeze.json (M3)
   sent_at: null
   export: null
-pilot: {run_ids: [], report_sha256: null, changelog_sha256: null}
+pilot: {run_ids: [ds-pilot-01], report_sha256: "801560af1107c77f01bbe25f28a48133396fe63bb9f991d99020a657b9647881", changelog_sha256: "6fc38dc580444b79a2349e1f592fd9e72e7bcf4894ba9f33aa3c323bb69bbfc6"}
 extraction_policies:
   bigcodebench: bigcodebench-sanitize
   llmseceval: python-fenced-blocks-v2
@@ -51,6 +51,61 @@ items:
   - protocol/configs/pilot/lse-sampled.json
   - protocol/analysis/contamination.json
   - protocol/analysis/plan.md
+  - protocol/analysis/designs/bcb-e-t/design.json
+  - protocol/analysis/designs/bcb-e-t/empirical-design_manifest.json
+  - protocol/analysis/designs/bcb-f-t/design.json
+  - protocol/analysis/designs/bcb-f-t/empirical-design_manifest.json
+  - protocol/analysis/designs/bcb-gold-on-s-parse/design.json
+  - protocol/analysis/designs/bcb-gold-on-s-parse/empirical-design_manifest.json
+  - protocol/analysis/designs/bcb-h-e/design.json
+  - protocol/analysis/designs/bcb-h-e/empirical-design_manifest.json
+  - protocol/analysis/designs/bcb-h-f/design.json
+  - protocol/analysis/designs/bcb-h-f/empirical-design_manifest.json
+  - protocol/analysis/designs/bcb-h1/design.json
+  - protocol/analysis/designs/bcb-h1/empirical-design_manifest.json
+  - protocol/analysis/designs/bcb-h3-end-to-end/design.json
+  - protocol/analysis/designs/bcb-h3-end-to-end/empirical-design_manifest.json
+  - protocol/analysis/designs/bcb-h3-s-parse/design.json
+  - protocol/analysis/designs/bcb-h3-s-parse/empirical-design_manifest.json
+  - protocol/analysis/designs/bcb-rq3c/design.json
+  - protocol/analysis/designs/bcb-rq3c/empirical-design_manifest.json
+  - protocol/analysis/designs/lse-general-python/design.json
+  - protocol/analysis/designs/lse-general-python/empirical-design_manifest.json
+  - protocol/analysis/designs/lse-general/design.json
+  - protocol/analysis/designs/lse-general/empirical-design_manifest.json
+  - protocol/analysis/designs/lse-greedy-general/design.json
+  - protocol/analysis/designs/lse-greedy-general/empirical-design_manifest.json
+  - protocol/analysis/designs/lse-targeted-fp/design.json
+  - protocol/analysis/designs/lse-targeted-fp/empirical-design_manifest.json
+  - protocol/analysis/designs/lse-targeted/design.json
+  - protocol/analysis/designs/lse-targeted/empirical-design_manifest.json
+  - protocol/covariates/bcb/covariates.jsonl
+  - protocol/covariates/bcb/empirical-covariates_manifest.json
+  - protocol/covariates/lse/covariates.jsonl
+  - protocol/covariates/lse/empirical-covariates_manifest.json
+  - protocol/variants/bcb-hauto.variants.jsonl
+  - protocol/variants/bcb-rest.variants.jsonl
+  - protocol/variants/copy-record.json
+  - protocol/variants/lse.variants.jsonl
+  - protocol/variants/parts/bcb-all/variants.jsonl
+  - protocol/variants/parts/bcb-all/variants.jsonl.render.json
+  - protocol/variants/parts/bcb-hauto/variants.jsonl
+  - protocol/variants/parts/bcb-hauto/variants.jsonl.render.json
+  - protocol/variants/parts/bcb-rest/variants.jsonl
+  - protocol/variants/parts/bcb-rest/variants.jsonl.render.json
+  - protocol/variants/parts/bcb-sparse/variants.jsonl
+  - protocol/variants/parts/bcb-sparse/variants.jsonl.render.json
+  - protocol/variants/parts/lse/variants.jsonl
+  - protocol/variants/parts/lse/variants.jsonl.render.json
+  - protocol/pilot-changelog.md
+  - protocol/pilot/power-grid.json
+  - protocol/pilot/power.csv
+  - protocol/pilot/report-bcb-hauto.json
+  - protocol/pilot/report-bcb-rest.json
+  - protocol/pilot/report-lse-greedy.json
+  - protocol/pilot/report-lse-sampled.json
+  - protocol/pilot/summary.json
+  - protocol/pilot/time-rules.json
   - protocol/freeze-spec.yaml
   - protocol/guidelines/gold-v2.0.md
   - protocol/hauto/d01/empirical-auto-annotate_manifest.json
@@ -183,9 +238,7 @@ items:
   - protocol/security/controls/V__89-SQI-3__percent.py
   - protocol/security/controls/V__89-SQI-3__web.py
   # TO ADD before the freeze F4, once they exist (all committed first):
-  # - protocol/variants/<benchmark>.variants.jsonl and their render records (T, H-gold, E, F)
-  # - protocol/covariates/<benchmark>.covariates.jsonl (output of covariates)
   # (protocol/hauto/: listed above. The gate report is computed after F4, parser-gate
   #  --purpose final --freeze --c22, before any analysis: its outcome only applies a frozen rule)
-  # - protocol/analysis/design-*.json; the values of plan.md marked TO FILL (pilot, power)
+  # - supervisor_ack above (after M2 and its deadline, 21/11 12:00)
   # Every other file of the repository is hashed by the freeze itself (protocol-freeze-v2).

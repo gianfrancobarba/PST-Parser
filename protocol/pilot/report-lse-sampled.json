@@ -1,0 +1,120 @@
+{
+  "report_version": "pilot-report-v2",
+  "endpoint": "security",
+  "conditions": [
+    "T",
+    "H-gold"
+  ],
+  "G1_journal_completeness": {
+    "planned": 120,
+    "recorded": 120,
+    "unrecorded": 0,
+    "duplicates": 0,
+    "unknown": 0,
+    "go": true
+  },
+  "G2_resume": {
+    "fingerprint_mismatches": 0,
+    "input_mismatches": 0,
+    "forced_interruption": "not observable in the files: record the interruption and the resumed cell of the notebook"
+  },
+  "G3_rendering": {
+    "t_requests": 60,
+    "t_unequal_to_source": 0,
+    "go": true
+  },
+  "G4_token_budget": {
+    "max_seq_length": 8192,
+    "max_new_tokens": 1280,
+    "max_input_tokens": 342,
+    "max_input_plus_budget": 1622,
+    "go": true
+  },
+  "G5_truncation": {
+    "by_condition": {
+      "T": {
+        "requests": 60,
+        "present": false,
+        "go": true
+      },
+      "H-gold": {
+        "requests": 60,
+        "present": false,
+        "go": true
+      }
+    },
+    "length": 0,
+    "rate": 0.0,
+    "threshold": 0.02,
+    "output_tokens_p99": 319,
+    "output_tokens_max": 329,
+    "max_new_tokens_if_raised": 399
+  },
+  "G10_provenance": {
+    "purpose": "pilot",
+    "revision_verified": true,
+    "chat_template_matches_official": true,
+    "repetition_penalty": 1.0,
+    "source_digest": "0887b9f284f48e0120ea6ec8a6a148a5a3656af1da064607cb88e2cb96ea29e5",
+    "go": true
+  },
+  "G11_resources": {
+    "elapsed_seconds_total": 882.4362313629963,
+    "elapsed_seconds_median": 6.478904641999861,
+    "elapsed_seconds_p95": 14.041764192999835,
+    "peak_vram_bytes": 15310173696,
+    "devices": [
+      "NVIDIA L4"
+    ]
+  },
+  "G13_input_overhead": {
+    "H-gold": {
+      "pairs": 60,
+      "median": 2.4450000000000003,
+      "p10": 2.3020833333333335,
+      "p90": 2.6511627906976742,
+      "min": 2.0140845070422535,
+      "max": 2.9753086419753085
+    }
+  },
+  "G6_extraction": {
+    "primary_policy": "python-fenced-blocks-v2",
+    "rows": 120,
+    "failures": 0,
+    "rate": 0.0,
+    "threshold": 0.15,
+    "go": true,
+    "by_condition": {
+      "T": {
+        "rows": 60,
+        "present": false
+      },
+      "H-gold": {
+        "rows": 60,
+        "present": false
+      }
+    },
+    "diagnostic": {
+      "python-single-block-v1": {
+        "failures": 20,
+        "rate": 0.16666666666666666
+      }
+    }
+  },
+  "G6b_prompt_as_data": null,
+  "G8_flakiness": null,
+  "G9_codeql": {
+    "measure": "general",
+    "usable": 120,
+    "analysed": 120,
+    "rate": 1.0,
+    "threshold": 0.95,
+    "go": true
+  },
+  "discordant_pairs": null,
+  "not_computed_here": {
+    "G7": "harness calibration: the reference and empty programs of check-bigcodebench and the exclusions of the calibration",
+    "G12": "annotation time and correction cycles: the annotation timesheet",
+    "G14": "parser on the pilot prompts: the parser generate, score and align runs"
+  }
+}

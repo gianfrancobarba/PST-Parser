@@ -1,0 +1,23 @@
+{
+  "flat": true,
+  "source_summary_sha256": "153ae66e380d110b8abbd752aeff1d6c39612f099b6ef3e5f70edd90456c6c29",
+  "files": {
+    "protocol/variants/bcb-hauto.variants.jsonl": "830c19614ec16f1b83aae5e9e93d560204386b94f05487acfaf5e6e6baeafb16",
+    "protocol/variants/bcb-rest.variants.jsonl": "f268b526d286355d54e28c90d13c2fe510179b64384392c11cc0fc9ee028756a",
+    "protocol/variants/lse.variants.jsonl": "33a20cf95ee648128be289553149f368fa0daf3a652f987c03ec093f7647f834",
+    "protocol/variants/parts/bcb-all/variants.jsonl": "37ab41629178bb9da84d725c7c33869263824f81b27693d744123f5e013d9171",
+    "protocol/variants/parts/bcb-all/variants.jsonl.render.json": "4da797de7269830e3f3346233953862c9c6a6916d77349a1c27570d7ba031740",
+    "protocol/variants/parts/bcb-sparse/variants.jsonl": "172186ba7732dd778fe3d4053bdc4de1551f2f3913b0c215f7e4cd9146788f19",
+    "protocol/variants/parts/bcb-sparse/variants.jsonl.render.json": "b84f1102e5fa57314f66c231218157f32bbea34c55dbb41ba3f064110f8089fc",
+    "protocol/variants/parts/bcb-rest/variants.jsonl": "f268b526d286355d54e28c90d13c2fe510179b64384392c11cc0fc9ee028756a",
+    "protocol/variants/parts/bcb-rest/variants.jsonl.render.json": "e07ee2bb046004b04b45dd42635703441fb78240627743fce2dcf98f84c601ca",
+    "protocol/variants/parts/bcb-hauto/variants.jsonl": "ea27d7ef9156ad60c2d254e925a15b21a3a43277b62f6b466a1ae29fe79313d4",
+    "protocol/variants/parts/bcb-hauto/variants.jsonl.render.json": "1c3b38e6039f02eff1589462bb517947f26d222f857a97090585d88252aa3c02",
+    "protocol/variants/parts/lse/variants.jsonl": "33a20cf95ee648128be289553149f368fa0daf3a652f987c03ec093f7647f834",
+    "protocol/variants/parts/lse/variants.jsonl.render.json": "0a189d45f5170e7cb940588242e894c01926583a6689469beeb2c5958a3ffb71",
+    "protocol/covariates/bcb/covariates.jsonl": "ba47e762ee37e7536716c307b1f2d7f16817c0a2774cc68c20c18717ae613d09",
+    "protocol/covariates/bcb/empirical-covariates_manifest.json": "5acdfda38693c761c7420dbc275cf5f19be4701270a3a204aa40f18dd2e6a4a0",
+    "protocol/covariates/lse/covariates.jsonl": "3cf8a88ebb499a3946398af7f3206a40a178e1f2fc0d5e5b589cd9d596f987e8",
+    "protocol/covariates/lse/empirical-covariates_manifest.json": "d832b269f6c188c9846b181079081af3e4f616e22bf6c9cdbf936add98aa9d39"
+  }
+}

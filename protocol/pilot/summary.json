@@ -1,0 +1,105 @@
+{
+  "format": "pilot-summary-v1",
+  "run_id": "ds-pilot-01",
+  "source_tree": "704c970a2b07602793ba291c4b649d9bb825b209",
+  "inputs_sha256": "2deca8d5783a7e7948b8be636901f71ee07c1bf8cbe63da793034bf3f7c5bc3e",
+  "transport_sha256": "5d07463e1adf930b60060d9d7201b2e9cf3a20a3e6e96fe2b9d591b5219b6430",
+  "criteria": {
+    "G1": {
+      "value": "292/292 recorded",
+      "go": true
+    },
+    "G2": {
+      "value": "0 fingerprint and 0 input mismatches; forced interruption at 44 rows of bcb-hauto, resumed (student's record)",
+      "go": true
+    },
+    "G3": {
+      "value": "T requests equal to the source: all",
+      "go": true
+    },
+    "G4": {
+      "value": "max input + budget 1811 of 8192",
+      "go": true
+    },
+    "G5": {
+      "value": "0 truncated (threshold 2% per condition)",
+      "go": true
+    },
+    "G6": {
+      "value": "0/292 extraction failures (primary policies)",
+      "go": true
+    },
+    "G6b": {
+      "value": "no json_response, no prompt_as_data (BigCodeBench)",
+      "go": null
+    },
+    "G7": {
+      "value": "calibration of the harness: 1129 of 1140 tasks eligible (11 excluded); the pilot tasks are eligible",
+      "go": true
+    },
+    "G8": {
+      "value": "agreement 1.0 on 148 programs",
+      "go": true
+    },
+    "G9": {
+      "value": "144/144 analysed (general measure)",
+      "go": true
+    },
+    "G10": {
+      "value": "revision and template verified",
+      "go": true
+    },
+    "G11": {
+      "value": "peak VRAM 15350212608 bytes = 0.64 of 24 GB",
+      "go": true
+    },
+    "G12": {
+      "value": "not measured (CP1, declared deviation)",
+      "go": null
+    },
+    "G13": {
+      "value": "input length ratios in report-bcb-hauto.json (descriptive)",
+      "go": null
+    },
+    "G14": {
+      "value": "D-01: 28/30 converted, valid JSON 29/30, macro F1 0.430 (descriptive)",
+      "go": null
+    }
+  },
+  "cp3": "go",
+  "time_rules": {
+    "generations": {
+      "bcb": 148,
+      "lse": 144
+    },
+    "s_bcb": 10.17,
+    "s_lse": 7.3,
+    "w": 20.39,
+    "programs_analysed": 144,
+    "cp3_f": {
+      "end": "2026-11-23T00:54:26.273072",
+      "deadline": "2026-11-24T18:00:00",
+      "F_in": true
+    },
+    "cp3_r": {
+      "end": "2026-11-22T22:13:47.833307",
+      "deadline": "2026-11-25T12:00:00",
+      "replicates": "5+1"
+    }
+  },
+  "discordant_pairs_T_H_gold": {
+    "b_plus_c": 6,
+    "pairs": 30,
+    "q": 0.2
+  },
+  "changelog_sha256": "6fc38dc580444b79a2349e1f592fd9e72e7bcf4894ba9f33aa3c323bb69bbfc6",
+  "files": {
+    "power-grid.json": "f61e1d0a613d1a1efd95bc5312e52cdde20cacd31bd0f0e7477d52d2b0740726",
+    "power.csv": "7bee8e88c6f01f113c6eca6808630e8fe703c8c25161fe51948d21c0107fbf85",
+    "report-bcb-hauto.json": "45aad2e11fdadf25159a090137fd36fde452a260d8325b32e707a74d113a5df1",
+    "report-bcb-rest.json": "8c4bfe814501d1b9da02badad795e731c8a2c56a20b6c205424d0e143c1d7a01",
+    "report-lse-greedy.json": "a68592500e77f6210508f87b0ce1024f1f01e1265e0a5dea58a1b7bc899b4350",
+    "report-lse-sampled.json": "2bf4acccaa9756fd980414e261a8a75fb20aa0a1f14fd86004a57a7f7116047b",
+    "time-rules.json": "97d774a3775a701d4671c08fde10f8526296967510e0ffc17bfb6d44fad88e26"
+  }
+}

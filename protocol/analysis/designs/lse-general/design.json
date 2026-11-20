@@ -1,0 +1,417 @@
+{
+  "analysis_id": "final-lse-sampled-general",
+  "endpoint": "security",
+  "tasks": [
+    {
+      "task_id": "LSE-027",
+      "family_id": "20-IIV-1"
+    },
+    {
+      "task_id": "LSE-028",
+      "family_id": "20-IIV-1"
+    },
+    {
+      "task_id": "LSE-029",
+      "family_id": "20-IIV-1"
+    },
+    {
+      "task_id": "LSE-030",
+      "family_id": "20-IIV-2"
+    },
+    {
+      "task_id": "LSE-031",
+      "family_id": "20-IIV-2"
+    },
+    {
+      "task_id": "LSE-032",
+      "family_id": "20-IIV-2"
+    },
+    {
+      "task_id": "LSE-033",
+      "family_id": "200-ESI-1"
+    },
+    {
+      "task_id": "LSE-034",
+      "family_id": "200-ESI-1"
+    },
+    {
+      "task_id": "LSE-035",
+      "family_id": "200-ESI-1"
+    },
+    {
+      "task_id": "LSE-036",
+      "family_id": "200-ESI-2"
+    },
+    {
+      "task_id": "LSE-037",
+      "family_id": "200-ESI-2"
+    },
+    {
+      "task_id": "LSE-038",
+      "family_id": "200-ESI-2"
+    },
+    {
+      "task_id": "LSE-039",
+      "family_id": "200-ESI-3"
+    },
+    {
+      "task_id": "LSE-040",
+      "family_id": "200-ESI-3"
+    },
+    {
+      "task_id": "LSE-041",
+      "family_id": "200-ESI-3"
+    },
+    {
+      "task_id": "LSE-042",
+      "family_id": "22-ILP-1"
+    },
+    {
+      "task_id": "LSE-043",
+      "family_id": "22-ILP-1"
+    },
+    {
+      "task_id": "LSE-044",
+      "family_id": "22-ILP-1"
+    },
+    {
+      "task_id": "LSE-045",
+      "family_id": "22-ILP-2"
+    },
+    {
+      "task_id": "LSE-046",
+      "family_id": "22-ILP-2"
+    },
+    {
+      "task_id": "LSE-047",
+      "family_id": "22-ILP-2"
+    },
+    {
+      "task_id": "LSE-048",
+      "family_id": "22-ILP-3"
+    },
+    {
+      "task_id": "LSE-049",
+      "family_id": "22-ILP-3"
+    },
+    {
+      "task_id": "LSE-050",
+      "family_id": "22-ILP-3"
+    },
+    {
+      "task_id": "LSE-051",
+      "family_id": "306-MAC-1"
+    },
+    {
+      "task_id": "LSE-052",
+      "family_id": "306-MAC-2"
+    },
+    {
+      "task_id": "LSE-053",
+      "family_id": "306-MAC-2"
+    },
+    {
+      "task_id": "LSE-054",
+      "family_id": "306-MAC-2"
+    },
+    {
+      "task_id": "LSE-055",
+      "family_id": "306-MAC-3"
+    },
+    {
+      "task_id": "LSE-056",
+      "family_id": "306-MAC-3"
+    },
+    {
+      "task_id": "LSE-057",
+      "family_id": "306-MAC-3"
+    },
+    {
+      "task_id": "LSE-063",
+      "family_id": "434-UUF-1"
+    },
+    {
+      "task_id": "LSE-064",
+      "family_id": "434-UUF-1"
+    },
+    {
+      "task_id": "LSE-065",
+      "family_id": "434-UUF-1"
+    },
+    {
+      "task_id": "LSE-066",
+      "family_id": "434-UUF-2"
+    },
+    {
+      "task_id": "LSE-067",
+      "family_id": "434-UUF-2"
+    },
+    {
+      "task_id": "LSE-068",
+      "family_id": "434-UUF-2"
+    },
+    {
+      "task_id": "LSE-069",
+      "family_id": "434-UUF-3"
+    },
+    {
+      "task_id": "LSE-070",
+      "family_id": "434-UUF-3"
+    },
+    {
+      "task_id": "LSE-071",
+      "family_id": "434-UUF-3"
+    },
+    {
+      "task_id": "LSE-081",
+      "family_id": "502-DUD-1"
+    },
+    {
+      "task_id": "LSE-082",
+      "family_id": "502-DUD-1"
+    },
+    {
+      "task_id": "LSE-083",
+      "family_id": "502-DUD-1"
+    },
+    {
+      "task_id": "LSE-084",
+      "family_id": "502-DUD-2"
+    },
+    {
+      "task_id": "LSE-085",
+      "family_id": "502-DUD-2"
+    },
+    {
+      "task_id": "LSE-086",
+      "family_id": "502-DUD-2"
+    },
+    {
+      "task_id": "LSE-087",
+      "family_id": "502-DUD-3"
+    },
+    {
+      "task_id": "LSE-088",
+      "family_id": "502-DUD-3"
+    },
+    {
+      "task_id": "LSE-089",
+      "family_id": "502-DUD-3"
+    },
+    {
+      "task_id": "LSE-090",
+      "family_id": "522-IPC-1"
+    },
+    {
+      "task_id": "LSE-091",
+      "family_id": "522-IPC-1"
+    },
+    {
+      "task_id": "LSE-092",
+      "family_id": "522-IPC-1"
+    },
+    {
+      "task_id": "LSE-093",
+      "family_id": "522-IPC-2"
+    },
+    {
+      "task_id": "LSE-094",
+      "family_id": "522-IPC-2"
+    },
+    {
+      "task_id": "LSE-095",
+      "family_id": "522-IPC-2"
+    },
+    {
+      "task_id": "LSE-096",
+      "family_id": "522-IPC-3"
+    },
+    {
+      "task_id": "LSE-097",
+      "family_id": "522-IPC-3"
+    },
+    {
+      "task_id": "LSE-098",
+      "family_id": "522-IPC-3"
+    },
+    {
+      "task_id": "LSE-099",
+      "family_id": "732-IPA-1"
+    },
+    {
+      "task_id": "LSE-100",
+      "family_id": "732-IPA-1"
+    },
+    {
+      "task_id": "LSE-101",
+      "family_id": "732-IPA-2"
+    },
+    {
+      "task_id": "LSE-102",
+      "family_id": "732-IPA-2"
+    },
+    {
+      "task_id": "LSE-103",
+      "family_id": "732-IPA-2"
+    },
+    {
+      "task_id": "LSE-104",
+      "family_id": "732-IPA-3"
+    },
+    {
+      "task_id": "LSE-105",
+      "family_id": "732-IPA-3"
+    },
+    {
+      "task_id": "LSE-106",
+      "family_id": "732-IPA-3"
+    },
+    {
+      "task_id": "LSE-107",
+      "family_id": "78-INS-1"
+    },
+    {
+      "task_id": "LSE-108",
+      "family_id": "78-INS-1"
+    },
+    {
+      "task_id": "LSE-109",
+      "family_id": "78-INS-1"
+    },
+    {
+      "task_id": "LSE-110",
+      "family_id": "78-INS-2"
+    },
+    {
+      "task_id": "LSE-111",
+      "family_id": "78-INS-2"
+    },
+    {
+      "task_id": "LSE-112",
+      "family_id": "78-INS-2"
+    },
+    {
+      "task_id": "LSE-113",
+      "family_id": "78-INS-3"
+    },
+    {
+      "task_id": "LSE-114",
+      "family_id": "78-INS-3"
+    },
+    {
+      "task_id": "LSE-115",
+      "family_id": "78-INS-3"
+    },
+    {
+      "task_id": "LSE-125",
+      "family_id": "79-INI-1"
+    },
+    {
+      "task_id": "LSE-126",
+      "family_id": "79-INI-1"
+    },
+    {
+      "task_id": "LSE-127",
+      "family_id": "79-INI-1"
+    },
+    {
+      "task_id": "LSE-128",
+      "family_id": "79-INI-2"
+    },
+    {
+      "task_id": "LSE-129",
+      "family_id": "79-INI-2"
+    },
+    {
+      "task_id": "LSE-130",
+      "family_id": "79-INI-2"
+    },
+    {
+      "task_id": "LSE-131",
+      "family_id": "79-INI-3"
+    },
+    {
+      "task_id": "LSE-132",
+      "family_id": "79-INI-3"
+    },
+    {
+      "task_id": "LSE-133",
+      "family_id": "79-INI-3"
+    },
+    {
+      "task_id": "LSE-134",
+      "family_id": "798-UHC-1"
+    },
+    {
+      "task_id": "LSE-135",
+      "family_id": "798-UHC-1"
+    },
+    {
+      "task_id": "LSE-136",
+      "family_id": "798-UHC-1"
+    },
+    {
+      "task_id": "LSE-137",
+      "family_id": "798-UHC-2"
+    },
+    {
+      "task_id": "LSE-138",
+      "family_id": "798-UHC-2"
+    },
+    {
+      "task_id": "LSE-139",
+      "family_id": "798-UHC-2"
+    },
+    {
+      "task_id": "LSE-140",
+      "family_id": "798-UHC-3"
+    },
+    {
+      "task_id": "LSE-141",
+      "family_id": "89-SQI-1"
+    },
+    {
+      "task_id": "LSE-142",
+      "family_id": "89-SQI-1"
+    },
+    {
+      "task_id": "LSE-143",
+      "family_id": "89-SQI-1"
+    },
+    {
+      "task_id": "LSE-144",
+      "family_id": "89-SQI-2"
+    },
+    {
+      "task_id": "LSE-145",
+      "family_id": "89-SQI-2"
+    },
+    {
+      "task_id": "LSE-146",
+      "family_id": "89-SQI-2"
+    },
+    {
+      "task_id": "LSE-147",
+      "family_id": "89-SQI-3"
+    },
+    {
+      "task_id": "LSE-148",
+      "family_id": "89-SQI-3"
+    },
+    {
+      "task_id": "LSE-149",
+      "family_id": "89-SQI-3"
+    }
+  ],
+  "replicate_ids": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "conditions": [
+    "T",
+    "H-gold"
+  ]
+}

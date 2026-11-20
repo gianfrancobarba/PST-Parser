@@ -1,0 +1,192 @@
+{
+  "report_version": "pilot-report-v2",
+  "endpoint": "functional",
+  "conditions": [
+    "T",
+    "H-gold",
+    "E",
+    "F"
+  ],
+  "G1_journal_completeness": {
+    "planned": 8,
+    "recorded": 8,
+    "unrecorded": 0,
+    "duplicates": 0,
+    "unknown": 0,
+    "go": true
+  },
+  "G2_resume": {
+    "fingerprint_mismatches": 0,
+    "input_mismatches": 0,
+    "forced_interruption": "not observable in the files: record the interruption and the resumed cell of the notebook"
+  },
+  "G3_rendering": {
+    "t_requests": 2,
+    "t_unequal_to_source": 0,
+    "go": true
+  },
+  "G4_token_budget": {
+    "max_seq_length": 8192,
+    "max_new_tokens": 1280,
+    "max_input_tokens": 487,
+    "max_input_plus_budget": 1767,
+    "go": true
+  },
+  "G5_truncation": {
+    "by_condition": {
+      "T": {
+        "requests": 2,
+        "present": false,
+        "go": true
+      },
+      "H-gold": {
+        "requests": 2,
+        "present": false,
+        "go": true
+      },
+      "E": {
+        "requests": 2,
+        "present": false,
+        "go": true
+      },
+      "F": {
+        "requests": 2,
+        "present": false,
+        "go": true
+      }
+    },
+    "length": 0,
+    "rate": 0.0,
+    "threshold": 0.02,
+    "output_tokens_p99": 293,
+    "output_tokens_max": 293,
+    "max_new_tokens_if_raised": 367
+  },
+  "G10_provenance": {
+    "purpose": "pilot",
+    "revision_verified": true,
+    "chat_template_matches_official": true,
+    "repetition_penalty": 1.0,
+    "source_digest": "0887b9f284f48e0120ea6ec8a6a148a5a3656af1da064607cb88e2cb96ea29e5",
+    "go": true
+  },
+  "G11_resources": {
+    "elapsed_seconds_total": 90.28635507900026,
+    "elapsed_seconds_median": 10.607623951999813,
+    "elapsed_seconds_p95": 17.706213321000178,
+    "peak_vram_bytes": 15339688448,
+    "devices": [
+      "NVIDIA L4"
+    ]
+  },
+  "G13_input_overhead": {
+    "H-gold": {
+      "pairs": 2,
+      "median": 1.898639819434545,
+      "p10": 1.7644927536231885,
+      "p90": 2.0327868852459017,
+      "min": 1.7644927536231885,
+      "max": 2.0327868852459017
+    },
+    "E": {
+      "pairs": 2,
+      "median": 1.0989249227845095,
+      "p10": 1.0710382513661203,
+      "p90": 1.1268115942028984,
+      "min": 1.0710382513661203,
+      "max": 1.1268115942028984
+    },
+    "F": {
+      "pairs": 2,
+      "median": 1.8759206462342597,
+      "p10": 1.7463768115942029,
+      "p90": 2.0054644808743167,
+      "min": 1.7463768115942029,
+      "max": 2.0054644808743167
+    }
+  },
+  "G6_extraction": {
+    "primary_policy": "bigcodebench-sanitize",
+    "rows": 8,
+    "failures": 0,
+    "rate": 0.0,
+    "threshold": 0.15,
+    "go": true,
+    "by_condition": {
+      "T": {
+        "rows": 2,
+        "present": false
+      },
+      "H-gold": {
+        "rows": 2,
+        "present": false
+      },
+      "E": {
+        "rows": 2,
+        "present": false
+      },
+      "F": {
+        "rows": 2,
+        "present": false
+      }
+    },
+    "diagnostic": {
+      "python-single-block-v1": {
+        "failures": 0,
+        "rate": 0.0
+      }
+    }
+  },
+  "G6b_prompt_as_data": {
+    "by_condition": {
+      "T": {
+        "rows": 2,
+        "json_response_present": false,
+        "prompt_as_data_present": false
+      },
+      "H-gold": {
+        "rows": 2,
+        "json_response_present": false,
+        "prompt_as_data_present": false
+      },
+      "E": {
+        "rows": 2,
+        "json_response_present": false,
+        "prompt_as_data_present": false
+      },
+      "F": {
+        "rows": 2,
+        "json_response_present": false,
+        "prompt_as_data_present": false
+      }
+    },
+    "total": {
+      "rows": 8,
+      "json_response": 0,
+      "prompt_as_data": 0
+    }
+  },
+  "G8_flakiness": {
+    "executed": 8,
+    "discordant_runs": 0,
+    "agreement": 1.0,
+    "flaky": 0,
+    "threshold": 0.99,
+    "go": true
+  },
+  "G9_codeql": null,
+  "discordant_pairs": {
+    "conditions": [
+      "T",
+      "H-gold"
+    ],
+    "complete_pairs": 2,
+    "discordant_total": 0,
+    "discordant_rate": 0.0
+  },
+  "not_computed_here": {
+    "G7": "harness calibration: the reference and empty programs of check-bigcodebench and the exclusions of the calibration",
+    "G12": "annotation time and correction cycles: the annotation timesheet",
+    "G14": "parser on the pilot prompts: the parser generate, score and align runs"
+  }
+}

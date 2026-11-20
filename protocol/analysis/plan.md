@@ -153,5 +153,16 @@ Constants: T0 = 22/11 at 12:00; 1 h per Colab session (two sessions); volumes 1,
 
 ## 8. Values filled after the pilot (before F4)
 
-- [TO FILL] pilot `ds-pilot-01`: report hash, G1–G14, `s_bcb`, `s_lse`, `w`, CP3 / CP3-F / CP3-R outcomes.
-- [TO FILL] q planning value from b + c of the pilot, and the power table at n = 600 and at the S_parse size (`power`).
+- **Pilot `ds-pilot-01`** (transport `5d07463e…`): summary `protocol/pilot/summary.json`, SHA-256 `801560af1107c77f01bbe25f28a48133396fe63bb9f991d99020a657b9647881`; reports, time rules and power table in `protocol/pilot/`; change log `protocol/pilot-changelog.md`.
+  - G1–G14: every criterion that decides CP3 is met (G1, G2, G3, G4, G5, G7, G10; G6 and G9 go). G12 not measured (CP1); G6b, G8, G11, G13, G14 descriptive. **CP3: go.**
+  - Measured, pooled over all conditions: `s_bcb` = 10.17 s (148 generations), `s_lse` = 7.3 s (144), `w` = 20.39 s per program (144 programs, 4 workers).
+  - **CP3-F**: estimated end 2026-11-23 00:54 ≤ 24/11 18:00, so **F is in** both correctness journals.
+  - **CP3-R**: estimated end 2026-11-22 22:13 ≤ 25/11 12:00, so **5 + 1 replicates**.
+- **Planning value of q** (discordant pairs, T and H-gold, direction not computed): b + c = 6 of 30, q = 0.20 (Clopper-Pearson 95% 0.077–0.386; 30 pairs make it imprecise, so the grid 0.10–0.30 is kept). MDE at 80% power, with the power at 5 pp in brackets (`power`, exact mid-p):
+
+| Hypothesis | n | α | q = 0.10 | q = 0.15 | q = 0.20 | q = 0.30 |
+|---|---|---|---|---|---|---|
+| H1 | 600 | 0.04 | 3.75 pp (0.97) | 4.75 pp (0.88) | 5.5 pp (0.76) | 6.5 pp (0.57) |
+| H3 | 506 (S_parse) | 0.01 | 4.75 pp (0.86) | 6 pp (0.64) | 6.75 pp (0.48) | 8.5 pp (0.30) |
+
+  At q = 0.20, after recycling at α = 0.05: H1 5.25 pp (0.79), H3 5.75 pp (0.71).

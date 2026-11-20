@@ -1,0 +1,11 @@
+{
+  "format": "render-record-v1",
+  "variants_sha256": "ea27d7ef9156ad60c2d254e925a15b21a3a43277b62f6b466a1ae29fe79313d4",
+  "canonical_sha256": "8d0b3e5ba2a81cd8102b7d095c2be34e5423629826cd0476a9b13155e3b8ea11",
+  "gold_status": null,
+  "annotations_sha256": null,
+  "h_gold_prompt_hashes": [],
+  "excluded_tasks_sha256": null,
+  "purpose": "exploratory",
+  "freeze_sha256": null
+}
