@@ -1,0 +1,33 @@
+{
+  "format": "parser-identity-v1",
+  "run_id": "parser-2026-11-22-r4",
+  "train_manifest_sha256": "9bc13effc7b0faf881720e2fe8daabb4230a02c25405e113cb4fe25bbc9a153b",
+  "backend": "hf",
+  "model": {
+    "name": "unsloth/Meta-Llama-3.1-8B-Instruct-unsloth-bnb-4bit",
+    "revision": "0db785ab56c082e30ae7dea3645d45465fbb5797"
+  },
+  "adapter": {
+    "digest": "da6e89e1d45ed1ee6ffeb5cf7ac28b7a1b5dec14d4d8056223b92d68b19b953e",
+    "chat_template_digest": "13fa181e503beab67515cef88b2ade67234338b325ac72180147e9cbe4efbd4d"
+  },
+  "system_prompt_sha256": "787bf89d4b6462391d928c70a2af556c1dbe82e826c70ba17fde6584cb7f3544",
+  "decoding": {
+    "max_new_tokens": 3072,
+    "do_sample": false,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": null,
+    "repetition_penalty": 1.0,
+    "structured_output": false,
+    "batch_size": 1
+  },
+  "reference_run": {
+    "backend": "unsloth",
+    "requested_model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+    "requested_revision": "a2856192dd7c25b842431f39c179a6c2c2f627d1",
+    "resolved_model_revision": "0db785ab56c082e30ae7dea3645d45465fbb5797",
+    "revision_verified": false,
+    "system_prompt_sha256": "787bf89d4b6462391d928c70a2af556c1dbe82e826c70ba17fde6584cb7f3544"
+  }
+}
