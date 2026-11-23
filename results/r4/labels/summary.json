@@ -1,0 +1,38 @@
+{
+  "format": "r4-labels-summary-v1",
+  "tasks": 198,
+  "judgement_units": 312,
+  "decision_equal_to_llm_proposal": 303,
+  "decision_changed_by_student": 9,
+  "changes": {
+    "context.constraints -> main_instruction": 2,
+    "context.format -> context.constraints": 2,
+    "context.format -> main_instruction": 2,
+    "context.constraints -> context.format": 2,
+    "main_instruction -> context.constraints": 1
+  },
+  "status": [
+    "reviewed"
+  ],
+  "inputs_sha256": {
+    "drafts": "4d4c63c491441c6cf1ee61caceb095754e80d05cbd00c269d0342c022a144d5d",
+    "units_csv": "23639b09def96481583813537a801bc4229d5649964e8f44aa477bca1964a5b7",
+    "lotto-01-decisioni.csv": "5d824eaed347f9de8ce05a4d893fa916ee3fac6453c852d76e8592eb9d04da9b",
+    "lotto-02-decisioni.csv": "ee8cf3f6b8dcf4a54a87674c56686b868f34f49653dabfacb11d7c5e667a3eff",
+    "lotto-03-decisioni.csv": "7b28ee091c32fc4ab9690370842078b8d3fdf85542f3a2a8339156d7c3c6d5aa",
+    "lotto-04-decisioni.csv": "23fd681c6040baac8e77040da5fc89b631aa77a5cc7b939389e9e13735e21770",
+    "lotto-05-decisioni.csv": "8450975370ebef06d6a727c4302d637468c279cd52f9b6fbf9d57e8d30476a83",
+    "lotto-06-decisioni.csv": "8c48d94639495d315ef0d1a956b572fd8dd70e4a9856e574e2b775c101127365",
+    "lotto-07-decisioni.csv": "50cf7cfbc04980d638a1f3924c11f4e70d991d8685ab352c3ab54e1d44c7058c",
+    "lotto-08-decisioni.csv": "a78d84ae7d86dca74c6c4860ac24499446c3fd6a92beed0d1004e20c553fae4a",
+    "lotto-09-decisioni.csv": "f72c1765f8a62ad6f2d44a03100c56a40ff3c621f523877d8b06f40f3f459ede",
+    "lotto-10-decisioni.csv": "097ff74cac61abcbc58bf385962cfd369b064b034724cdccc2d759936f69385d",
+    "lotto-11-decisioni.csv": "5e98f4c72cb0a12045144270af5a5f3d7ab5d0d5bc5a9500f90e99d3c48efc88",
+    "lotto-12-decisioni.csv": "18b02bec3df2e06e3b0de318bae4280ee4437906b3340153d3a00d6df4c26950",
+    "lotto-13-decisioni.csv": "9507828cc4371a01b5a4d1e95cf46cc15229db2ace04be63a9473fa8b49e6088"
+  },
+  "outputs_sha256": {
+    "annotations": "d916163fd9d8e5997683fdeaf0adc908017d177b3cc2d2b4354cbed9129d776b",
+    "review_log": "a97b81b8f28ad8ee8f48d7e464dbdccf9ba961368b6bd80313f80b9fb8831cc3"
+  }
+}

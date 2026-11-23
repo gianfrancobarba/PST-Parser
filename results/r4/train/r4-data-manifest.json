@@ -1,0 +1,45 @@
+{
+  "format": "r4-data-v1",
+  "rule": "r3 split (baseline.yaml, seed 42) kept; BigCodeBench records appended to train and validation",
+  "r3": {
+    "records": 1123,
+    "train": 905,
+    "val": 100,
+    "test": 100,
+    "records_sha256": "c29994222ad40305f89caa2d498541731238f1e17f3dad8bc8c339bf36130d99",
+    "split_sha256": {
+      "train.json": "ce123904519962008ea85922bedbe1adccb334b90e8edb20b4b1599de739b0d0",
+      "val.json": "26bac00b280fe106a287fa022693856bca3c5ee4fac1d7c1a1057408b4b1ac75",
+      "test.json": "1df6adc0a5b061a5e295f6dc2825ca053f44a4738b63f11e47708d92dea1f7a8"
+    }
+  },
+  "r4": {
+    "records": 1321,
+    "train": 1073,
+    "val": 130,
+    "test": 100,
+    "records_sha256": "567041c27b29da91fab19e95b6a8236d0d1f743ee8e6d79c43778425b201eb62",
+    "split_sha256": {
+      "train.json": "a6959cae4ba67b28216a59104a3632de9113d0ab3fcf4bf16d116a01763b6deb",
+      "val.json": "a29cb8c55a1287f142cde38c4c031973d5447976d78432da15d0288d94298653",
+      "test.json": "1df6adc0a5b061a5e295f6dc2825ca053f44a4738b63f11e47708d92dea1f7a8",
+      "split_manifest.json": "e4a9460b9ee61382b7fb79761472fde27ea13763959d34fc8c6c7ca55daf560e"
+    }
+  },
+  "bcb": {
+    "yaml": "results/r4/data/bcb-r4.yaml",
+    "yaml_sha256": "6fb4961ea8b549853b64907c064f9df5bc62a95c3e0fc09b1567603b02330829",
+    "first_index": 1123,
+    "train": 168,
+    "val": 30
+  },
+  "quality_r4": {
+    "total": 1321,
+    "min_coverage_ratio": 0.9,
+    "issue_count": 0,
+    "affected_records": 0,
+    "issues": []
+  },
+  "sources_override": "data.sources=[{path: data/raw/prompt_dataset_v2.xlsx, sheet: prompt_dataset_v2, fixes: data/raw/annotation_fixes.yaml}, {path: data/annotated/reasoning.yaml, format: yaml}, {path: results/r4/data/bcb-r4.yaml, format: yaml}]",
+  "line_endings": "split_manifest.json and quality_report.json written CRLF by the package on Windows, converted to LF (content unchanged)"
+}
