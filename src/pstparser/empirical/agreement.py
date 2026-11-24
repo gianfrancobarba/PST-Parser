@@ -4,7 +4,7 @@ Both measures canonicalise the annotations with the policy of the renderer
 (whitespace between spans belongs to the preceding span, a prefix to the first),
 so two annotations that render to the same H agree perfectly. Whitespace
 characters are never counted. A mask restricts both measures to chosen
-characters: the primary measure uses the judgement units (02 §3.5; 11 F3), the
+characters: the primary measure uses the judgement units, the
 measure on every non-whitespace character is descriptive.
 """
 

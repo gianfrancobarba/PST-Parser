@@ -678,7 +678,7 @@ def evaluate_generations(
             outcome=sarif,
             config=config,
         )
-        # I is decided before CodeQL (R-ORA-07): an unusable program stays I even
+        # I is decided before CodeQL: an unusable program stays I even
         # if the analyser could not run; only a usable one becomes missing.
         lost = failure and usable
         state: Outcome = "missing" if lost else judgment.state
@@ -716,7 +716,7 @@ def evaluate_generations(
                 "extraction_status": extracted.status,
                 "extraction_blocks": extracted.blocks,
                 "extraction_open_fence": extracted.open_fence,
-                # Lines of code that are neither blank nor comments (07 C4).
+                # Lines of code that are neither blank nor comments.
                 "loc": sum(
                     1
                     for line in (code or "").split("\n")
@@ -865,7 +865,7 @@ def calibrate(
 def require_calibration(
     calibration: Mapping[str, Any], config: CodeQLConfig, cards: Mapping[str, Card]
 ) -> None:
-    """Accept the frozen CodeQL calibration only if it backs the cards (R-ORA-10).
+    """Accept the frozen CodeQL calibration only if it backs the cards.
 
     The calibration must have been run with these settings, show no mismatch,
     and observe for every calibrated family the state its card declares.

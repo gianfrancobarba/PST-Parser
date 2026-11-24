@@ -417,7 +417,7 @@ def score(
 
     The results record the SHA-256 of the predictions and their indices, and
     with ``--id-map`` the task of each index, so that the parser gate can bind
-    the report to the predictions behind S_parse (R-HAU-02).
+    the report to the predictions behind S_parse.
     """
     experiment = _load(config, set_)
 

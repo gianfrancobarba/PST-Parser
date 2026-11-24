@@ -9,7 +9,7 @@ is the number of discordant T/H-gold pairs, b + c, without b - c.
 Truncations, empty sanitised programs, ``json_response`` and ``prompt_as_data``
 are failures by construction: counted per condition next to b + c they would
 bound the sign of H-gold - T. Per condition the report says only whether they
-are present; their counts are pooled over all conditions (R-STA-05).
+are present; their counts are pooled over all conditions.
 
 Some criteria cannot be read from a journal and its evaluation (calibration of
 the harness, annotation time, the parser on the pilot prompts); they are listed
@@ -335,7 +335,7 @@ def pilot_report(
             ``restrict``, the ledgers of the check runs of the merged files.
         details: The details written by the same check run(s).
         restrict: Keep only the outcomes of the journal's cells and the
-            details of its requests (two journals in one session, C-26); the
+            details of its requests (two journals in one session); the
             exact coverage check applies after the restriction, so a missing
             or doubly judged cell still stops the report.
 

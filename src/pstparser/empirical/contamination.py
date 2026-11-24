@@ -1,12 +1,12 @@
-"""Prespecified exploratory analyses of contamination and near duplicates (00 A-6; M25).
+"""Prespecified exploratory analyses of contamination and near duplicates.
 
 - Contamination: how much of a task's reference solution a generated program
   reproduces, as the share of the distinct token 10-grams of the reference that
   also occur in the program; a program is "highly similar" at or above a
-  threshold read from the frozen configuration (0.5, 06 §3.8.1). The reference
+  threshold read from the frozen configuration (0.5). The reference
   solution is read only here, at analysis time, from the oracle file: it never
   reaches generation or rendering.
-- Near duplicates (03 B15): BigCodeBench prompts whose sets of word tokens have
+- Near duplicates: BigCodeBench prompts whose sets of word tokens have
   a Jaccard index of at least 0.8, joined into connected groups; the S-NEARDUP
   sensitivity resamples these groups as clusters, every other task alone.
 """
@@ -138,7 +138,7 @@ def similarity_strata(
 
 
 def word_tokens(text: str) -> set[str]:
-    """Lower-cased word tokens, the token set of the near-duplicate check (03 B15)."""
+    """Lower-cased word tokens, the token set of the near-duplicate check."""
     return set(_WORD.findall(text.lower()))
 
 

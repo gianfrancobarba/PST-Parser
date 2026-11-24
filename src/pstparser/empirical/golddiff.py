@@ -1,4 +1,4 @@
-"""Diff between the rule drafts and the reviewed gold (plan of 18/11/2026, P-07).
+"""Diff between the rule drafts and the reviewed gold (`protocol/analysis/plan.md`).
 
 A prespecified analysis: how much the review changed the drafts proposed by the
 rules. Characters are compared with the renderer's separator policy (the

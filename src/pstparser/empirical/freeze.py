@@ -1,6 +1,6 @@
 """Protocol freeze: hash every frozen input, the code and the lock file, and verify them.
 
-``protocol/protocol-freeze.json`` (08 §3.2.2) lists by SHA-256 every file the
+``protocol/protocol-freeze.json`` lists by SHA-256 every file the
 study is frozen on (samples, gold, variants, configurations, oracles, analysis
 plan), the digest of the package source (generation and analysis code alike,
 07 RD-4) and the lock file. It never holds its own hash: a generation
@@ -9,7 +9,7 @@ lists the configuration. The file is written once, canonically serialised;
 the date it was written is proved by the dated email to the supervisor that
 carries its SHA-256, not by this file.
 
-Format v2 (R-GEN-01) also lists every other file of the repository by hash
+Format v2 also lists every other file of the repository by hash
 (``repository``): gold, notebooks, prompts, configurations and
 ``pyproject.toml`` included. In a git checkout the files are those git tracks,
 and a new file that git does not ignore is reported; elsewhere (an archive on
@@ -148,7 +148,7 @@ def build_freeze(
     inputs and time the document, and its SHA-256, are the same.
 
     ``meta`` holds ``protocol_version``, ``frozen_by`` and the descriptive keys
-    of 08 §3.2.2 (supervisor acknowledgement, preregistration, pilot,
+    of the freeze (supervisor acknowledgement, preregistration, pilot,
     extraction policies, conditions, renderer version).
 
     Raises:
@@ -333,7 +333,7 @@ def require_final_freeze(
 
 
 def _require_frozen_gold(document: Mapping[str, Any], root: Path, variants: Path) -> None:
-    """Every H-gold variant must come from a listed rendering of frozen, listed gold (R-TRA-02).
+    """Every H-gold variant must come from a listed rendering of frozen, listed gold.
 
     The render records (``*.render.json``) listed in the freeze name the prompt
     hashes of the H-gold variants they wrote, the state of the gold and the

@@ -204,7 +204,7 @@ def _journal_rows(directory: Path) -> tuple[dict[str, Any], list[dict[str, Any]]
 
 
 def merge_journals(directories: Sequence[Path], sample_tasks: Sequence[str]) -> dict[str, Any]:
-    """Verified union of the complete journals of one generation session (C-26).
+    """Verified union of the complete journals of one generation session.
 
     The core conditions are those of every journal; their rows must cover each
     task of ``sample_tasks`` exactly once, a task belonging to one journal only.

@@ -232,7 +232,7 @@ def collect(code: str) -> Facts | None:
             and node.value is not None
         ):
             assigned.setdefault(node.target.id, []).append(node.value)
-    # v2 (R-ORA-06): a string that is a statement of its own (a docstring, a bare
+    # v2: a string that is a statement of its own (a docstring, a bare
     # string) says nothing about what the program does; comments never reach the AST.
     bare = {
         id(node.value)
@@ -523,7 +523,7 @@ FAMILY_RULES: Final[dict[str, tuple[str, Callable[[Facts], bool]]]] = {
 }
 
 
-#: Pilot material only (decision S-1 of 19/11/2026): the four C-origin memory
+#: Pilot material only (declared in ``protocol/deviations.md``): the four C-origin memory
 #: families of the pilot, disjoint from the sample, have no target query and no
 #: family rule. They get the generic rule alone, so that the general measure can
 #: be tried on generated programs. No final family is here.

@@ -97,7 +97,7 @@ def resolve_snapshot(name: str, revision: str, *, hash_weights: bool = False) ->
 
 
 def verify_expected_files(snapshot: SnapshotIdentity, expected: Mapping[str, Any]) -> None:
-    """Compare the hashed files of a snapshot with the frozen expected digests (R-GEN-02).
+    """Compare the hashed files of a snapshot with the frozen expected digests.
 
     ``expected`` is ``protocol/model.json``: ``name``, ``revision`` and
     ``files`` (path in the repository to SHA-256). Every hashed file must be
@@ -483,7 +483,7 @@ def _load_hf(config: ModelConfig) -> tuple[Model, Tokenizer]:
         source = str(resolve_snapshot(config.name, config.revision).path)
         if config.load_in_4bit and _prequantised(Path(source)):
             # The snapshot carries its own quantisation (the parser's base
-            # weights, C-24): it is the one applied, not a default of ours.
+            # weights): it is the one applied, not a default of ours.
             del keywords["quantization_config"]
         keywords["attn_implementation"] = "sdpa"
         if not config.load_in_4bit and torch.cuda.is_available():

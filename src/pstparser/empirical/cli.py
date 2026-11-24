@@ -29,7 +29,7 @@ def _purpose(purpose: str, freeze: Path | None) -> dict[str, Any]:
     """Purpose of a downstream command and the hash of the verified freeze it ran under.
 
     A ``final`` purpose requires a protocol freeze that verifies against the
-    repository (R-GEN-01); an ``exploratory`` one records ``None`` when no
+    repository; an ``exploratory`` one records ``None`` when no
     freeze is given.
 
     Raises:
@@ -55,7 +55,7 @@ def _purpose(purpose: str, freeze: Path | None) -> dict[str, Any]:
 _PURPOSE_HELP = "exploratory, or final: final requires --freeze (a verified protocol freeze)."
 _FREEZE_HELP = "protocol-freeze.json the command runs under; verified before anything is read."
 #: S_gold, the tasks with reviewed gold, relative to protocol/samples: the 600-task
-#: prefix of the frozen permutation (plan of 18/11/2026, P-02).
+#: prefix of the frozen permutation (`protocol/analysis/plan.md`).
 S_GOLD_FILE = "prefix-600/bcb-prefix-600.json"
 #: Prespecified fallback, the nested 400-task prefix: chosen only for time (pilot
 #: stopwatch above 3.0 min per prompt, or gold review late at CP4), never for
@@ -72,7 +72,7 @@ def _rows(path: Path) -> list[dict[str, Any]]:
 def _with_prefill(
     rows: list[dict[str, Any]], generations: Path
 ) -> tuple[list[dict[str, Any]], str | None]:
-    """Put the S-PREFILL prefill back in front of every output (Q-25).
+    """Put the assistant prefill back in front of every output.
 
     The journal records only the continuation; the prefill is read from the
     configuration in the manifest next to the journal and prepended, as the
@@ -149,7 +149,7 @@ def render(
     """Render reviewed canonical JSONL annotations into T/H-gold (and E) JSONL.
 
     With ``--condition H-auto`` the hierarchical variant of parsed spans is
-    labelled H-auto (M19); ``--no-traditional`` leaves T out, so that it can be
+    labelled H-auto; ``--no-traditional`` leaves T out, so that it can be
     joined with the gold rendering of the same tasks; ``--tasks`` keeps only
     the tasks of an S_parse document and ``--exclude-tasks`` only the others,
     so that the two journals of a session partition the sample; ``--flat`` adds
@@ -207,7 +207,7 @@ def render(
     from pstparser.empirical.auto import tasks_digest
     from pstparser.repro.manifest import digest_file
 
-    # State of the gold the canonical file was joined in (R-TRA-02), read from the
+    # State of the gold the canonical file was joined in, read from the
     # canonicalize manifest when it describes this very file.
     gold_status: str | None = None
     annotations_sha256: str | None = None
@@ -446,7 +446,7 @@ def merge_journals_command(
         Path | None, typer.Option(help="S_parse document the H-auto rows must cover exactly.")
     ] = None,
 ) -> None:
-    """Verified union of the journals of one session, before check-bigcodebench (C-26).
+    """Verified union of the journals of one session, before check-bigcodebench.
 
     Writes ``generations-core.jsonl`` (the conditions of every journal, on the
     sample) and, if any, ``generations-extra.jsonl`` (H-auto on S_parse).
@@ -1002,7 +1002,7 @@ def sample_reannotation(
     """Draw the re-annotation sample among the tasks with at least one judgement unit.
 
     Drawn with a seed before the gold review, so that the choice of tasks cannot
-    depend on how the review went (plan of 18/11/2026, P-07).
+    depend on how the review went (`protocol/analysis/plan.md`).
     """
     from pstparser.empirical import sampling
     from pstparser.empirical.benchmarks import read_sources
@@ -1159,7 +1159,7 @@ def gold_diff_command(
 ) -> None:
     """Diff between the rule drafts and the reviewed gold: units and characters by rule.
 
-    A prespecified analysis (plan of 18/11/2026, P-07): share of tasks changed,
+    A prespecified analysis (`protocol/analysis/plan.md`): share of tasks changed,
     characters and units changed for each rule, and the share of characters the
     rules leave to the reviewer.
     """
@@ -1328,12 +1328,12 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         "dataset_revision",
         "purpose",
         "review_record",
-        # The one GPU of the whole campaign (C-01, R-PIA-02): a run elsewhere is refused.
+        # The one GPU of the whole campaign: a run elsewhere is refused.
         "gpu",
     }
     # A configuration without format_version is version 1 and keeps its closed
     # key set; the keys added since are admitted only by declaring version 2.
-    # assistant_prefill (S-PREFILL, 00 T-3) is the one optional key of version 2.
+    # assistant_prefill (a sensitivity) is the one optional key of version 2.
     versioned = "format_version" in config
     if versioned:
         if config["format_version"] != 2:
@@ -1379,13 +1379,13 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         from pstparser.empirical.freeze import require_final_freeze
 
         # Before any model is loaded: a final run belongs to a verified freeze
-        # that lists this configuration and these variants (M12).
+        # that lists this configuration and these variants.
         require_final_freeze(review, variants, configuration)
     model_config = ModelConfig(**config["model"])
     inference = InferenceConfig(**config["inference"])
     if not re.fullmatch(r"[0-9a-f]{40}", model_config.revision or ""):
         raise ValueError("provide an immutable 40-character model revision")
-    # A pilot measures the treatment of the final runs (R-GEN-03): only the hf
+    # A pilot measures the treatment of the final runs: only the hf
     # backend loads the requested snapshot and keeps the published template.
     if model_config.backend != "hf" or model_config.chat_template != "native":
         raise ValueError("generation requires the hf backend with the 'native' template")
@@ -1394,12 +1394,12 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
     if not inference.do_sample and len(config["replicate_ids"]) != 1:
         raise ValueError("greedy repetitions are not independent samples")
     # Before anything is loaded: pilot, final runs, determinism and H-auto share
-    # one declared GPU, since greedy outputs may differ across GPUs (R-PIA-02).
+    # one declared GPU, since greedy outputs may differ across GPUs.
     measured_environment = environment()
     found = measured_environment.get("accelerator", {}).get("devices") or []
     if not found or any(device != config["gpu"] for device in found):
         raise ValueError(f"the run requires the declared GPU {config['gpu']!r}; found {found}")
-    # Q-03 (b): the kernel string and the NVIDIA driver may change between Colab
+    # The kernel string and the NVIDIA driver may change between Colab
     # sessions on the same GPU. They are recorded per completion, not frozen.
     volatile = {
         "platform": measured_environment.pop("platform", None),
@@ -1425,7 +1425,7 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         from pstparser.empirical.freeze import default_root, load_freeze
         from pstparser.models.loader import verify_expected_files
 
-        # The loaded files must be the frozen ones (Q-02 b, R-GEN-02), before loading.
+        # The loaded files must be the frozen ones, before loading.
         expected = default_root(review) / "protocol" / "model.json"
         listed = set(load_freeze(review)["items"].values())
         if digest_file(expected) not in listed:
@@ -1481,8 +1481,8 @@ def generate(variants: Path, configuration: Path, directory: Path) -> None:
         "environment": measured_environment,
     }
 
-    # Identity of this process (M18): a resume in another session leaves a second
-    # session_id in the journal; the environment itself must not change (S03).
+    # Identity of this process: a resume in another session leaves a second
+    # session_id in the journal; the environment itself must not change.
     devices = frozen["environment"].get("accelerator", {}).get("devices") or []
     session = {
         "session_id": uuid.uuid4().hex,
@@ -1652,7 +1652,7 @@ def blind_sample(
         str, typer.Option(help="full, or reduced (only the U and targeted V cases).")
     ] = "full",
 ) -> None:
-    """Draw the blind review (04 §3.10): programs renamed by hash, one sheet, a separate key.
+    """Draw the blind review: programs renamed by hash, one sheet, a separate key.
 
     Move ``key.jsonl`` out of the reviewer's sight before opening the sheet.
     """
@@ -1728,7 +1728,9 @@ def determinism_sample(
     seed: Annotated[int, typer.Option(help="Seed of the selection.")],
     out: Annotated[Path, typer.Option(help="New variants file of the selected tasks.")],
 ) -> None:
-    """Select whole tasks holding at least 5% of the greedy requests (minimum 20), 00 G-6.
+    """Select whole tasks holding at least 5% of the greedy requests (minimum 20).
+
+    The share is the one of ``protocol/analysis/plan.md`` §6.
 
     The tasks are ordered by SHA-256(seed | task) and taken until the share is
     reached; every condition of a chosen task is kept, so generate on the
@@ -1781,7 +1783,7 @@ def determinism_compare(
     regenerated: Annotated[Path, typer.Argument(help="Journal regenerated in another session.")],
     out: Annotated[Path, typer.Option(help="New determinism report (JSON).")],
 ) -> None:
-    """Compare the regenerated outputs with the original ones, byte for byte (00 G-6)."""
+    """Compare the regenerated outputs with the original ones, byte for byte."""
     from pstparser.repro.manifest import digest_file
 
     first = {row["request_id"]: row["raw_output"] for row in _json_lines(original)}
@@ -1812,7 +1814,7 @@ def model_digests(
     revision: Annotated[str, typer.Option(help="Immutable 40-character commit.")],
     out: Annotated[Path, typer.Option(help="New model.json with the SHA-256 of every file.")],
 ) -> None:
-    """Hash every file of the model snapshot, weights included, into model.json (Q-02 b).
+    """Hash every file of the model snapshot, weights included, into model.json.
 
     Run once where the model is downloaded (Colab); the file goes to
     protocol/model.json and into the freeze, and generate final compares the
@@ -1863,7 +1865,7 @@ def design(
         typer.Option(help="Targeted measure: add the families with documented false positives."),
     ] = False,
 ) -> None:
-    """Write the analysis design of a frozen sample (R-STA-04): tasks, families, replicates.
+    """Write the analysis design of a frozen sample: tasks, families, replicates.
 
     Functional designs take the tasks of a frozen sample, in its order, without
     families; security designs take the prompts of one selection of the
@@ -2227,7 +2229,7 @@ def check_security(
         raise ValueError("--sensitivity applies to the targeted measure only")
     config = oracle.read_config(codeql, bundle_dir)
     scenario_cards = oracle.read_cards(cards)
-    # The family states come from a frozen calibration, not from the cards alone (R-ORA-10).
+    # The family states come from a frozen calibration, not from the cards alone.
     oracle.require_calibration(_read_document(calibration), config, scenario_cards)
     families = {row["task_id"]: row["family_id"] for row in _read_document(id_map)["records"]}
     rows = _json_lines(generations)
@@ -2308,7 +2310,7 @@ def covariates(
     ],
     out: Annotated[Path, typer.Option(help="New covariates file (JSON Lines).")],
 ) -> None:
-    """Compute the frozen prompt covariates (M13, M25) before any generation.
+    """Compute the frozen prompt covariates before any generation.
 
     Token lengths count the whole model input (system message, wrapper and
     request, with the generation prompt) with the generator's tokenizer.
@@ -2493,7 +2495,7 @@ def agreement(
     The primary measures count only the judgement units; the measures on every
     non-whitespace character are descriptive. The second file is the
     re-annotation from scratch: no row may come from a rule, and the interval
-    between the two annotations is recorded (plan of 18/11/2026, P-07).
+    between the two annotations is recorded (`protocol/analysis/plan.md`).
     """
     from datetime import date
 
@@ -2539,7 +2541,7 @@ def agreement(
         for task in tasks
     ]
     every = [AgreementItem(i.task_id, i.text, i.first, i.second) for i in judged]
-    # Kappa per unit type (R-TRA-01): the first sentence is rule-fixed and only descriptive.
+    # Kappa per unit type: the first sentence is rule-fixed and only descriptive.
     by_type = {}
     for unit_type in UNIT_TYPES:
         typed = [
@@ -2744,7 +2746,7 @@ def thesis_tables(
 
     frozen = _purpose(purpose, freeze)
     if frozen["purpose"] == "final":
-        # Thesis tables of a final run read only final analyses under this freeze (R-STA-04).
+        # Thesis tables of a final run read only final analyses under this freeze.
         for manifest in sorted((run / "analysis").glob("*/empirical-analysis_manifest.json")):
             upstream = _read_document(manifest)
             if (upstream.get("purpose"), upstream.get("freeze_sha256")) != (
@@ -2773,7 +2775,7 @@ def thesis_tables(
         if freeze is not None and gate is not None:
             from pstparser.empirical.freeze import load_freeze
 
-            # The thresholds the gate was decided on must be the frozen ones (R-STA-01).
+            # The thresholds the gate was decided on must be the frozen ones.
             thresholds = _read_document(gate).get("inputs", {}).get("thresholds_sha256")
             if thresholds not in set(load_freeze(freeze)["items"].values()):
                 raise ValueError("the parser gate was not decided on thresholds the freeze lists")
@@ -2876,7 +2878,7 @@ def retarget_predictions_command(
     ],
     out: Annotated[Path, typer.Option(help="New predictions file with the gold targets.")],
 ) -> None:
-    """Replace the stored target of each prediction with the gold tree (P-04, T-7).
+    """Replace the stored target of each prediction with the gold tree.
 
     Raw outputs, prompts, indices and token counts are kept; auto-annotate, score
     and parser-gate then read the new file, so the gate stays bound to it.
@@ -2930,7 +2932,7 @@ def merge_ledgers_command(
     analysis_id: Annotated[str, typer.Option(help="analysis_id of the merged ledger.")],
     out: Annotated[Path, typer.Option(help="New merged ledger (JSON Lines).")],
 ) -> None:
-    """Merge the core and extra ledgers of a session for hauto-ledgers (C-26), unchanged."""
+    """Merge the core and extra ledgers of a session for hauto-ledgers, unchanged."""
     from pstparser.empirical.analysis import write_outcomes
     from pstparser.empirical.ledgers import merge_ledgers
     from pstparser.repro.manifest import (
@@ -3033,10 +3035,10 @@ def parser_gate_command(
         ),
     ] = None,
 ) -> None:
-    """Decide the parser gate (00 T-7) before any H-auto generation.
+    """Decide the parser gate before any H-auto generation.
 
     The score report, S_parse and the index map must come from the same
-    predictions, and the tasks must be exactly those of the sample (R-HAU-02).
+    predictions, and the tasks must be exactly those of the sample.
     """
     from pstparser.empirical.auto import parser_gate
     from pstparser.empirical.freeze import default_root

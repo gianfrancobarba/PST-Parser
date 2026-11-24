@@ -254,7 +254,7 @@ def write_report(
         top_confusions: Number of misassignments listed in the report.
         provenance: What was scored (digest of the predictions, their indices
             and tasks), written under ``provenance`` so that a reader can bind
-            the report to its predictions (R-HAU-02).
+            the report to its predictions.
 
     Returns:
         The paths of the results file and the detail file.

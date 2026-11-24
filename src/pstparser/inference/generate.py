@@ -310,7 +310,7 @@ def generate_messages(
     in the model's own ``generation_config`` (a repetition penalty, a sampling
     temperature). Only the special token ids still come from the model.
 
-    ``assistant_prefill`` (S-PREFILL sensitivity only) is tokenized on its own,
+    ``assistant_prefill`` (prefill sensitivity only) is tokenized on its own,
     without special tokens, and appended after the assistant generation
     prompt; it counts in the token budget and is not part of the returned
     text, which holds only what the model generated.
@@ -345,7 +345,7 @@ def generate_messages(
     started = perf_counter()
     with torch.no_grad():
         # One request at a time, never padded: the mask is all ones. Passing it
-        # explicitly changes no output and removes the pad = eos ambiguity (Q-08).
+        # explicitly changes no output and removes the pad = eos ambiguity.
         outputs = model.generate(
             input_ids=inputs, attention_mask=torch.ones_like(inputs), **keywords
         )

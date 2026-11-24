@@ -1,4 +1,4 @@
-"""Power of the primary tests, computed with the functions of the real analysis (M11).
+"""Power of the primary tests, computed with the functions of the real analysis.
 
 Correctness (independent tasks, one greedy pair): with discordance ``q`` and
 effect ``delta`` the number of discordant pairs is ``m ~ Bin(n, q)`` and, given
@@ -28,7 +28,7 @@ import numpy as np
 from pstparser.empirical.analysis import TaskEstimate
 from pstparser.empirical.inference import midp_mcnemar, sign_flip_test
 
-#: Prompts per family in the security designs (00 C-5, C-6).
+#: Prompts per family in the security designs.
 FAMILY_SIZES: Final = {
     "S2_100p_35f": [3] * 32 + [2] + [1] * 2,
     "S1_83p_29f": [3] * 27 + [1] * 2,

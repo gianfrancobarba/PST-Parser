@@ -1,4 +1,4 @@
-"""Thesis figures regenerated from versioned run files (M20; F-R1 to F-R4).
+"""Thesis figures regenerated from versioned run files.
 
 Figures are drawn with matplotlib's object interface (no global state) and
 saved as PDF and PNG without a creation date, so the same inputs give the same
@@ -68,7 +68,7 @@ def _interval(report: Mapping[str, Any]) -> tuple[float, float] | None:
 
 
 def forest(reports: Mapping[str, Mapping[str, Any]]) -> Any:
-    """F-R1: each analysis' difference with its primary 95% interval, in percentage points."""
+    """Each analysis' difference with its primary 95% interval, in percentage points."""
     entries = sorted(
         (report for report in reports.values() if report["delta"] is not None),
         key=lambda report: report["analysis_id"],
@@ -97,7 +97,7 @@ def forest(reports: Mapping[str, Mapping[str, Any]]) -> Any:
 
 
 def effects(report: Mapping[str, Any]) -> Any:
-    """F-R2: distribution of the per-task (or per-family) differences of one analysis."""
+    """Distribution of the per-task (or per-family) differences of one analysis."""
     estimates = report["task_estimates"]
     if not estimates:
         raise ValueError("the report has no complete task")
@@ -123,7 +123,7 @@ def effects(report: Mapping[str, Any]) -> Any:
 
 
 def leaves(report: Mapping[str, Any], variants: Sequence[Mapping[str, Any]]) -> Any:
-    """F-R3 (exploratory): mean difference by the number of non-empty leaves of H-gold."""
+    """Exploratory: mean difference by the number of non-empty leaves of H-gold."""
     counts = {
         row["task_id"]: leaf_count(row["text"]) for row in variants if row["condition"] == "H-gold"
     }
@@ -152,7 +152,7 @@ def leaves(report: Mapping[str, Any], variants: Sequence[Mapping[str, Any]]) -> 
 
 
 def tokens(journal: Sequence[Mapping[str, Any]], baseline: str = "T") -> Any:
-    """F-R4: per-task ratio of input tokens to the baseline, one box per condition."""
+    """Per-task ratio of input tokens to the baseline, one box per condition."""
     measured = input_tokens(journal)
     conditions = [c for c in ordered_conditions({c for _, c in measured}) if c != baseline]
     tasks = sorted({task for task, _ in measured})

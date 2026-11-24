@@ -1,9 +1,9 @@
 """Frozen prompt covariates, computed from the prompts alone before any generation.
 
-Covariates (M13; 00 A-6) describe what the hierarchical form changes in each
+Covariates describe what the hierarchical form changes in each
 prompt: its length, how many leaves and segments it uses, how many segments it
 moves away from their source order, whether the prompt holds code, and how many
-units of the gold needed a human decision (M25). They never read a model output,
+units of the gold needed a human decision. They never read a model output,
 a test or a reference solution.
 """
 
@@ -90,7 +90,7 @@ def unit_regions(text: str, rule: str) -> dict[str, list[tuple[int, int]]]:
 def judgement_regions(text: str, rule: str) -> list[tuple[int, int]]:
     """Character ranges of the units whose leaf is decided by the reviewer.
 
-    Rule ``judgement-units-v2`` (R-TRA-01, Q-24): the sentences of the prose of
+    Rule ``judgement-units-v2``: the sentences of the prose of
     the description after the first one (``G3``) and the sentences of the
     "Note that:" section (``B6``). The first sentence is left out: rule G3.1
     fixes its leaf. Fixed sections, the starting code, parameter and example

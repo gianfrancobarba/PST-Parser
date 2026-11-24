@@ -12,7 +12,7 @@ EXTRACTION_VERSION = "python-single-block-v1"
 
 
 #: Primary policy for LLMSecEval: every complete Python fenced block, in order.
-#: v2 (R-ORA-08): ``python3`` is a Python label, and a last fence left open no
+#: v2: ``python3`` is a Python label, and a last fence left open no
 #: longer discards the complete blocks before it.
 FENCED_BLOCKS: Final = "python-fenced-blocks-v2"
 #: Sensitivity for LLMSecEval: the longest complete Python fenced block alone.

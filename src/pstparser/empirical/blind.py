@@ -1,4 +1,4 @@
-"""Blind review of the security judgments (00 V-7, 04 §3.10): sample, sheet and score.
+"""Blind review of the security judgments: sample, sheet and score.
 
 The sample is drawn with a seed from the details of ``check-security``, before
 any program is opened: every U, the targeted V up to 40, 15 programs per
@@ -7,10 +7,10 @@ hashed identifier; the reviewer sees the program and the prompt in its T form,
 never the condition. The key (condition, states, usability) stays apart until
 the sheet is complete.
 
-The reduced form (plan of 18/11/2026, P-06) keeps only the cases drawn for U
+The reduced form (`protocol/analysis/plan.md`) keeps only the cases drawn for U
 and V_targeted: it is the corresponding part of the full draw, with the same
 identifiers, so a review started reduced can be extended to the full form
-without a new draw. Time rule (decided by the student on 18/11/2026): the
+without a new draw. Time rule (``protocol/analysis/plan.md`` §7, cut 3): the
 reduced part is always reviewed first; the rest of the full draw only if time
 remains before 28/11 at 12:00, copying the answers of the reduced cases by
 case_id. The full form is reported only if it is complete, otherwise the
@@ -31,7 +31,7 @@ from typing import Any, Final
 from pstparser.empirical.auto import clopper_pearson
 
 BLIND_VERSION: Final = "blind-review-v1"
-#: Frozen quotas of 04 §3.10.
+#: Frozen quotas of the blind sample.
 TARGETED_V_MAX: Final = 40
 GENERAL_PER_CELL: Final = 15
 UNUSABLE_MAX: Final = 20

@@ -1,4 +1,4 @@
-"""H-auto: parser predictions turned into source spans, S_parse and the parser gate (M19).
+"""H-auto: parser predictions turned into source spans, S_parse and the parser gate.
 
 The conversion reads only the source text and the parser's raw output: never
 the gold spans. Each located phrase becomes the span of the source characters
@@ -6,7 +6,7 @@ it matched, narrowed to its non-whitespace edges; the phrase is taken from the
 source, so a match at the ``collapsed`` or ``stripped`` level stays lossless.
 Blank leaves carry no content and are ignored.
 
-Two policies (00 T-6):
+Two policies:
 
 * ``auto-strict-v1`` (primary, fail-closed): an invalid output, a phrase that is
   absent from the source or only occurs where another one sits (contested), or
@@ -14,12 +14,13 @@ Two policies (00 T-6):
 * ``auto-attach-v1`` (sensitivity): unplaced phrases are dropped and counted; a
   gap with content extends the preceding span (a prefix extends the first);
   only an invalid output or no located phrase fails the task.
-* ``auto-strict-v2`` (plan of 18/11/2026, P-04, C-22): as ``auto-strict-v1``,
+* ``auto-strict-v2`` (`protocol/analysis/plan.md`): as ``auto-strict-v1``,
   except that a gap that is exactly the starting code block of a BigCodeBench
   prompt becomes a ``context.data`` span. The block is found in the source text
   by its fixed marker (rule B4 of the drafts), never in the gold. Available but
-  never the default: it becomes primary only by the C-22 rule
-  (:func:`c22_primary_policy`) read on the v1 conversion of the pilot tasks.
+  never the default: it becomes primary only by the C-22 rule of
+  ``protocol/analysis/plan.md`` §2 (:func:`c22_primary_policy`) read on the v1
+  conversion of the pilot tasks.
 
 The tasks whose conversion succeeds form S_parse, written with its hash before
 any H-auto generation. H3 is estimated on S_parse; the end-to-end estimate
@@ -49,11 +50,11 @@ STRICT_V2: Final = "auto-strict-v2"
 POLICIES: Final = (STRICT, ATTACH, STRICT_V2)
 #: Strict policies: a gap with content fails the task (v2 exempts the starting code).
 STRICT_POLICIES: Final = (STRICT, STRICT_V2)
-#: Share of the v1 failures above which auto-strict-v2 becomes primary (C-22).
+#: Share of the v1 failures above which auto-strict-v2 becomes primary.
 C22_THRESHOLD: Final = 0.5
 S_PARSE_FORMAT: Final = "s-parse-v1"
 GATE_FORMAT: Final = "parser-gate-v1"
-#: Causes of a parser failure, in the order they are checked (02 §3.7, (a)-(d)).
+#: Causes of a parser failure, in the order they are checked.
 CAUSES: Final = (
     "invalid_output",
     "absent_phrase",
@@ -294,7 +295,7 @@ def auto_annotate(
 
 
 def c22_primary_policy(s_parse: Mapping[str, Any]) -> str:
-    """The primary strict policy by the C-22 rule, read on a v1 conversion (P-04).
+    """The primary strict policy by the C-22 rule, read on a v1 conversion.
 
     ``auto-strict-v2`` if the omitted starting code alone causes more than half
     of the strict failures; otherwise ``auto-strict-v1``. With no failure, v1.
@@ -411,7 +412,7 @@ def s_parse_ledger(records: Sequence[OutcomeRecord], s_parse: Sequence[str]) -> 
 
 
 def macro_f1(field_f1: Mapping[str, Mapping[str, Any]]) -> tuple[float | None, list[str]]:
-    """Mean F1 over the leaves with gold support, as ``score`` reports them (00 T-7)."""
+    """Mean F1 over the leaves with gold support, as ``score`` reports them."""
     leaves = sorted(name for name, value in field_f1.items() if value["support"] > 0)
     values = [field_f1[name]["f1"] or 0.0 for name in leaves]
     return (math.fsum(values) / len(values) if values else None), leaves
@@ -440,10 +441,10 @@ def parser_gate(
 
     ``s_parse`` must come from the primary strict policy on S_gold: ``auto-strict-v1``,
     or ``auto-strict-v2`` only when the C-22 rule read on ``c22`` (the v1
-    conversion of the pilot tasks) makes it primary (plan of 18/11/2026, P-04);
+    conversion of the pilot tasks) makes it primary (`protocol/analysis/plan.md`);
     a v1 conversion is refused when that rule makes v2 primary. ``score`` is the
     ``score`` report of the same predictions against the gold targets. Both are
-    bound to those predictions (R-HAU-02): the score must record the digest
+    bound to those predictions: the score must record the digest
     the conversion read, over the indices of ``id_map``, whose digest the
     conversion recorded too; and the tasks of ``id_map`` must be exactly
     ``sample_tasks`` (S_gold).

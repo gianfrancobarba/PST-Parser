@@ -147,7 +147,7 @@ class PairedReport:
 def family_sensitivity(
     estimates: Sequence[TaskEstimate], confidence: float = 0.95
 ) -> dict[str, Any] | None:
-    """Prespecified family sensitivity of a clustered estimate (06 §3.1.2, 07 K2).
+    """Prespecified family sensitivity of a clustered estimate.
 
     ``delta_fam`` is the equally weighted mean of the family means, with a
     t(G - 1) interval; it is flagged when it differs from the task-weighted
@@ -223,7 +223,7 @@ def _join(
     if len({t.family_id is None for t in design.tasks}) != 1:
         raise ValueError("Family IDs must be supplied for all tasks or none")
     if design.endpoint == "security" and design.tasks[0].family_id is None:
-        # The unit of inference of the security endpoint is the family (00 A-2, R-STA-04).
+        # The unit of inference of the security endpoint is the family.
         raise ValueError("security designs need family IDs: the unit of inference is the family")
     if (
         not design.replicate_ids
@@ -254,7 +254,7 @@ def _join(
             raise ValueError("Record replicate_id must be an integer")
         key = (record.task_id, record.condition, record.replicate_id)
         if record.condition in other_arms:
-            # A declared arm outside the pair: validated like the pair (R-STA-03),
+            # A declared arm outside the pair: validated like the pair,
             # then left out of the estimate and counted.
             if (record.task_id, record.replicate_id) not in planned_cells:
                 raise ValueError(f"Unexpected record key: {key}")
@@ -417,12 +417,12 @@ def analyze_paired(
     tasks (holding U=0), and joint U/missing bounds. Bootstrap preserves
     complete blocks.
 
-    Primary tests (paired-v2): with one greedy pair per independent task, the
+    Primary tests: with one greedy pair per independent task, the
     mid-p McNemar test (``midp_p``; the exact test stays as a sensitivity
     analysis); with families or replicates, the studentized sign-flip of whole
     families, or of tasks without families (``signflip_*``), seeded by ``seed``.
 
-    Primary intervals (paired-v2): Tango's score interval at ``confidence`` and
+    Primary intervals: Tango's score interval at ``confidence`` and
     at 90% (``tango_ci``, ``tango_ci_90``) for one greedy pair per task, with
     Newcombe's method 10 as a sensitivity (``newcombe_ci``); the CR1 interval
     with t(G - 1) (``cr1_*``) with families or replicates. A mid-p decision that
@@ -448,7 +448,7 @@ def analyze_paired(
             for replicate in design.replicate_ids
             if joined[task.task_id, condition, replicate].outcome == "missing"
         ]
-        # Every contrast of a ledger uses the same complete tasks (06 §3.7.1):
+        # Every contrast of a ledger uses the same complete tasks:
         # a missing cell in any declared arm excludes the whole task.
         missing += [
             f"{condition}/{replicate}: {others[task.task_id, condition, replicate].reason}"
@@ -487,8 +487,8 @@ def analyze_paired(
 
     neardup: dict[str, float | None] = {}
     if near_duplicate_groups is not None:
-        # S-NEARDUP (06, R-DAT-02): one task per group of near duplicates, the first
-        # of the design; the others leave the complete tasks.
+        # S-NEARDUP (``protocol/analysis/plan.md`` §4): one task per group of near
+        # duplicates, the first of the design; the others leave the complete tasks.
         order = {task.task_id: index for index, task in enumerate(design.tasks)}
         dropped = {
             task
@@ -626,7 +626,7 @@ def _flaky_sensitivity(
     estimates: Sequence[TaskEstimate],
     details: Sequence[Mapping[str, Any]] | None,
 ) -> dict[str, float | None]:
-    """S-FLAKY (06, 00 V-2): without flaky tasks, and with discordant programs as fails.
+    """S-FLAKY (``protocol/analysis/plan.md`` §4): no flaky tasks; discordant programs fail.
 
     Read from the harness details of the same ledger: ``flaky`` and the
     ``run_statuses`` of each program. Only for the functional endpoint and only

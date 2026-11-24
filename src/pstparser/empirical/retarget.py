@@ -1,4 +1,4 @@
-"""Retarget parser predictions on the reviewed or frozen gold (P-04, T-7; 19/11/2026).
+"""Retarget parser predictions on the reviewed or frozen gold.
 
 ``parse-prompts`` writes, beside each raw prediction, the target built from the
 spans of its source file; the D-01 and prefix sources carried the rule drafts.
@@ -36,7 +36,7 @@ def retarget_predictions(
         tasks: The ``tasks`` of its ``id-map.json`` (task of each index).
         sources: Benchmark sources of those tasks.
         gold: Annotations in ``require_status``, covering exactly the parsed tasks.
-        require_status: ``reviewed`` (D-01) or ``frozen`` (final gate).
+        require_status: ``reviewed`` or ``frozen`` (final gate).
 
     Raises:
         ValueError: If an index has no task, a task repeats, the gold does not

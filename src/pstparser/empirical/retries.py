@@ -1,4 +1,4 @@
-"""Bounded, logged retries of infrastructure failures (M18; Metodologia §7.5; 03 §3.5.4).
+"""Bounded, logged retries of infrastructure failures.
 
 Only a failure of the infrastructure is retried: a container that does not
 start, a harness or analyser that exits with an error. Anything that depends on

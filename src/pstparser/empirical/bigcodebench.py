@@ -677,7 +677,7 @@ SANITIZE_DRIVER: Final = (
 )
 
 #: Keys of the hierarchical prompt (H) and of the envelope control (E): both
-#: renderings have ``prompt`` at the root (R-ORA-04).
+#: renderings have ``prompt`` at the root.
 _PROMPT_KEYS: Final = frozenset({"prompt", "main_instruction", "context", "phrase", "position"})
 #: Keys no ordinary program uses: the instruction leaf of the hierarchical prompt.
 _DISTINCTIVE_KEYS: Final = frozenset({"main_instruction"})
@@ -908,7 +908,7 @@ def resolve_majority(
 
     A timeout counts as a failure. Where the first two runs disagree, or where
     exactly one of them is missing, a third run is required and the program is
-    flagged ``flaky`` (R-ORA-03). A program is ``missing`` only when fewer than
+    flagged ``flaky``. A program is ``missing`` only when fewer than
     two runs gave a valid outcome, or when two valid outcomes split (reason
     ``no_majority``).
 
@@ -1042,7 +1042,7 @@ def is_prompt_as_data(code: str) -> bool:
       the result of a ``loads`` call, directly or through a name bound to it;
     - passes text holding ``main_instruction`` or ``"prompt":`` to ``loads``.
     Ordinary uses of ``prompt`` or ``position`` (an API body, a dataframe
-    column) do not count (R-ORA-05). Code that does not parse is searched as
+    column) do not count. Code that does not parse is searched as
     text for ``main_instruction`` in key position.
     """
     try:
@@ -1273,7 +1273,7 @@ def evaluate_generations(
     directory (``<run>-attempt-<n>``) up to three attempts in all; if every
     attempt fails, the run is repeated task by task and only the programs of a
     task whose batch still fails are ``missing`` with the reason
-    ``harness_unavailable`` (03 §3.5.4, R-ORA-02). Rows absent with exit code 0
+    ``harness_unavailable``. Rows absent with exit code 0
     and failed references are faults too. With more than 1% of the programs
     changing outcome between the first two runs the evaluation stops, unless
     ``accept_discordance`` (recorded in the summary).
@@ -1305,8 +1305,8 @@ def evaluate_generations(
             return execute(config, target, task_ids=tasks)
 
         def failure(result: HarnessRun) -> str | None:
-            # 03 §3.5.4: a crash, rows the harness did not report and a reference
-            # that fails are faults of the run, never outcomes (R-ORA-01).
+            # A crash, rows the harness did not report and a reference
+            # that fails are faults of the run, never outcomes.
             if result.exit_code != 0:
                 return f"exit code {result.exit_code}"
             results = parse_results(
@@ -1358,7 +1358,7 @@ def evaluate_generations(
         run, results, attempts = attempt_batch(label, rows, mapping)
         if results is None:
             # A program that keeps the whole run from finishing costs only its own
-            # task: the run is repeated task by task (R-ORA-02).
+            # task: the run is repeated task by task.
             results = []
             batches = 0
             for task in tasks:
@@ -1421,7 +1421,7 @@ def evaluate_generations(
     executed = len(first)
     above = bool(executed) and len(discordant) > 0.01 * executed
     if above and not accept_discordance:
-        # 03 §3.5.3 point 5: the environment is not stable enough to judge (R-ORA-01).
+        # More than 1% of discordant programs: the environment is not stable enough to judge.
         raise ValueError(
             f"{len(discordant)} of {executed} programs changed outcome between two runs "
             "(more than 1%): stop and check the environment, or accept it explicitly"

@@ -31,7 +31,7 @@ GUIDELINES_VERSION: Final = "gold-v2.0"
 SPLITTER_VERSION: Final = "g1-splitter-v1"
 BCB_RULE: Final = "bcb-markers-v1"
 LSE_RULE: Final = "lse-prefix-v1"
-#: Cuts of a judgement unit admitted by the lint when the notes record them (Q-16).
+#: Cuts of a judgement unit admitted by the lint when the notes record them.
 CUT_RULE: Final = "g1-registered-cuts-v1"
 _CUT: Final = re.compile(r"\bcut@(\d+)\b")
 
@@ -472,7 +472,7 @@ def lint(source: SourceRecord, row: AnnotationRow) -> list[str]:
     that is expected to stay empty. The leaf chosen for a judgement unit is the
     annotator's decision and is not checked.
 
-    Rule ``g1-registered-cuts-v1`` (Q-16): a judgement unit (``G3`` or ``B6``)
+    Rule ``g1-registered-cuts-v1``: a judgement unit (``G3`` or ``B6``)
     may be cut at a space, for example between the items of a list written on
     one line, when the notes record the cut as ``cut@<offset>``, the offset of
     the first character after the cut. The first sentence, marker blocks and

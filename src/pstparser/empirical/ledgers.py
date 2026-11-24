@@ -1,6 +1,6 @@
 """Union of the outcome ledgers of the check runs of one generation session.
 
-With two journals in a session (plan of 18/11/2026, P-04, C-26), the oracle runs
+With two journals in a session (`protocol/analysis/plan.md`), the oracle runs
 once on the merged core generations (T, H-gold, E on S_gold) and once on the
 extra ones (H-auto on S_parse). ``hauto-ledgers`` reads a single ledger holding
 T and H-auto under one ``analysis_id``: this module writes it, without changing

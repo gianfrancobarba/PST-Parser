@@ -1,4 +1,4 @@
-"""Thesis tables regenerated from versioned run files, never copied by hand (M20).
+"""Thesis tables regenerated from versioned run files, never copied by hand.
 
 Every table is built from explicit input files and written as CSV and LaTeX.
 Each file opens with comment lines that name the run, the SHA-256 of every
@@ -6,9 +6,8 @@ input and the digest of the package source, so a number in the thesis can be
 traced to the files it comes from. No file holds a time or an output path:
 the same inputs and the same source give the same bytes.
 
-The tables follow the output map of the operating plan (T-M1, T-M2, T-M3,
-T-M9, T-R1, T-R2, T-R3, T-R4, T-R6, T-R8, T-X1). The table of the blind
-security review (T-R7) is not built here: the review has no file format yet.
+Each builder below says which table it writes. The tables of the blind security
+review are built by :func:`review_tables` from the score of ``blind-score``.
 """
 
 from __future__ import annotations
@@ -108,7 +107,7 @@ def _bounds(interval: Sequence[float] | None) -> tuple[float | None, float | Non
 def samples_tables(
     samples: Mapping[str, Mapping[str, Any]], exclusions: Mapping[str, Any] | None
 ) -> tuple[Table, ...]:
-    """T-M1: the samples and, from the frozen exclusions, each excluded task with its rules."""
+    """The samples and, from the frozen exclusions, each excluded task with its rules."""
     rows = []
     for name in sorted(samples):
         document = samples[name]
@@ -188,7 +187,7 @@ def leaf_count(hierarchical: str) -> int:
 
 
 def treatment_tables(variants: Sequence[Mapping[str, Any]]) -> tuple[Table, ...]:
-    """T-M2: non-empty leaves per prompt and the share of single-leaf prompts."""
+    """Non-empty leaves per prompt and the share of single-leaf prompts."""
     counts: dict[str, list[int]] = {}
     for row in variants:
         if row["renderer_version"] in {"pst-gold-json-v1"} and row["condition"] != "T":
@@ -239,7 +238,7 @@ def input_tokens(journal: Sequence[Mapping[str, Any]]) -> dict[tuple[str, str], 
 
 
 def tokens_tables(journal: Sequence[Mapping[str, Any]], baseline: str = "T") -> tuple[Table, ...]:
-    """T-M3: input tokens per condition and, per task, the ratio to the baseline."""
+    """Input tokens per condition and, per task, the ratio to the baseline."""
     tokens = input_tokens(journal)
     conditions = ordered_conditions({condition for _, condition in tokens})
     if baseline not in conditions:
@@ -284,7 +283,7 @@ def tokens_tables(journal: Sequence[Mapping[str, Any]], baseline: str = "T") -> 
 
 
 def freeze_tables(freeze: Mapping[str, Any]) -> tuple[Table, ...]:
-    """T-M9: every frozen item with its SHA-256, then code, lock and source."""
+    """Every frozen item with its SHA-256, then code, lock and source."""
     rows: list[tuple[Cell, ...]] = [
         ("item", name, digest) for name, digest in freeze["items"].items()
     ]
@@ -308,7 +307,7 @@ def freeze_tables(freeze: Mapping[str, Any]) -> tuple[Table, ...]:
 def diagnostics_tables(
     journal: Sequence[Mapping[str, Any]], details: Sequence[Mapping[str, Any]] | None
 ) -> tuple[Table, ...]:
-    """T-R1: finish reasons, response length, sessions and, with details, extraction.
+    """Finish reasons, response length, sessions and, with details, extraction.
 
     ``details`` is the file of one check run of this journal (functional or
     security); it must cover the journal's requests exactly.
@@ -391,7 +390,7 @@ def _equivalence_interval(report: Mapping[str, Any]) -> tuple[float, float] | No
     return None
 
 
-#: What each confirmatory hypothesis must be (00 A-3, R-STA-01): endpoint,
+#: What each confirmatory hypothesis must be: endpoint,
 #: conditions and, for H3, the S_parse estimate of ``hauto-ledgers``.
 CONFIRMATORY_REPORTS: Final = {
     "H1": ("functional", ["T", "H-gold"], ""),
@@ -399,8 +398,8 @@ CONFIRMATORY_REPORTS: Final = {
 }
 
 
-#: Frozen protocol document for the prespecified time cut (plan of 18/11/2026,
-#: P-04): without a complete parse by its deadline, the family is H1 alone at
+#: Frozen protocol document for the prespecified time cut (`protocol/analysis/plan.md`
+#: §7, cut 5): without a complete parse by its deadline, the family is H1 alone at
 #: 0.05 and H3 is exploratory whatever the parser gate says. Without this
 #: document the parser gate decides the family.
 FAMILY_FORMAT: Final = "confirmatory-family-v1"
@@ -466,7 +465,7 @@ def paired_tables(
     confirmatory: Mapping[str, str] | None = None,
     gate: Mapping[str, Any] | None = None,
 ) -> tuple[Table, ...]:
-    """T-R2, T-R3, T-R5, T-X1: paired estimates, tests, intervals and sensitivity.
+    """Paired estimates, tests, intervals and sensitivity.
 
     ``confirmatory`` maps H1 (and H3, if it stayed in the family) to the
     ``analysis_id`` of its report; their primary p-values are decided with the
@@ -475,7 +474,7 @@ def paired_tables(
     family is H1 alone, read at 0.05 (failed parser gate).
 
     Every report also gets the TOST at +/-5 pp on its 90% interval and the
-    four-way reading E1-E4 (00 A-4), crossed with the primary test at 0.05.
+    four-way reading E1-E4, crossed with the primary test at 0.05.
     """
     # A report is its analysis_id and its two conditions: the exploratory contrasts
     # of the core ledger (E - T, H-gold - E) share the analysis_id of H1.
@@ -511,7 +510,7 @@ def paired_tables(
                 raise ValueError(f"{hypothesis}: the report has no primary p-value")
         result = weighted_holm(p_values, CONFIRMATORY_WEIGHTS)
         # The difference of a confirmatory row is read at the level the weighted
-        # Holm assigned it, not at 0.05 (R-STA-02).
+        # Holm assigned it, not at 0.05.
         levels = {
             members[name]: level
             for name, level in weighted_holm_levels(p_values, CONFIRMATORY_WEIGHTS).items()
@@ -542,7 +541,7 @@ def paired_tables(
             if primary is not None and equivalence is not None
             else None
         )
-        # Readings at 3 and 10 pp, always reported (06 S7), on the same test and interval.
+        # Readings at 3 and 10 pp, always reported, on the same test and interval.
         other: list[str | None] = []
         for margin in (0.03, 0.10):
             if equivalence is None:
@@ -654,7 +653,7 @@ def paired_tables(
 
 
 def loc_tables(details: Sequence[Mapping[str, Any]]) -> tuple[Table, ...]:
-    """LOC and CodeQL findings per 100 LOC by condition (07 C4), usable programs only.
+    """LOC and CodeQL findings per 100 LOC by condition, usable programs only.
 
     A form that only writes more code gets more findings of the general
     measure; the rate per 100 LOC is the prespecified sensitivity.
@@ -687,7 +686,7 @@ def loc_tables(details: Sequence[Mapping[str, Any]]) -> tuple[Table, ...]:
 
 
 def review_tables(score: Mapping[str, Any]) -> tuple[Table, ...]:
-    """T-R-S4: the blind review (04 §3.10) by condition, with the accuracy of the blind."""
+    """The blind review by condition, with the accuracy of the blind."""
     rows = []
     for condition in ordered_conditions(set(score["targeted"]) | set(score["general"])):
         targeted = score["targeted"].get(condition, {})
@@ -738,7 +737,7 @@ def review_tables(score: Mapping[str, Any]) -> tuple[Table, ...]:
 
 
 def security_tables(outcomes: Sequence[OutcomeRecord]) -> tuple[Table, ...]:
-    """T-R4, T-R6: V/N/I/U/missing counts per measure (analysis) and condition."""
+    """V/N/I/U/missing counts per measure (analysis) and condition."""
     if any(record.endpoint != "security" for record in outcomes):
         raise ValueError("the security table reads security outcomes only")
     cells: dict[tuple[str, str], Counter[str]] = {}
@@ -768,7 +767,7 @@ def security_tables(outcomes: Sequence[OutcomeRecord]) -> tuple[Table, ...]:
 
 
 def parser_tables(score: Mapping[str, Any]) -> tuple[Table, ...]:
-    """T-R8: validity and per-leaf precision, recall and F1 of a ``score`` report."""
+    """Validity and per-leaf precision, recall and F1 of a ``score`` report."""
     summary = (
         (
             score["total"],

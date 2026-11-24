@@ -1,4 +1,4 @@
-"""Running the frozen parser on benchmark prompts (M19, H-auto).
+"""Running the frozen parser on benchmark prompts (H-auto).
 
 The parser's ``generate`` command reads only the partitions of its corpus. This
 stage submits arbitrary source prompts instead, through the same conversation,
@@ -11,7 +11,7 @@ When a source row carries reviewed spans, the record's target is the gold tree
 never read by the conversion of predictions into spans. Without spans the
 target is the empty tree.
 
-A ``pilot`` or ``final`` run pins the parser (R-HAU-03, C-24): before loading,
+A ``pilot`` or ``final`` run pins the parser: before loading,
 the configuration, adapter, system prompt and decoding must match the parser
 identity (``protocol/hauto/parser.json``) and the model snapshot its expected
 digests; after loading, the adapter's conversation template must be the one of

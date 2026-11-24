@@ -31,7 +31,7 @@ def envelope_text(text: str) -> str:
 def render_envelope_variant(prompt: CanonicalPrompt) -> PromptVariant:
     """Produce E (``envelope-json-v1``): the whole source text in one neutral field.
 
-    E isolates the JSON envelope, its escaping and part of the length (00 T-4).
+    E isolates the JSON envelope, its escaping and part of the length.
     It carries no PST label and no annotation: the spans of ``prompt`` are
     ignored, so ``annotation_hash`` and ``annotation_version`` are empty.
 
@@ -165,7 +165,7 @@ def render_flat_variant(prompt: CanonicalPrompt) -> PromptVariant:
     """Produce F (``pst-flat-json-v1``): the leaves of H at one level, keyed by path.
 
     Same spans, validation, separator policy, positions and serialisation as H;
-    only the intermediate ``context`` and ``reasoning`` nodes are gone (02 §3.8):
+    only the intermediate ``context`` and ``reasoning`` nodes are gone:
     ``{"prompt": {"main_instruction": [...], "context.format": [...], ...}}``.
     The annotation metadata is that of T and H.
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any, Final
 
-#: Registered prompt conditions (00 G-5, T-4, T-8). T is the original text,
+#: Registered prompt conditions. T is the original text,
 #: H-gold and H-auto the PST from reviewed and from parsed spans, E the text in
 #: a neutral JSON envelope, F the flat PST, H-explained H-gold with a schema
 #: sentence in the system message.

@@ -1,6 +1,6 @@
-"""Reading run files and writing thesis tables and figures into a new directory (M20).
+"""Reading run files and writing thesis tables and figures into a new directory.
 
-A run directory follows the layout of the operating plan::
+A run directory follows this layout::
 
     <run>/run-identity.json            run_id (required)
     <run>/protocol-freeze.json         freeze copy

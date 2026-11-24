@@ -11,7 +11,7 @@
 - Confirmatory family {H1, H3}: Holm with weights 0.8 / 0.2 (levels 0.04 / 0.01
   at alpha 0.05) and recycling of the weight of a rejected hypothesis, the
   two-hypothesis case of the graphical method of Bretz et al. (2009).
-- Intervals (paired-v2, P1): Tango's asymptotic score interval for a paired
+- Intervals: Tango's asymptotic score interval for a paired
   difference (primary for correctness, at 95% and 90%), Newcombe's method 10
   (sensitivity) and the CR1 cluster-robust interval with t(G - 1) quantiles
   (primary for security).
@@ -33,7 +33,7 @@ from scipy import stats
 if TYPE_CHECKING:
     from pstparser.empirical.analysis import TaskEstimate
 
-#: Weights of the confirmatory family (00 A-3): levels 0.04 and 0.01 at alpha 0.05.
+#: Weights of the confirmatory family: levels 0.04 and 0.01 at alpha 0.05.
 CONFIRMATORY_WEIGHTS: Final = {"H1": 0.8, "H3": 0.2}
 EXACT_THRESHOLD: Final = 16
 Decision = Literal["rejected", "not_rejected", "dropped"]
@@ -209,7 +209,7 @@ def weighted_holm_levels(
     A rejected hypothesis gets the level of the step that rejected it; one that
     is not rejected gets its level at the last step (after any recycling); a
     dropped one gets ``None``. ``p <= level`` holds exactly for the rejected
-    ones (R-STA-02: the four-way reading of a confirmatory row uses it).
+    ones (the four-way reading of a confirmatory row uses it).
     """
     weighted_holm(p_values, weights, alpha)  # validates the arguments
     remaining = {name for name, value in p_values.items() if value is not None}
@@ -406,7 +406,7 @@ def cluster_t_interval(
     )
 
 
-#: Equivalence margin of the primary reading (00 A-4), on the proportion scale.
+#: Equivalence margin of the primary reading, on the proportion scale.
 TOST_MARGIN: Final = 0.05
 Reading = Literal["E1", "E2", "E3", "E4"]
 
@@ -449,7 +449,7 @@ def four_way_reading(
     alpha: float = 0.05,
     margin: float = TOST_MARGIN,
 ) -> Reading:
-    """The frozen four-way reading (06 §3.5.2): difference test crossed with TOST.
+    """The frozen four-way reading: difference test crossed with TOST.
 
     E1 relevant effect (different, not equivalent); E2 different from zero but
     negligible (different and equivalent); E3 equivalence (only equivalent);
