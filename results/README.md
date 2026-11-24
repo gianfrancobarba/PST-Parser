@@ -17,7 +17,7 @@ This directory holds two kinds of artefacts, versioned with the code:
 | `near-duplicates/` | Groups of near-duplicate BigCodeBench prompts, used by the S-NEARDUP sensitivity |
 | `r4/` | Exploratory analysis R: labels, training data, identity and Colab notebooks of the retrained parser r4 |
 | `s/notebooks/` | Exploratory analysis S: Colab notebooks of the LLMSecEval parse and generations with r3 and r4 |
-| `tools/` | Tools written after the freeze, before the data they read (re-annotation sheets, exploratory analyses of the plan, decomposition of the H-auto effect, count on the unanalysable security cases, r4 data), with their tests |
+| `tools/` | Tools written after the freeze, before the data they read (re-annotation sheets, exploratory analyses of the plan, decomposition of the H-auto effect, count on the unanalysable security cases, r4 data), with their tests. The `results_*.py` tools read the evaluated outcomes for the results analysis declared in `protocol/deviations.md` (24/11/2026): reproduction of the frozen reports, sample flow, correctness, heterogeneity (with the BigCodeBench library-to-domain table, `bigcodebench-lib2domain.json`, Apache-2.0), errors, H-auto, security, multiplicity and the parser versions |
 | `downstream/` | Intended layout for downstream runs; see its README |
 
 The generation journals, oracle outputs and analysis reports of the study are not versioned here:
