@@ -1,4 +1,4 @@
-"""C-16 (R-ORA-06, R-ORA-07, R-ORA-10): usability on code tokens, I first, frozen calibration.
+"""Usability on code tokens, I first, frozen calibration.
 
 Counterexamples of the independent review, inverted: a docstring alone made a
 program usable, ``/information`` matched ``/info``, the word "location" in a

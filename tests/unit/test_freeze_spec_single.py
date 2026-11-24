@@ -1,9 +1,9 @@
-"""The freeze specification describes the single freeze F4 (plan of 18/11/2026, P-09, C-07).
+"""The freeze specification describes the single freeze F4 (`protocol/analysis/plan.md`).
 
-One internal freeze before the final generations; no public registry (decision of
-19/11/2026). The preregistration is the push of the freeze commit to the public
-remote before the first final generation (decision of 20/11/2026, replacing the
-email M3); no supervisor acknowledgement is recorded (deviation of 20/11/2026).
+One internal freeze before the final generations and no public registry. The
+preregistration is the push of the freeze commit to the public remote before the
+first final generation, which replaced a planned preregistration email; no supervisor
+acknowledgement is recorded. Both are declared in ``protocol/deviations.md``.
 """
 
 from pathlib import Path

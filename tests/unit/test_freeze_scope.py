@@ -1,4 +1,4 @@
-"""C-09 (R-GEN-01): the freeze covers every file of the repository and is required downstream.
+"""The freeze covers every file of the repository and is required downstream.
 
 Counterexamples of the independent review, inverted: a freeze used to verify
 after changes to the gold, the notebook, the parser prompt, configurations and

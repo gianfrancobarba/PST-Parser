@@ -1,4 +1,4 @@
-"""The parser outputs on the frozen gold of the prefix enter the freeze F4 (A3, 19/11/2026).
+"""The parser outputs on the frozen gold of the prefix enter the freeze F4.
 
 The prefix predictions (run ``hauto-prefix-01``) were retargeted on the frozen
 gold and annotated with the primary policy ``auto-strict-v1``; S_parse, its

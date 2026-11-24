@@ -1,4 +1,4 @@
-"""Character kappa and boundary F1 on the judgement units (M25; 02 §3.5)."""
+"""Character kappa and boundary F1 on the judgement units."""
 
 import pytest
 

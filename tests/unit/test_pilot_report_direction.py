@@ -1,4 +1,4 @@
-"""R-STA-05 (C-04): the pilot report must not bound the sign of H-gold - T.
+"""The pilot report must not bound the sign of H-gold - T.
 
 Truncations, empty sanitised programs, ``json_response`` and ``prompt_as_data``
 are failures by construction. Counted per condition, together with b + c, they

@@ -1,4 +1,4 @@
-"""Primary tests of the analysis (M15, P0): mid-p McNemar, studentized sign-flip, weighted Holm."""
+"""Primary tests of the analysis: mid-p McNemar, studentized sign-flip, weighted Holm."""
 
 import itertools
 import math
@@ -31,8 +31,9 @@ def test_midp_known_values() -> None:
     assert midp_mcnemar(0, 5) == midp_mcnemar(5, 0) == 0.03125  # 0.0625 - 0.03125
     assert midp_mcnemar(3, 10) == 470 / 8192  # (2 * 378 - 286) / 2^13
     assert midp_mcnemar(0, 0) == 1.0
-    # Ties: 2 * (P(X <= k) - P(X = k) / 2) = 1 exactly. 09 M15 says 0.75 for (1, 1),
-    # which no single definition gives together with (0, 5): QUESTIONI Q-23.
+    # Ties: 2 * (P(X <= k) - P(X = k) / 2) = 1 exactly, the usual two-sided mid-p.
+    # An early draft of the specification gave 0.75 for (1, 1), a value that no
+    # single definition gives together with (0, 5).
     assert midp_mcnemar(1, 1) == 1.0
     assert midp_mcnemar(7, 7) == 1.0
 
@@ -223,7 +224,7 @@ def test_weighted_holm_refuses_bad_input(p_values, weights, message) -> None:
         weighted_holm(p_values, weights)
 
 
-# --- Primary tests in the paired report (paired-v2) -----------------------------------------
+# --- Primary tests in the paired report -----------------------------------------
 
 
 def ledger(arms, *, endpoint="functional", families=None, replicates=(0,)):

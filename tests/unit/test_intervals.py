@@ -1,4 +1,4 @@
-"""Intervals of the analysis plan (M15, P1): Tango, Newcombe method 10, CR1 with t(G - 1)."""
+"""Intervals of the analysis plan: Tango, Newcombe method 10, CR1 with t(G - 1)."""
 
 import json
 import math
@@ -215,7 +215,7 @@ def test_families_give_a_cr1_interval_and_no_tango() -> None:
     assert report.cr1_df == 2
 
 
-# --- C-19 (R-DES-01, R-STA-06) -----------------------------------------------------------------
+# --- Coverage and agreement of the intervals ---------------------------------
 
 
 def test_mid_p_and_tango_disagree_at_six_and_fifteen() -> None:

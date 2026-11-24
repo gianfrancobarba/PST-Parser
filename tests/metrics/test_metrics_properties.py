@@ -68,7 +68,7 @@ def _keys(value: object) -> list[str]:
 @given(trees)
 def test_assembled_tree_always_declares_every_leaf(tree: dict[str, object]) -> None:
     # Counted on the structure, not on the JSON text: a segment may itself read
-    # "main_instruction" (R-PRO-02).
+    # "main_instruction".
     assert _keys(tree).count("main_instruction") == 1
     assert ROOT_KEY in tree
 

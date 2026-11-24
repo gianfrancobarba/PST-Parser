@@ -1,4 +1,4 @@
-"""Security oracle for the pilot families (decision S-1 of 19/11/2026).
+"""Security oracle for the pilot families (declared in ``protocol/deviations.md``).
 
 The 12 LLMSecEval prompts of the pilot come from four C-origin memory families,
 disjoint from the S2 sample. They have no target query and no family rule: the

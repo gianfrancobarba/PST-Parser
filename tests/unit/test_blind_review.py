@@ -1,4 +1,4 @@
-"""C-18, V-7 (04 §3.10): blind review of the security judgments, on a JSONL sheet.
+"""Blind review of the security judgments, on a JSONL sheet.
 
 The sample is drawn with a seed before any file is opened (all U, targeted V
 up to 40, 15 per condition for general V and N, 20 I); files are renamed by

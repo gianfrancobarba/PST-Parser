@@ -1,4 +1,4 @@
-"""The parser gate thresholds are fixed in the protocol before any benchmark parse (P-04)."""
+"""The parser gate thresholds are fixed in the protocol before any benchmark parse."""
 
 import json
 from pathlib import Path

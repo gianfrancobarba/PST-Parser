@@ -192,7 +192,7 @@ class Harness:
             "gpu": "NVIDIA A100-SXM4-80GB",
         }
         document.update(changes)
-        # A final run needs a verified protocol freeze listing its inputs (S17):
+        # A final run needs a verified protocol freeze listing its inputs:
         # unless a test names its own record, one is written for these files.
         frozen = document["purpose"] == "final" and "review_record" not in changes
         if frozen:
@@ -212,7 +212,7 @@ class Harness:
         (self.root / "protocol").mkdir(exist_ok=True)
         target = self.root / "protocol" / "protocol-freeze.json"
         target.unlink(missing_ok=True)
-        # H-gold of a final run comes from a listed rendering of frozen gold (C-10).
+        # H-gold of a final run comes from a listed rendering of frozen gold.
         gold = self.root / "annotations.jsonl"
         gold.write_text('{"status": "frozen"}\n', encoding="utf-8", newline="\n")
         record = self.root / "variants.jsonl.render.json"
@@ -228,7 +228,7 @@ class Harness:
             ),
             encoding="utf-8",
         )
-        # The expected model files (C-17, Q-02 b), unless a test wrote its own.
+        # The expected model files, unless a test wrote its own.
         model = self.root / "protocol" / "model.json"
         if not model.exists():
             files = {"tokenizer_config.json": "t" * 64, "model.safetensors": "w" * 64}
@@ -307,7 +307,7 @@ def test_journal_plan_records_the_environment(harness) -> None:
     for package in ("transformers", "torch", "tokenizers", "huggingface_hub"):
         assert environment["packages"][package] == metadata.version(package)
     assert environment["accelerator"]["devices"] == ["NVIDIA A100-SXM4-80GB"]
-    # Q-03 (b): the driver is recorded per completion, outside the frozen plan.
+    # The driver is recorded per completion, outside the frozen plan.
     assert "driver" not in environment["accelerator"]
     assert {record["gpu_driver"] for record in harness.journal()} == {"550.54"}
     assert environment["python"] == ".".join(str(part) for part in sys.version_info[:3])
@@ -538,7 +538,7 @@ HF_MODEL = {"backend": "hf", "name": "fake/model", "revision": SHA, "chat_templa
         ({**V2, "format_version": 3}, "format_version must be 2"),
         ({**V2, "format_version": 1}, "format_version must be 2"),
         ({"format_version": 2, "user_template": WRAPPER}, "configuration requires exactly"),
-        # S-PREFILL (S15): the prefill is a version 2 key, refused in version 1.
+        # S-PREFILL: the prefill is a version 2 key, refused in version 1.
         ({"assistant_prefill": "x"}, "configuration requires exactly"),
         ({**V2, "assistant_prefill": ""}, "non-empty string or null"),
         ({**V2, "assistant_prefill": 3}, "non-empty string or null"),
@@ -619,7 +619,7 @@ def test_no_peak_vram_field_without_a_gpu(harness) -> None:
     assert all("peak_vram_bytes" not in r for r in harness.journal())
 
 
-# --- S-PREFILL (M04, P1) ---------------------------------------------------------------------
+# --- S-PREFILL ---------------------------------------------------------------------
 
 PREFILL = "```python\n"
 
@@ -690,7 +690,7 @@ def test_without_a_prefill_the_frozen_configuration_is_unchanged(harness, monkey
     assert set(seen) == {rendering(wrapped(row["text"])).encode("utf-8") for row in harness.rows}
 
 
-# --- Session identity (M18) ------------------------------------------------------------------
+# --- Session identity ------------------------------------------------------------------
 
 
 def test_every_completion_records_its_session_and_a_resume_adds_a_second_one(
@@ -718,13 +718,13 @@ def test_every_completion_records_its_session_and_a_resume_adds_a_second_one(
     assert all(len(session) == 32 for session in sessions)
     assert {record["gpu_name"] for record in records} == {"NVIDIA A100-SXM4-80GB"}
     assert len({record["environment_digest"] for record in records}) == 1
-    # A resume on another GPU is still refused (S03): the session cannot hide it.
+    # A resume on another GPU is still refused: the session cannot hide it.
     harness.gpu = "NVIDIA L4"
     other = harness.run(**V2)
     assert isinstance(other.exception, ValueError)
 
 
-# --- Protocol freeze (M12) -------------------------------------------------------------------
+# --- Protocol freeze -------------------------------------------------------------------
 
 
 def test_a_final_run_on_a_freeze_that_does_not_list_the_configuration_is_refused(harness) -> None:
@@ -758,7 +758,7 @@ def test_a_pilot_run_keeps_a_plain_review_record(harness) -> None:
     assert harness.manifest()["configuration"]["review_record"] == "review.md"
 
 
-# R-GEN-03 (C-02): a pilot measures the same treatment as the final runs, so a
+# A pilot measures the same treatment as the final runs, so a
 # v1 configuration without a backend may no longer fall back to the optimised
 # loader and the Llama template.
 @pytest.mark.parametrize("purpose", ["pilot", "final"])
@@ -778,7 +778,7 @@ def test_a_pilot_with_the_unsloth_backend_is_refused_before_loading(harness) -> 
     assert harness.model is None
 
 
-# --- One declared GPU (C-01, R-PIA-02) and resume rule (Q-03 b) -----------------------------
+# --- One declared GPU and resume rule -----------------------------
 
 
 def test_a_configuration_must_declare_its_gpu(harness) -> None:
@@ -839,7 +839,7 @@ def test_a_resume_after_a_kernel_or_driver_update_is_accepted(harness, monkeypat
     assert "platform" not in environment and "driver" not in environment["accelerator"]
 
 
-# --- Expected model files (C-17, R-GEN-02, Q-02 b) ----------------------------------------------
+# --- Expected model files ----------------------------------------------
 
 
 def test_a_final_run_with_a_file_digest_other_than_the_frozen_one_is_refused(harness) -> None:

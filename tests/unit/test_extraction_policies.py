@@ -49,7 +49,7 @@ def test_unclosed_block_is_an_invalid_fence() -> None:
     result = extract_fenced_blocks(f"Sure:\n```python\n{SOLUTION}")
 
     assert result == ExtractedCode(None, "invalid_fence", FENCED_BLOCKS, None, open_fence=True)
-    # v2 (R-ORA-08): a complete block before a cut one is kept, and the cut is flagged.
+    # v2: a complete block before a cut one is kept, and the cut is flagged.
     kept = extract_fenced_blocks(f"{fenced(SOLUTION)}\n```python\nx = 1")
     assert (kept.status, kept.blocks, kept.open_fence) == ("ok", 1, True)
 

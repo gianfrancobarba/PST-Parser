@@ -1,4 +1,4 @@
-"""The downstream Colab notebook (M17): valid, a launcher only, without the parser stack."""
+"""The downstream Colab notebook: valid, a launcher only, without the parser stack."""
 
 import ast
 import json

@@ -1,4 +1,4 @@
-"""Contamination by 10-gram overlap, near-duplicate groups and S-NEARDUP (M25)."""
+"""Contamination by 10-gram overlap, near-duplicate groups and S-NEARDUP."""
 
 import hashlib
 import json

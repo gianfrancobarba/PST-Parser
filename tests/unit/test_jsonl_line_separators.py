@@ -1,4 +1,4 @@
-"""JSON Lines readers split on the line feed only (R-PRO-01).
+"""JSON Lines readers split on the line feed only.
 
 ``str.splitlines`` also breaks on U+2028, U+2029 and U+0085, which
 ``json.dumps(..., ensure_ascii=False)`` writes unescaped inside strings: a

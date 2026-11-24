@@ -1,4 +1,4 @@
-"""The pilot report of one journal read from the check runs of the merged files (P6, C-26).
+"""The pilot report of one journal read from the check runs of the merged files.
 
 With two journals in a session, check-bigcodebench runs on the merged files
 (generations-core.jsonl for the common conditions, generations-extra.jsonl for

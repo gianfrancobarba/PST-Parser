@@ -1,4 +1,4 @@
-"""C-06 (R-TRA-01, Q-24): judgement units without the rule-fixed first sentence.
+"""Judgement units without the rule-fixed first sentence.
 
 The first sentence of the description goes to ``main_instruction`` by rule
 G3.1, so it holds no decision of the reviewer; the sentences of "Note that:"

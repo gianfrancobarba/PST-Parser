@@ -1,4 +1,4 @@
-"""The gold file of S_gold covers the 600-task prefix exactly, in its order (18/11/2026).
+"""The gold file of S_gold covers the 600-task prefix exactly, in its order.
 
 The 800 drafts of ``bcb-final`` stay as they are, as the draft side of
 ``gold-diff``; the gold is reviewed and frozen in ``bcb-gold``, whose rows are

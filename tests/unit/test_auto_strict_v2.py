@@ -1,4 +1,4 @@
-"""auto-strict-v2: exemption of the omitted starting code block only (P-04, C-22).
+"""auto-strict-v2: exemption of the omitted starting code block only.
 
 The span of the block comes from the source text (the fixed marker of
 BigCodeBench), never from the gold. Every other failure stays as in v1. The C-22

@@ -1,4 +1,4 @@
-"""Bounded, logged retries of infrastructure failures (M18)."""
+"""Bounded, logged retries of infrastructure failures."""
 
 import json
 from pathlib import Path

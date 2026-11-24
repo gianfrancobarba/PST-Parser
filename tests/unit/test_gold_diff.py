@@ -1,4 +1,4 @@
-"""Prespecified diff between the rule drafts and the reviewed gold (plan of 18/11/2026, P-07)."""
+"""Prespecified diff between the rule drafts and the reviewed gold (`protocol/analysis/plan.md`)."""
 
 import dataclasses
 import hashlib

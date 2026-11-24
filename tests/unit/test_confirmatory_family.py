@@ -1,4 +1,4 @@
-"""C-11 (R-STA-01): the confirmatory family comes from the parser gate, and its reports are checked.
+"""The confirmatory family comes from the parser gate, and its reports are checked.
 
 Before the correction, ``--confirmatory`` alone decided whether H3 stayed in
 the family (and so whether H1 was read at 0.04 or 0.05), a security report was
@@ -114,7 +114,7 @@ def test_h3_must_be_the_functional_t_versus_h_auto_report_on_s_parse(
         paired_tables({"a": H1, "b": h3}, family, gate("confirmatory"))
 
 
-# --- C-12 (R-STA-02): the four-way reading of a confirmatory row follows the Holm decision.
+# --- The four-way reading of a confirmatory row follows the Holm decision.
 
 
 def tabled(analysis_id: str, p: float, conditions=("T", "H-gold"), planned: int = 800) -> dict:
@@ -186,7 +186,7 @@ def test_holm_levels_agree_with_the_decisions_on_a_grid() -> None:
                     assert (value <= levels[name]) == (decisions[name] == "rejected")
 
 
-# Prespecified time cut (plan of 18/11/2026, P-04, CP2): without a complete parse
+# Prespecified time cut (`protocol/analysis/plan.md`): without a complete parse
 # by the deadline, a frozen document fixes the family to H1 alone, read at 0.05;
 # H3 is then exploratory whatever the parser gate says.
 PROTOCOL = {

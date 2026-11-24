@@ -1,4 +1,4 @@
-"""The written parts of the freeze F4 agree with the code and the frozen files (19/11/2026).
+"""The written parts of the freeze F4 agree with the code and the frozen files.
 
 The gold guidelines, the prompt-as-data rule and the analysis plan are frozen as
 text: their versions, thresholds and counts must be those the code and the

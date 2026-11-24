@@ -1,4 +1,4 @@
-"""Score the parser against the reviewed or frozen gold, not the drafts (P-04, T-7; 19/11/2026).
+"""Score the parser against the reviewed or frozen gold, not the drafts.
 
 parse-prompts stores, beside each prediction, the target built from the spans of
 the parse sources; for D-01 and the prefix those sources carried the rule drafts.

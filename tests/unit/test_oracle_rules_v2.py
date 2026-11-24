@@ -1,6 +1,6 @@
-"""C-03: condition-independent taxonomy rules and a layout-robust fenced extraction.
+"""Condition-independent taxonomy rules and a layout-robust fenced extraction.
 
-Counterexamples of the independent review (R-ORA-04, R-ORA-05, R-ORA-08),
+Counterexamples of the independent review,
 inverted: each one documented a defect of the v1 rules.
 """
 

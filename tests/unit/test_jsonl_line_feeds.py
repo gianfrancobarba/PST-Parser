@@ -1,4 +1,4 @@
-"""Journals and variant files are JSON Lines split on the line feed only (QUESTIONI Q-04).
+"""Journals and variant files are JSON Lines split on the line feed only.
 
 Files are written with ensure_ascii=False, so U+2028, U+2029 and U+0085 stay
 unescaped inside a record, and str.splitlines would cut the record there. The

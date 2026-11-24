@@ -1,4 +1,4 @@
-"""Non-directional pilot report (M16): technical criteria G1-G14 and b + c, never an effect."""
+"""Non-directional pilot report: technical criteria G1-G14 and b + c, never an effect."""
 
 import json
 from dataclasses import replace

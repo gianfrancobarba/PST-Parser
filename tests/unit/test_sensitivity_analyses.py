@@ -1,4 +1,4 @@
-"""C-18 (R-PIA-01): the prespecified sensitivity analyses kept by the user, each with a test.
+"""The prespecified sensitivity analyses kept by the user, each with a test.
 
 Leave-one-family-out and the equally weighted family mean (with the 2 pp
 rule) for the security endpoint; S-FLAKY and "fail if the first two runs
@@ -235,7 +235,7 @@ def test_determinism_selects_whole_tasks_and_compares_byte_for_byte(tmp_path: Pa
     assert sorted(report["differing"]) == [f"{min(picked)}-H-gold", f"{min(picked)}-T"]
 
 
-# --- S-NEARDUP (C-20, R-DAT-02) --------------------------------------------------------------
+# --- S-NEARDUP --------------------------------------------------------------
 
 
 def test_s_neardup_keeps_one_task_per_group() -> None:

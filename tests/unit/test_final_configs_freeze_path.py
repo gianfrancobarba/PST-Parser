@@ -1,4 +1,4 @@
-"""Final configurations reach the repository freeze (finding of the dress rehearsal, 19/11/2026).
+"""Final configurations reach the repository freeze (a dress-rehearsal finding).
 
 ``generate`` reads ``review_record`` relative to the configuration and verifies the
 freeze against the repository two levels above it. A final configuration kept in

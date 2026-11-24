@@ -1,4 +1,4 @@
-"""Reduced blind review (plan of 18/11/2026, P-06, C-18): only the U and targeted V cases.
+"""Reduced blind review (`protocol/analysis/plan.md`): only the U and targeted V cases.
 
 The reduced form is the part of the full draw drawn for U and V_targeted: same
 seed, same identifiers, same order. The review can start with it and extend to

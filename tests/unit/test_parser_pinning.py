@@ -1,4 +1,4 @@
-"""parse-prompts with a pinned and verified parser (R-HAU-03, C-24).
+"""parse-prompts with a pinned and verified parser.
 
 A pilot or final run loads the hf backend at the revision of the parser
 identity, with the adapter and conversation template of the reference run, and
@@ -155,7 +155,7 @@ def test_the_h_auto_configuration_pins_the_reference_parser() -> None:
     assert model.load_in_4bit is True
     assert model.dtype == "bfloat16"
     assert set(document["model"]) == set(ModelConfig.model_fields)
-    # M03: greedy, with every decoding value written out, repetition_penalty 1.0 included.
+    # Greedy, with every decoding value written out, repetition_penalty 1.0 included.
     assert document["inference"]["do_sample"] is False
     assert document["inference"]["repetition_penalty"] == 1.0
     assert document["inference"]["max_new_tokens"] == 3072

@@ -1,4 +1,4 @@
-"""Protocol freeze and its verification (M12)."""
+"""Protocol freeze and its verification."""
 
 import json
 from pathlib import Path

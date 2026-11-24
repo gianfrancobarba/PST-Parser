@@ -1,4 +1,4 @@
-"""C-15 (R-ORA-01..03): harness faults are faults, and cost only their own programs.
+"""Harness faults are faults, and cost only their own programs.
 
 Counterexamples of the independent review, inverted: rows absent with exit 0
 were never retried, one exhausted run made every program missing, a missing
@@ -116,7 +116,7 @@ def outcomes(result: dict[str, Any]) -> dict[tuple[str, str], tuple[str, str]]:
 TASKS = ["BigCodeBench/1", "BigCodeBench/2"]
 
 
-# --- R-ORA-03: a missing row in one run does not prevail over a valid outcome.
+# --- A missing row in one run does not prevail over a valid outcome.
 
 
 def test_pass_against_missing_needs_a_third_run_and_the_majority_of_valid_outcomes() -> None:
@@ -134,7 +134,7 @@ def test_missing_twice_stays_missing_without_a_third_run() -> None:
     assert settled.status == "missing"
 
 
-# --- R-ORA-01: absent rows with exit 0 and failed references are faults, retried.
+# --- Absent rows with exit 0 and failed references are faults, retried.
 
 
 def test_absent_rows_with_exit_zero_are_retried(tmp_path: Path) -> None:
@@ -155,7 +155,7 @@ def test_a_failed_reference_is_a_fault_of_the_run(tmp_path: Path) -> None:
     assert result["attempts"][0]["detail"].startswith("reference failed")
 
 
-# --- R-ORA-02: an exhausted run is repeated task by task.
+# --- An exhausted run is repeated task by task.
 
 
 def test_an_exhausted_run_is_repeated_by_task_and_only_the_faulty_batch_is_missing(
@@ -173,7 +173,7 @@ def test_an_exhausted_run_is_repeated_by_task_and_only_the_faulty_batch_is_missi
     assert "run-a-task-1" in result["calls"] and "run-a-task-2" in result["calls"]
 
 
-# --- R-ORA-01: more than 1% of discordant programs stops the evaluation.
+# --- More than 1% of discordant programs stops the evaluation.
 
 
 def test_a_discordance_above_one_percent_stops_unless_accepted(tmp_path: Path) -> None:

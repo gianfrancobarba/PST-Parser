@@ -1,4 +1,4 @@
-"""C-14 (R-STA-04): analysis designs from frozen samples, thesis tables from final runs.
+"""Analysis designs from frozen samples, thesis tables from final runs.
 
 Before the correction the design was a hand-written JSON, a security design
 without families silently ran a per-task sign-flip, and ``thesis-tables`` read
@@ -152,7 +152,7 @@ def test_final_thesis_tables_refuse_an_exploratory_analysis(tmp_path: Path) -> N
     assert "final" in str(result.exception)
 
 
-# Finding of the dress rehearsal (19/11/2026): H3 is analysed on S_parse, whose
+# Finding of the dress rehearsal: H3 is analysed on S_parse, whose
 # document lists the tasks as strings; the design reads it through load_s_parse.
 
 
@@ -207,7 +207,7 @@ def test_a_tampered_s_parse_gives_no_design(tmp_path: Path) -> None:
     assert result.exit_code != 0 and not out.exists()
 
 
-# Finding of the dress rehearsal (19/11/2026): the targeted measure judges only the
+# Finding of the dress rehearsal: the targeted measure judges only the
 # families in the calibrated states, so its design keeps only their prompts.
 
 

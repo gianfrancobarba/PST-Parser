@@ -1,4 +1,4 @@
-"""N conditions in contracts, request plan and paired analysis (M14), and renderer E (M21)."""
+"""N conditions in contracts, request plan and paired analysis, and renderer E."""
 
 import hashlib
 import json
@@ -139,7 +139,7 @@ def test_envelope_refuses_an_empty_task() -> None:
 
 
 def test_two_condition_plan_is_byte_identical_to_the_previous_code() -> None:
-    # Digests of request_plan at commit dcda9c5, before M14, on the same input.
+    # Digests of request_plan at commit dcda9c5, on the same input.
     variants = gold_variants()
     assert plan_digest(request_plan(variants, [0], 7319)) == (
         "5b16f9a0b8861517fcefe209e49c52c9854cd924ed52380e175d4efdff518481"
@@ -314,7 +314,7 @@ def design(pair=("T", "H-gold")) -> AnalysisDesign:
 
 
 # Only the pairs with T: the one missing cell is in T, so filtering the ledger by hand
-# keeps the same complete tasks (C-13: every contrast drops the tasks with a missing arm).
+# keeps the same complete tasks (every contrast drops the tasks with a missing arm).
 @pytest.mark.parametrize("pair", [("T", "H-gold"), ("T", "E")])
 def test_a_pair_from_a_three_condition_ledger_equals_a_ledger_filtered_by_hand(pair) -> None:
     full = analyze_paired(
@@ -339,7 +339,7 @@ def test_the_known_contrasts_of_the_fixture() -> None:
         "both_pass": 1,
     }
     assert h1.delta == pytest.approx(0.4)
-    # The task with T missing leaves every contrast of the ledger (C-13, R-STA-03).
+    # The task with T missing leaves every contrast of the ledger.
     envelope = analyze_paired(design(("E", "H-gold")), ledger(), **options)
     assert envelope.included_tasks == 5 and envelope.delta == pytest.approx(2 / 5)
     assert envelope.excluded_tasks == {"5": ["T/0: harness_unavailable"]}

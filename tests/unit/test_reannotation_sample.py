@@ -1,4 +1,4 @@
-"""Seeded samples of the re-annotation from scratch (plan of 18/11/2026, P-07).
+"""Seeded samples of the re-annotation from scratch (`protocol/analysis/plan.md`).
 
 Thirty BigCodeBench tasks of the prefix with judgement units, thirty LLMSecEval
 prompts stratified by family; both drawn with a seed before the gold review.

@@ -1,7 +1,7 @@
-"""The parser gate reads the primary strict policy fixed by the C-22 rule (P-04).
+"""The parser gate reads the primary strict policy fixed by the C-22 rule.
 
 auto-strict-v2 is accepted only when the C-22 rule, read on the v1 conversion of
-the pilot tasks (D-01), makes it primary; a v1 conversion is refused when the
+the pilot tasks, makes it primary; a v1 conversion is refused when the
 rule makes v2 primary. A final gate needs that document, listed in the freeze.
 """
 

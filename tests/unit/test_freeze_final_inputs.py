@@ -1,4 +1,4 @@
-"""The inputs of the final collection enter the freeze F4 (A4/A5, 19/11/2026).
+"""The inputs of the final collection enter the freeze F4.
 
 The journal variants, their renderings with records, the covariates and the
 analysis designs are listed; every H-gold variant of a journal comes from a listed

@@ -1,4 +1,4 @@
-"""Registered sentence cuts in the gold lint (Q-16, decided 17/11/2026; R-TRA-03).
+"""Registered sentence cuts in the gold lint.
 
 A reviewer may cut a judgement unit (rule G3 or B6) at a space, for example to
 separate the items of a list written on one line, when the row's notes record

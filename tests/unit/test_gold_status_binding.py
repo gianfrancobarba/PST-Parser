@@ -1,4 +1,4 @@
-"""C-10 (R-TRA-02): variants carry the state of their gold, and final runs need frozen gold.
+"""Variants carry the state of their gold, and final runs need frozen gold.
 
 ``render`` writes next to the variants a record (``<variants>.render.json``)
 with the state the canonical file was joined in (from the ``canonicalize``

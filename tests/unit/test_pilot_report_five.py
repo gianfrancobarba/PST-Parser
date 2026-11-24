@@ -1,4 +1,4 @@
-"""The pilot report with the five conditions of the pilot (plan of 18/11/2026, P-08, C-04).
+"""The pilot report with the five conditions of the pilot (`protocol/analysis/plan.md`).
 
 T, H-gold, E, F and H-auto in one journal: every condition is listed, no key
 reveals a rate or a difference, and two worlds with opposite directions give

@@ -1,4 +1,4 @@
-"""Extension F (pst-flat-json-v1, M21) and the TOST with the four-way reading (M22)."""
+"""Extension F (pst-flat-json-v1) and the TOST with the four-way reading."""
 
 import json
 from pathlib import Path

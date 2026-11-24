@@ -1,4 +1,4 @@
-"""Thesis tables and figures (M20): regenerated from run files, identical across executions."""
+"""Thesis tables and figures: regenerated from run files, identical across executions."""
 
 import json
 from pathlib import Path
@@ -109,7 +109,7 @@ def fake_run(root: Path) -> Path:
     report = run / "analysis" / "bcb-h1" / "report.json"
     report.parent.mkdir(parents=True)
     report.write_text(json.dumps(functional_report()), encoding="utf-8")
-    # A failed parser gate: H1 alone is confirmatory (C-11).
+    # A failed parser gate: H1 alone is confirmatory.
     (run / "parser" / "gate").mkdir(parents=True)
     (run / "parser" / "gate" / "gate.json").write_text(
         json.dumps(gate("descriptive")), encoding="utf-8"
@@ -427,7 +427,7 @@ def test_the_protocol_family_decides_h1_alone_through_the_command(
     assert "confirmatory-family-v1" in str(refused.exception)
 
 
-# Finding of the dress rehearsal (19/11/2026): the exploratory contrasts E - T and
+# Finding of the dress rehearsal: the exploratory contrasts E - T and
 # H-gold - E are analysed on the same core ledger as H1, so their reports share
 # its analysis_id; a report is identified by its analysis_id and its conditions.
 

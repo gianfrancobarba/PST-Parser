@@ -141,7 +141,7 @@ def test_repeated_prompt_ids_get_distinct_internal_ids(dataset: Path) -> None:
     assert len({row["prompt_id"] for row in rows.values()}) == 148
 
 
-# 03 B15: Jaccard >= 0.8 on the word tokens of instruct_prompt, 8 groups and 17 tasks.
+# Jaccard >= 0.8 on the word tokens of instruct_prompt, 8 groups and 17 tasks.
 NEAR_DUPLICATE_GROUPS = [
     {349, 351, 353},
     {130, 131},

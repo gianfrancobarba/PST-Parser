@@ -1,4 +1,4 @@
-"""Every real draft renders, and lints clean, with the local benchmark sources (R-DES-02).
+"""Every real draft renders, and lints clean, with the local benchmark sources.
 
 The drafts of ``data/annotated/downstream`` are versioned; the sources are local
 copies made by ``import-bigcodebench`` and are not. Set ``PST_BCB_SOURCES`` to

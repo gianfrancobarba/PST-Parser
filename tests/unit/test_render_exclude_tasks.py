@@ -1,6 +1,6 @@
 """render --exclude-tasks: the tasks outside S_parse, for the second journal of a session.
 
-Plan of 18/11/2026, P-04 and C-26: one session has a journal with H-auto on
+`protocol/analysis/plan.md`: one session has a journal with H-auto on
 S_parse and a journal without H-auto on the other tasks of the sample. The
 second variant file is the gold rendering of exactly the tasks outside S_parse.
 """

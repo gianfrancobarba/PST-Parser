@@ -1,4 +1,4 @@
-"""The H-auto parser Colab notebook (C-24, D-01): a launcher of the pinned parse-prompts."""
+"""The H-auto parser Colab notebook: a launcher of the pinned parse-prompts."""
 
 import ast
 import json
@@ -62,7 +62,7 @@ def test_no_link_to_unversioned_documents_and_no_secrets() -> None:
 
 
 def test_the_final_branch_reads_the_single_freeze_f4() -> None:
-    # Plan of 18/11/2026, P-09: one freeze, F4. The prefix is parsed as a pilot run
+    # `protocol/analysis/plan.md`: one freeze, F4. The prefix is parsed as a pilot run
     # before F4; a final run (a re-parse) reads protocol/protocol-freeze.json.
     text = NOTEBOOK.read_text(encoding="utf-8")
     assert "protocol-freeze-hauto" not in text

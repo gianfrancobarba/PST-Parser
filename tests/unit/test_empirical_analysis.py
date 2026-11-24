@@ -91,7 +91,7 @@ def test_missing_excludes_whole_task_and_bounds_keep_observed_outcomes():
 
 
 def test_security_unknown_bounds_are_asymmetric_and_findings_survive(tmp_path):
-    # Security designs carry families: the unit of inference (C-14).
+    # Security designs carry families: the unit of inference.
     design, records = fixture(
         [(["U"], ["N"]), (["I"], ["U"])], endpoint="security", families=["F1", "F2"]
     )

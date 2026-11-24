@@ -36,7 +36,7 @@ SPLIT = "v0.1.4"
 # 314, 590, 1005, 1012. Tests that pass a program doing nothing: 59, 272.
 ALWAYS_EXCLUDED = {59, 101, 176, 272, 314, 590, 1005, 1012}
 # References that pass both reference runs and fail now and then only when
-# submitted as a sample (Q-27, decided (a) on 17/11/2026: left to the 2+1 rule,
+# submitted as a sample (left to the 2+1 rule,
 # the frozen exclusions are not reopened). 205: timeout of its process pool;
 # 819: timing tolerance of time.sleep. Such a calibration is not conclusive and
 # writes no exclusions, but it is not a regression.

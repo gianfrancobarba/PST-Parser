@@ -1,4 +1,4 @@
-"""Frozen prompt covariates (M13) and judgement units of the gold (M25)."""
+"""Frozen prompt covariates and judgement units of the gold."""
 
 import hashlib
 import json

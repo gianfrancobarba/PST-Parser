@@ -91,7 +91,7 @@ def command(
         "pilot-01",
         "--order-seed",
         "7",
-        # The fixture has one discordant program out of seven (C-15: accepted explicitly).
+        # The fixture has one discordant program out of seven (accepted explicitly).
         "--accept-discordance",
     ]
 
@@ -232,7 +232,7 @@ def security_command(tmp_path: Path, bundle: Path, measure: str, *extra: str) ->
         journal.write_text(
             "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
         )
-    # A frozen calibration that backs every card (C-16, R-ORA-10).
+    # A frozen calibration that backs every card.
     calibration = tmp_path / "codeql-calibration.json"
     if not calibration.exists():
         cards = read_cards(sec.CARDS)

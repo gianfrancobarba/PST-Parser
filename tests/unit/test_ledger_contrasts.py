@@ -1,4 +1,4 @@
-"""C-13 (R-STA-03): every contrast of an N-condition ledger uses the same complete tasks.
+"""Every contrast of an N-condition ledger uses the same complete tasks.
 
 Counterexample of the independent review (``s07_missing``), inverted: with E
 missing on t0 and H-gold missing on t1, H-T, E-T and H-E used three different

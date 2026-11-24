@@ -1,4 +1,4 @@
-"""Q-25 (confirmed 17/11/2026): the S-PREFILL prefill goes in front of the continuation.
+"""The assistant prefill goes in front of the continuation.
 
 The journal of a prefilled run records only what the model generated; before
 extraction and the harness the prefill is put back, as the start of the

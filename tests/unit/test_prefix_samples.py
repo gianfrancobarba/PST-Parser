@@ -1,4 +1,4 @@
-"""The correctness sample is a prefix of the frozen permutation (plan of 18/11/2026, P-02, P-03).
+"""The correctness sample is a prefix of the frozen permutation (`protocol/analysis/plan.md`).
 
 S_gold is the 600-task prefix; the 400-task prefix is the prespecified fallback,
 chosen only for time. Both are read from the files in ``protocol/``.
@@ -47,7 +47,7 @@ def test_the_hard_census_is_no_longer_in_the_protocol() -> None:
 
 
 def test_the_protocol_does_not_fix_the_family_so_the_parser_gate_decides_h3() -> None:
-    # P-03: Holm on {H1, H3}, with H3 in the family only after a passed gate. The
+    # Holm on {H1, H3}, with H3 in the family only after a passed gate. The
     # confirmatory-family-v1 document is kept in the code for the prespecified
-    # time cut (P-04, CP2) and enters the protocol only if that cut is applied.
+    # time cut (CP2) and enters the protocol only if that cut is applied.
     assert not (ROOT / "protocol" / "analysis" / "confirmatory-family.json").exists()

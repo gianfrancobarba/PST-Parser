@@ -1,4 +1,4 @@
-"""H-auto (M19): parser predictions into spans, S_parse, the two H3 estimates and the gate."""
+"""H-auto: parser predictions into spans, S_parse, the two H3 estimates and the gate."""
 
 import hashlib
 import json
@@ -306,7 +306,7 @@ def test_inconsistent_h3_ledgers_are_refused() -> None:
         )
 
 
-# The bindings of the gate (R-HAU-02): the conversion and the score read the same predictions.
+# The bindings of the gate: the conversion and the score read the same predictions.
 BOUND = {"predictions_sha256": "p" * 64, "id_map_sha256": "m" * 64}
 BIND = {"id_map": ID_MAP, "id_map_sha256": "m" * 64, "sample_tasks": ID_MAP["tasks"]}
 SCORE = {
@@ -498,7 +498,7 @@ def test_the_cli_writes_the_two_h3_ledgers(tmp_path: Path, monkeypatch) -> None:
     assert {r.task_id for r in every} == {r.task_id for r in primary}
 
 
-# Finding of the dress rehearsal (19/11/2026): RQ3c (H-auto - H-gold) and the
+# Finding of the dress rehearsal: RQ3c (H-auto - H-gold) and the
 # decomposition of Delta_auto are estimated on S_parse, so a third ledger keeps
 # every condition of the S_parse tasks.
 

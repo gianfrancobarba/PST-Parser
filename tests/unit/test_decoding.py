@@ -245,7 +245,7 @@ def test_generate_command_rejects_sampling_at_temperature_zero_before_loading(
     assert not (tmp_path / "o").exists()
 
 
-# --- Q-08: an explicit attention mask of ones ------------------------------------------------
+# --- An explicit attention mask of ones ------------------------------------------------
 
 
 def test_generation_passes_an_explicit_attention_mask_of_ones() -> None:

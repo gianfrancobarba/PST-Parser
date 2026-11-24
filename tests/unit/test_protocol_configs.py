@@ -1,12 +1,11 @@
-"""Generation configurations of the pilot and of the core (plan of 18/11/2026, P-04, P-08, P-11).
+"""Generation configurations of the pilot and of the core (`protocol/analysis/plan.md`).
 
 One file per journal. The BigCodeBench core has two journals in one session,
 {T, H-gold, E, H-auto} on S_parse and {T, H-gold, E} on the other tasks, each
 with and without F (F enters only by the CP3-F time rule); the pilot always has
 F. Security: greedy and sampled, {T, H-gold}. Values from the frozen decisions:
-SYS and wrapper W (00 T-1, T-2), greedy 1280 tokens (G-2), sampling 0.7/0.8/20
-with replicates 1-5 (G-3), repetition_penalty 1.0 everywhere (G-4), one L4
-(G-1), seed 7319 (decided by the student on 18/11/2026).
+system prompt and wrapper W, greedy 1280 tokens, sampling 0.7/0.8/20 with
+replicates 1-5, repetition_penalty 1.0 everywhere, one L4, seed 7319.
 """
 
 import json
@@ -47,7 +46,7 @@ FILES = {
     "lse-sampled.json": ["T", "H-gold"],
 }
 PILOT = {name: c for name, c in FILES.items() if name.startswith("lse") or "-f" in name}
-# R-6 (19/11/2026): a final configuration in protocol/configs/final/ reaches the repository
+# R-6: a final configuration in protocol/configs/final/ reaches the repository
 # freeze protocol/protocol-freeze.json; a pilot one names the render record next to it.
 REVIEW = {"final": "../../protocol-freeze.json", "pilot": "render-record.json"}
 

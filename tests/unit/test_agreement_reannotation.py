@@ -1,4 +1,4 @@
-"""The re-annotation from scratch is a human second file, at a recorded interval (P-07)."""
+"""The re-annotation from scratch is a human second file, at a recorded interval."""
 
 import hashlib
 import json

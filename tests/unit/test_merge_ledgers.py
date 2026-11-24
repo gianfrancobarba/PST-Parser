@@ -1,4 +1,4 @@
-"""Union of the outcome ledgers of the check runs of one session, for hauto-ledgers (P8, C-26).
+"""Union of the outcome ledgers of the check runs of one session, for hauto-ledgers.
 
 check-bigcodebench runs once on generations-core.jsonl (T, H-gold, E on S_gold)
 and once on generations-extra.jsonl (H-auto on S_parse). hauto-ledgers wants one

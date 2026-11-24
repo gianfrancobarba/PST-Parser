@@ -1,4 +1,4 @@
-"""Verified union of the two journals of one generation session (plan of 18/11/2026, P-04, C-26).
+"""Verified union of the two journals of one generation session (`protocol/analysis/plan.md`).
 
 Journal A holds {T, H-gold, E, H-auto} on S_parse, journal B {T, H-gold, E} on the
 other tasks. The union gives the core file (the conditions of every journal, on

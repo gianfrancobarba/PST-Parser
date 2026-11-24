@@ -941,7 +941,7 @@ def test_calibration_stops_if_a_control_cannot_be_analysed(
         calibrate(config, RUN_CARDS, controls, tmp_path, analyzer=FakeAnalyzer(broken={"sqlite3"}))
 
 
-# ----------------------------------------------------------------- infrastructure retries (M18)
+# ----------------------------------------------------------------- infrastructure retries
 
 
 class FlakyContainer(FakeAnalyzer):

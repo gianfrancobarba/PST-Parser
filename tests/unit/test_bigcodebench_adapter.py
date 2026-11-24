@@ -299,7 +299,7 @@ def test_a_missing_row_is_not_a_disagreement_but_needs_a_third_run() -> None:
     first, second = run("pass", "missing"), run("missing", "fail")
 
     assert compare_runs(first, second) == []
-    # C-15 (R-ORA-03): one run missing calls a third run; missing again, it stays missing.
+    # One run missing calls a third run; missing again, it stays missing.
     third = run("missing", "missing")
     assert [(r.status, dict(r.details)) for r in resolve_majority(first, second, third)] == [
         ("missing", {"reason": "row_absent"}),
@@ -415,7 +415,7 @@ def test_a_passing_program_is_never_given_a_failure_category() -> None:
         ('import json\nDATA = json.loads(\'{"prompt": "Sum two numbers"}\')\n', True),
         ("from json import loads\nDATA = loads('{\"main_instruction\": 1}')\n", True),
         ("import json\ndef task_func(s):\n    return json.loads(s)['prompt']\n", True),
-        # v2 (R-ORA-05): ordinary uses of the same keys are not the prompt.
+        # v2: ordinary uses of the same keys are not the prompt.
         ("from json import loads\nDATA = loads('{\"phrase\": 1}')\n", False),
         ("def task_func(df):\n    return df['position'].mean()\n", False),
         ("def task_func(t):\n    return {'prompt': t, 'max_tokens': 5}\n", False),
@@ -448,7 +448,7 @@ def test_prompt_as_data_rule(code: str, expected: bool) -> None:
             'The request has "main_instruction": [...] and "phrase": "Sum".\n```python\nx = 1\n```',
             False,
         ),
-        # v2 (R-ORA-04): a JSON echo of either prompt counts, a bracketed heading does not.
+        # v2: a JSON echo of either prompt counts, a bracketed heading does not.
         ('Input: {"prompt": "Sum."}\n```python\nx = 1\n```', True),
         ("[Solution]\n```python\nx = 1\n```", False),
         (fence(GOOD), False),
@@ -482,7 +482,7 @@ def test_every_planned_generation_gets_one_outcome() -> None:
             SampleResult(failing["request_id"], "fail", {"test_a": ASSERTION}),
             SampleResult(absent["request_id"], "pass", {}),
         ],
-        # One run missing: a third run settles it (C-15); missing again, one valid outcome.
+        # One run missing: a third run settles it; missing again, one valid outcome.
         [SampleResult(absent["request_id"], "missing", {"reason": "row_absent"})],
     )
 
@@ -618,7 +618,7 @@ def test_two_runs_then_a_third_only_for_the_tasks_that_disagree(
 ) -> None:
     harness = FakeHarness()
 
-    # One discordant program out of seven is more than 1%: accepted explicitly (C-15).
+    # One discordant program out of seven is more than 1%: accepted explicitly.
     result = evaluate_generations(
         config,
         planned(),
@@ -700,7 +700,7 @@ def test_generations_for_an_unknown_task_are_refused(config: HarnessConfig, tmp_
         )
 
 
-# ----------------------------------------------------------------- infrastructure retries (M18)
+# ----------------------------------------------------------------- infrastructure retries
 
 
 class BrokenHarness(FakeHarness):
@@ -768,7 +768,7 @@ def test_a_failed_container_is_retried_in_a_new_directory_and_logged(
 def test_three_failed_attempts_are_followed_by_runs_task_by_task(
     config: HarnessConfig, tmp_path: Path
 ) -> None:
-    # C-15 (R-ORA-02): an exhausted run costs only the tasks whose own batch fails;
+    # An exhausted run costs only the tasks whose own batch fails;
     # here every batch of run-b succeeds, so no program is missing.
     harness = BrokenHarness({"run-b": 3})
 

@@ -1,4 +1,4 @@
-"""The parser gate is bound to the predictions behind S_parse and to S_gold (R-HAU-02, C-23).
+"""The parser gate is bound to the predictions behind S_parse and to S_gold.
 
 ``score`` records the SHA-256 of the predictions it read, their indices and,
 with ``--id-map``, the tasks. ``parser-gate`` checks that the score report,

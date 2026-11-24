@@ -1,4 +1,4 @@
-"""Power of the primary tests (M11): exact mid-p power and MDE, clustered sign-flip simulation."""
+"""Power of the primary tests: exact mid-p power and MDE, clustered sign-flip simulation."""
 
 import json
 import math
@@ -51,10 +51,10 @@ def test_the_size_of_the_midp_test_never_exceeds_alpha(alpha) -> None:
 @pytest.mark.parametrize(
     ("n", "alpha", "expected"),
     [
-        (800, 0.05, (0.0325, 0.04, 0.045, 0.055)),  # 00 §3.6, before the weighted Holm
-        (800, 0.04, (0.0325, 0.04, 0.0475, 0.0575)),  # 00 §3.6, H1
-        (600, 0.01, (0.045, 0.055, 0.0625, 0.0775)),  # 00 §3.6, H3 if H1 is not rejected
-        (600, 0.05, (0.0375, 0.045, 0.0525, 0.0625)),  # 00 §3.6, H3 if H1 is rejected
+        (800, 0.05, (0.0325, 0.04, 0.045, 0.055)),  # before the weighted Holm
+        (800, 0.04, (0.0325, 0.04, 0.0475, 0.0575)),  # H1
+        (600, 0.01, (0.045, 0.055, 0.0625, 0.0775)),  # H3 if H1 is not rejected
+        (600, 0.05, (0.0375, 0.045, 0.0525, 0.0625)),  # H3 if H1 is rejected
     ],
 )
 def test_minimum_detectable_effects_of_the_plan(n, alpha, expected) -> None:
@@ -63,13 +63,13 @@ def test_minimum_detectable_effects_of_the_plan(n, alpha, expected) -> None:
 
 def test_power_at_five_points_for_h1() -> None:
     powers = [midp_power(800, q, 0.05, 0.04) for q in Q]
-    assert powers == pytest.approx([0.995, 0.95, 0.87, 0.70], abs=0.005)  # 00 §3.6
+    assert powers == pytest.approx([0.995, 0.95, 0.87, 0.70], abs=0.005)
 
 
 def test_mde_is_none_when_the_target_is_out_of_reach() -> None:
-    # Values of power_midp.json (06): at alpha 0.05 the MDE is reached at delta = q
-    # (power 0.855); at alpha 0.025 it is not (power 0.737). 06 §3.4.1 prints the
-    # second case in the alpha 0.05 table (QUESTIONI Q-23).
+    # At alpha 0.05 the MDE is reached at delta = q (power 0.855); at alpha 0.025
+    # it is not (power 0.737). An early power table printed the second case under
+    # alpha 0.05.
     assert mde(145, 0.05, 0.05) == 0.05
     assert midp_power(145, 0.05, 0.05, 0.025) == pytest.approx(0.7369150134695646, rel=1e-9)
     assert mde(145, 0.05, 0.025) is None
@@ -161,7 +161,7 @@ def test_clustered_power_grows_with_the_effect() -> None:
         "seed": 5,
         "samples": 199,
     }
-    assert simulate_clustered(delta=0.20, **common).rate > 0.9  # 06 §3.4.3: MDE 9 pp
+    assert simulate_clustered(delta=0.20, **common).rate > 0.9  # MDE 9 pp
 
 
 def test_power_command_writes_the_same_csv_for_the_same_seed(tmp_path) -> None:

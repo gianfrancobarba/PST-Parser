@@ -1,4 +1,4 @@
-"""parse-prompts (M19): the parser on benchmark prompts, with an index map and gold targets."""
+"""parse-prompts: the parser on benchmark prompts, with an index map and gold targets."""
 
 import json
 from collections.abc import Iterable, Sequence
