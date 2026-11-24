@@ -10,7 +10,10 @@ abstract: >-
   Supervised fine-tuning and evaluation pipeline for the structural segmentation
   of large language model prompts according to the Prompt Syntax Tree framework.
   Given a natural language prompt, the model extracts its text segments and
-  assigns each of them to a node of a hierarchical taxonomy.
+  assigns each of them to a node of a hierarchical taxonomy. The repository also
+  holds the frozen protocol and the code of an empirical study that compares the
+  correctness and security of code generated from the original prompt and from
+  its Prompt Syntax Tree; the protocol is frozen in commit 394c893.
 keywords:
   - prompt engineering
   - large language models

@@ -1,11 +1,16 @@
-# Installazione e verifiche
+# Installation and checks
 
-Requisiti in [REQUIREMENTS.md](REQUIREMENTS.md). Eseguire dalla radice del progetto.
-`outputs/new-run/` è un esempio: scegliere un nome nuovo per ogni preparazione e usare gli
-stessi override in train e generate. Non sovrascrivere split o risultati storici.
-La preparazione tecnica downstream non equivale all'approvazione del protocollo da parte del docente.
+Requirements are in [REQUIREMENTS.md](REQUIREMENTS.md). Run everything from the project root.
+`outputs/new-run/` is an example: choose a new name for every preparation, and use the same overrides
+in train and generate. Never overwrite historical splits or results.
 
-## Preparazione e scoring CPU
+The empirical study is closed and its protocol is frozen in commit `394c893`
+(`protocol/protocol-freeze.json`). The supervisors' approval of the choices made after the proposal
+is not recorded in the protocol; this is declared in `protocol/deviations.md`. Commands with purpose
+`final` verify the freeze and run on an extraction of `git -c core.autocrlf=false archive 394c893`,
+not on a Windows working tree, whose text files may be CRLF.
+
+## Preparation and scoring on a CPU
 
 ```bash
 uv sync --no-dev
@@ -13,27 +18,27 @@ uv run pstparser validate-config --config configs/experiments/baseline.yaml
 uv run pstparser score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
 ```
 
-Senza `--run-dir`, score crea una directory `score-...` sotto `training.output_dir` (`outputs/`
-di default), mai accanto alle predizioni, con `results.json`, `eval_details.jsonl` e
-`score_manifest.json`; align fa lo stesso con `align-...`. È un ricalcolo con metriche
-attuali di predizioni storiche, non un nuovo training. Le collisioni con output esistenti sono rifiutate.
+Without `--run-dir`, score creates a `score-...` directory under `training.output_dir` (`outputs/` by
+default), never next to the predictions, with `results.json`, `eval_details.jsonl` and
+`score_manifest.json`; align does the same with `align-...`. It recomputes historical predictions with
+the current metrics; it is not a new training. Collisions with existing outputs are refused.
 
-## Training e generazione
+## Training and generation
 
 ```bash
 uv sync --extra cu128 --extra train --extra unsloth
 ```
 
-Per sviluppo CPU con stack dei modelli e test:
+For development on a CPU with the model stack and the tests:
 
 ```bash
 uv sync --extra cpu --extra train --extra dev
 ```
 
-Gli extra cpu e cu128 sono incompatibili. Il backend ottimizzato può compilare kernel
-all'importazione: installazione riuscita non significa training validato.
-`--set model.backend=hf` seleziona il percorso alternativo, senza garantire identità numerica
-o gli stessi requisiti. Verificare modello e precisione effettivi con uno smoke.
+The `cpu` and `cu128` extras are incompatible. The optimised backend may compile kernels when it is
+imported: a successful installation does not mean a validated training. `--set model.backend=hf`
+selects the alternative path, without guaranteeing numerical identity or the same requirements. Check
+the actual model and precision with a smoke test.
 
 ```bash
 uv run pstparser prepare-data --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits
@@ -42,40 +47,41 @@ uv run pstparser generate --config configs/experiments/baseline.yaml --set data.
 uv run pstparser score --config configs/experiments/baseline.yaml --predictions outputs/new-run/generation/predictions.jsonl --run-dir outputs/new-run/scoring
 ```
 
-Sul corpus descritto dall'audit: 1123 record prima della deduplica (975 Excel e 148 YAML),
-17 correzioni, 18 duplicati e split 905/100/100 sono dati dello snapshot, da verificare sul
-report nuovo; non requisiti invarianti per corpus futuri. Il gate verifica collocazione/copertura
-con soglie e normalizzazioni configurate: non certifica semantica o copertura strict al 100%.
+On the audited corpus there are 1,123 records before deduplication (975 from the spreadsheet and 148
+from YAML), 17 corrections, 18 duplicates and the 905/100/100 split. These describe that snapshot and
+are to be checked on the new report; they are not invariants for future corpora. The quality gate
+checks placement and coverage with the configured thresholds and normalisations: it certifies neither
+semantics nor a strict 100% coverage.
 
-prepare-data richiede directory fresche per record e split. I manifest nuovi sono distinti:
-`prepare_manifest.json`, `train_manifest.json`, `generate_manifest.json`, `score_manifest.json`.
-Gli override dei percorsi devono accompagnare train/generate per selezionare gli stessi dati.
+`prepare-data` needs fresh directories for records and splits. New manifests are separate:
+`prepare_manifest.json`, `train_manifest.json`, `generate_manifest.json`, `score_manifest.json`. The
+path overrides must go with train and generate so that they select the same data.
 
-## Audit del corpus e moduli downstream
+## Corpus audit and downstream modules
 
-Si invocano come moduli Python, senza entry point dedicati; non richiedono GPU tranne
-`empirical generate`, che carica il modello.
+They are invoked as Python modules, without dedicated entry points; none needs a GPU except
+`empirical generate`, which loads the model.
 
 ```bash
 uv run python -m pstparser.data.audit --config configs/experiments/baseline.yaml --output outputs/new-run/corpus-audit.json
 uv run python -m pstparser.empirical --help
 ```
 
-L'audit è in sola lettura e rifiuta un file di output esistente; la directory deve esistere.
-I sottocomandi `render`, `generate`, `check` e `analyze` di `pstparser.empirical` richiedono input
-espliciti (annotazioni canoniche, configurazione congelata, oracoli, disegno dell'analisi).
-`check` richiede Docker e un'immagine Python già presente localmente, fissata per digest
-(`nome@sha256:...`): non scarica immagini né esegue codice generato sull'host.
+The audit is read-only and refuses an existing output file; the directory must exist. The `render`,
+`generate`, `check` and `analyze` subcommands of `pstparser.empirical` need explicit inputs
+(canonical annotations, frozen configuration, oracles, analysis design). `check` needs Docker and a
+Python image already present locally, pinned by digest (`name@sha256:...`): it pulls no image and runs
+no generated code on the host.
 
-## Container
+## Containers
 
 ```bash
 docker build -f docker/Dockerfile --target eval -t pstparser:eval .
 docker compose -f docker/compose.yaml --profile eval run --rm score score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
 ```
 
-L'immagine eval non richiede lo stack dei modelli. Dimensione e compatibilità dipendono dalla build.
-Per GPU verificare NVIDIA Container Toolkit e runtime sull'host:
+The eval image does not need the model stack. Its size and compatibility depend on the build. For a
+GPU, check the NVIDIA Container Toolkit and the runtime on the host:
 
 ```bash
 docker run --rm --gpus all nvidia/cuda:12.8.0-base-ubuntu22.04 nvidia-smi
@@ -84,19 +90,21 @@ docker compose -f docker/compose.yaml --profile train run --rm train prepare-dat
 docker compose -f docker/compose.yaml --profile train run --rm train train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-container-run/processed --set data.split.output_dir=outputs/new-container-run/splits --run-dir outputs/new-container-run/training
 ```
 
-Compose monta dati/output/risultati e una cache dei modelli. Queste immagini non costituiscono
-automaticamente il sandbox downstream per codice non fidato.
+Compose mounts data, outputs and results, and a model cache. These images are not by themselves the
+downstream sandbox for untrusted code.
 
-## Test
+## Tests
 
 ```bash
 uv run pytest -m "not slow and not gpu"
 uv run pytest -m slow
 ```
 
-I test slow possono scaricare un modello e richiedere rete/stack dei modelli. Durata e supporto
-GPU dipendono dall'ambiente. Se la creazione dei temporanei è impedita, passare
-`--basetemp outputs/test-temp-new` con una directory dedicata nuova: pytest la gestisce
-come temporanea, quindi non scegliere percorsi con dati da conservare.
+The fast suite needs the `cpu` (or `cu128`), `train` and `dev` extras: some tests import `torch`,
+`transformers` and `tokenizers`. Two tests need a git checkout and are skipped in an archive
+extraction. The slow tests may download a model and need the network and the model stack; their
+duration and GPU support depend on the environment. If creating temporary files is not allowed, pass
+`--basetemp outputs/test-temp-new` with a new dedicated directory: pytest manages it as temporary,
+so never pick a path holding data to keep.
 
-Su Windows make richiede installazione separata; i comandi CLI sopra non ne dipendono.
+On Windows `make` needs a separate installation; the CLI commands above do not depend on it.

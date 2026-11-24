@@ -20,11 +20,11 @@ env/
 .env
 .env.local
 
-# Artefatti
-# data/raw/, data/annotated/, data/splits/ e results/ restano versionati: sono
-# gli input del progetto — quelli consegnati e quelli annotati qui — e i suoi
-# output di riferimento. data/synthetic/ no: contiene i prompt,
-# che non sono ancora annotati e che l'annotazione porta in data/annotated/.
+# Artefacts
+# data/raw/, data/annotated/, data/splits/ and results/ stay versioned: they are
+# the inputs of the project (the delivered ones and those annotated here) and
+# its reference outputs. data/synthetic/ does not: it holds generated prompts
+# that are not annotated yet; annotation moves them into data/annotated/.
 data/processed/
 data/synthetic/
 outputs/

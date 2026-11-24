@@ -1,8 +1,7 @@
 # Downstream runs
 
-One folder per run, `results/downstream/<run_id>/` (`ds-pilot-01`, `ds-core-01`, ...), copied from the run tree once the run is evaluated.
-
-Versioned here:
+The layout a downstream run directory follows when it is copied here, `results/downstream/<run_id>/`,
+and the one the `thesis-tables` command reads (`make thesis-tables DS_RUN=<run directory>`):
 
 - `run-identity.json` and a copy of `protocol-freeze.json`;
 - the variant files given to the generator;
@@ -11,6 +10,12 @@ Versioned here:
 - a per-program summary of the CodeQL results;
 - analysis designs, reports and manifests.
 
-Not versioned: model weights and caches, Docker images (only their digests), CodeQL databases, full SARIF files, logs with personal paths or session identifiers, and the texts of SecurityEval (only identifiers, hashes and outcomes).
+The runs of the empirical study are **not** copied here. Their journals and oracle outputs are large,
+they hold the texts of BigCodeBench and LLMSecEval under those datasets' licences, and they carry paths
+of the machine they ran on. Their identities, hashes and every estimate drawn from them are recorded
+with the study; the tracked results are described in `results/README.md`.
 
-The historical parser runs at the root of `results/` are not part of this folder and are never changed.
+Never versioned: model weights and caches, Docker images (only their digests), CodeQL databases, full
+SARIF files, and logs with personal paths or session identifiers.
+
+The historical parser run at the root of `results/` is not part of this folder and is never changed.

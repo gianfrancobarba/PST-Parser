@@ -1,178 +1,205 @@
 # PST-Parser
 
-Pipeline di fine-tuning supervisionato e valutazione per la **segmentazione strutturale di prompt**
-secondo il framework Prompt Syntax Tree (PST).
+Supervised fine-tuning and evaluation pipeline for the **structural segmentation of prompts**
+according to the Prompt Syntax Tree (PST) framework, and the code of an empirical study that uses
+the PST as a prompt format for code generation.
 
-Dato un prompt in linguaggio naturale, il modello ne estrae i segmenti testuali e li classifica nei
-nodi di una tassonomia gerarchica, producendo un oggetto JSON:
+Given a natural-language prompt, the model extracts its text segments and assigns each of them to a
+node of a hierarchical taxonomy, producing a JSON object:
 
 ```
 prompt
 ├── main_instruction
 ├── context
-│   ├── format          istruzioni positive sulla presentazione dell'output
-│   ├── constraints     vincoli restrittivi sulla generazione
-│   ├── data            contenuto grezzo da processare
-│   └── role            definizione della persona
-├── examples            coppie input-output per few-shot learning
+│   ├── format          positive instructions on how the output is presented
+│   ├── constraints     restrictions on the generation
+│   ├── data            raw content to process
+│   └── role            definition of the persona
+├── examples            input-output pairs for few-shot learning
 └── reasoning
-    ├── influence           trigger di ragionamento
-    ├── reasoning_examples  esempi con passi intermedi espliciti
-    └── paths               rami alternativi di ragionamento
+    ├── influence           reasoning triggers
+    ├── reasoning_examples  examples with explicit intermediate steps
+    └── paths               alternative reasoning branches
 ```
 
-Ogni foglia è una **lista di segmenti**: una categoria può comparire in più punti del prompt, e
-tenerne i pezzi separati è ciò che permette di ricostruire il testo di partenza. Come la
-discontinuità venga segnata dipende dal formato in cui il corpus è annotato: in un foglio di calcolo
-con il token `<sep>`, perché una cella regge una stringa sola; in un file di testo scrivendo un
-segmento per voce di lista, perché una sequenza non ha bisogno di un token che dica dove si divide.
+Every leaf is a **list of segments**: a category can occur in several places of the prompt, and
+keeping its pieces apart is what allows the original text to be rebuilt. How the discontinuity is
+marked depends on the format the corpus is annotated in: in a spreadsheet with the `<sep>` token,
+because a cell holds a single string; in a text file by writing one segment per list item, because a
+sequence needs no token to say where it splits.
 
-## Stato del progetto e della valutazione
+The PST and the original parser prototype come from the master's thesis of Giovanni Scorziello
+(University of Salerno). This repository is a verifiable reimplementation and extension of that
+parser, not an exact replica of its numbers: the extended dataset, the adapter and the predictions of
+the original work were not available.
 
-La pipeline PST e i moduli downstream sono distinti: `src/pstparser/empirical/` contiene
-contratti, rendering, generazione, oracoli e analisi per il confronto fra le condizioni, ma i test
-sintetici non sono risultati scientifici di generazione del codice. Il protocollo di valutazione
-empirica è tenuto nella documentazione locale di progettazione, non versionata.
+## Status of the project and of the empirical study
 
-**Decisioni del relatore.** Le quattro decisioni su cui poggia il disegno:
+The PST pipeline and the downstream modules are separate: `src/pstparser/empirical/` holds the
+contracts, rendering, generation, oracles and analysis that compare the prompt conditions.
 
-- D1: prima il PST verificato a mano (H-gold), anche su un sottoinsieme di prompt; poi il PST
-  prodotto dal parser (H-auto);
-- D2: BigCodeBench-Instruct per la correttezza;
-- D3: CodeQL per la sicurezza, con la sua inaffidabilità dichiarata come minaccia alla validità;
-- D4: il secondo revisore, per le annotazioni e per i giudizi di sicurezza, è opzionale.
+**The empirical study is closed.** It asks whether presenting a programming task to an LLM as a PST,
+with the same source text, instead of as the original text changes the correctness and the security
+of the generated code.
 
-**A che punto è la valutazione.** I campioni e le esclusioni sono congelati in `protocol/`: le
-esclusioni di BigCodeBench, i task idonei e quelli Hard sono in `protocol/oracles/bcb-exclusions.json`
-(`excluded_count`, `eligible`, `eligible_hard`). La permutazione stratificata degli idonei è in
-`protocol/samples/bcb-permutation.json`; il campione su cui si rivede il gold (S_gold) è il prefisso
-di 600 task, `protocol/samples/prefix-600/bcb-prefix-600.json`, con il prefisso annidato di 400
-(`prefix-400/`) come ripiego prespecificato, solo per tempo. `protocol/samples/bcb-final.json` è il
-prefisso di 800 da cui sono nate le bozze. Il pool pilota è in `protocol/samples/pilot-bcb.json` e
-`pilot-llmseceval.json`, i campioni della ri-annotazione in `protocol/reannotation/`, le soglie del
-gate del parser in `protocol/hauto/gate-thresholds.json` e le configurazioni di generazione in
-`protocol/configs/`. Il freeze del protocollo (`protocol/protocol-freeze.json`, uno solo, prima
-delle generazioni finali) non è ancora stato eseguito: finché manca, ogni output downstream è una
-prova tecnica, non un risultato.
+- Conditions:
+  - T: original text;
+  - H-gold: PST of the reviewed gold;
+  - E: the text inside `{"prompt": ...}`;
+  - F: flat JSON;
+  - H-auto: PST of the parser.
+- Generator: Qwen2.5-Coder-7B-Instruct.
+- Correctness: BigCodeBench-Instruct, with the official harness.
+- Security (exploratory): LLMSecEval, with CodeQL.
 
-**La run del parser `parser-2026-11-12-r3`** è quella che H-auto userà. I suoi artefatti
-(`run-identity.json`, `run_manifest.json`, `results.json`) sono su Google Drive e non sono
-versionati: identità e numeri della run vanno citati da quei file, una volta archiviati, e non sono
-riprodotti qui. Due avvertenze di provenienza valgono già:
+- **Protocol.** Everything the study depends on is in `protocol/`: samples, configurations,
+  variants, oracles, security cards, analysis designs and the analysis plan
+  (`protocol/analysis/plan.md`). The gold annotations are in `data/annotated/`.
+- **Freeze.** The protocol was frozen once, in commit `394c893` (`protocol/protocol-freeze.json`),
+  and that commit was pushed to the public remote before the first final generation; the push is the
+  preregistration. Final commands verify the freeze and run on an extraction of
+  `git -c core.autocrlf=false archive 394c893`.
+- **Deviations.** Every later change is a dated row of `protocol/deviations.md`. That includes the
+  exploratory analyses decided after the main results (G, R, S) and the clean-up of comments, tests
+  and documentation after the study was closed at commit `26e9362`. From that clean-up on, the
+  working tree no longer verifies the freeze; the freeze commit does.
+- **Gold.** The gold leaves of the judgement units were proposed by an LLM; an AI-assisted step
+  drafted a decision and a reason for every unit, which the student checked, corrected in part and
+  reviewed further. The gold is never described as written by hand, and an unassisted re-annotation
+  of 30 + 30 prompts is the independent check (`protocol/reannotation/`, `results/reannotation/`).
+- **Results.** The generation journals, oracle outputs and analysis reports are not versioned (size,
+  dataset licences and paths of the machine). `results/` holds the tracked results of the study:
+  the retrained parser r4, the re-annotation agreement, the draft-to-gold diff, the near-duplicate
+  groups and the Colab notebooks of the exploratory runs (see `results/README.md`).
 
-- **Unsloth.** Il backend ottimizzato carica un proprio repository pre-quantizzato al posto della
-  revisione richiesta, quindi la revisione del modello di quella run non è verificata
-  (`revision_verified: false`). La generazione downstream usa il backend `hf`, che verifica la
-  revisione e rifiuta le run finali senza verifica.
-- **CRLF.** L'archivio sorgente di quella run è stato creato da un checkout Windows con
-  `core.autocrlf=true`: gli hash di alcuni file di testo nel manifest sono quelli delle copie CRLF,
-  non dei blob git. Il modello ha comunque ricevuto testo LF, perché i file sono letti con
-  `read_text`. Gli archivi nuovi si creano con `make source-archive`, che usa
-  `git -c core.autocrlf=false archive` e verifica l'albero.
+**The supervisor's decisions** the design rests on:
 
-Gli artefatti in `results/` sono storici: non attestano che le configurazioni attuali siano state
-addestrate e valutate. I ricalcoli vanno scritti in nuove directory, senza sostituire quelle prove.
-Le run downstream vanno in `results/downstream/<run_id>/`.
+- D1: first the reviewed PST (H-gold), even on a subset of prompts; then the PST produced by the
+  parser (H-auto);
+- D2: BigCodeBench-Instruct for correctness;
+- D3: CodeQL for security, with its unreliability declared as a threat to validity;
+- D4: a second reviewer, for the annotations and for the security judgments, is optional.
 
-## Requisiti
+**The parser run `parser-2026-11-12-r3`** is the one H-auto used; its identity is pinned in
+`protocol/hauto/parser.json` and `configs/experiments/hauto-parser.yaml`. Two provenance caveats
+hold:
 
-- Python 3.11 o 3.12
-- [`uv`](https://docs.astral.sh/uv/) per la gestione dell'ambiente
-- Per il training: GPU NVIDIA e stack CUDA compatibile; 8 GB richiedono uno smoke di memoria e tempi e non garantiscono la fattibilità della configurazione base
-- Un token Hugging Face con permesso di lettura, se il modello base è ad accesso condizionato
+- **Unsloth.** The optimised backend loads its own prequantised repository instead of the requested
+  revision, so the model revision of that run is not verified (`revision_verified: false`). The
+  downstream generation uses the `hf` backend, which verifies the revision and refuses final runs
+  without verification.
+- **CRLF.** The source archive of that run was created from a Windows checkout with
+  `core.autocrlf=true`: the hashes of some text files in its manifest are those of the CRLF copies,
+  not of the git blobs. The model still received LF text, because the files are read with
+  `read_text`. New archives are created with `make source-archive`, which uses
+  `git -c core.autocrlf=false archive` and verifies the tree.
 
-La sola valutazione non richiede GPU.
+The artefacts at the root of `results/` are historical: they do not attest that the current
+configurations were trained and evaluated. Recomputations go into new directories and never replace
+that evidence.
 
-## Installazione
+## Requirements
+
+- Python 3.11 or 3.12
+- [`uv`](https://docs.astral.sh/uv/) to manage the environment
+- For training: an NVIDIA GPU and a compatible CUDA stack. 8 GB need a smoke test of memory and time
+  and do not guarantee that the base configuration fits.
+- A Hugging Face token with read permission, if the base model is gated
+
+Evaluation alone needs no GPU.
+
+## Installation
 
 ```bash
 uv sync --extra cu128 --extra train --extra unsloth
 ```
 
-Per una macchina senza GPU, sufficiente per preparare i dati e calcolare le metriche:
+On a machine without a GPU, enough to prepare the data, compute the metrics and run the test gate:
 
 ```bash
 uv sync --extra cpu --extra train --extra dev
 ```
 
-Copiare `.env.example` in `.env` e compilare i valori necessari.
+The test gate needs the `train` extra too: some tests import `transformers` and `tokenizers`.
 
-Istruzioni complete, incluso il percorso containerizzato, in [INSTALL.md](INSTALL.md); requisiti
-di sistema in [REQUIREMENTS.md](REQUIREMENTS.md).
+Copy `.env.example` to `.env` and fill in the values you need.
 
-## Uso
+Full instructions, including the containerised path, are in [INSTALL.md](INSTALL.md); system
+requirements are in [REQUIREMENTS.md](REQUIREMENTS.md).
 
-Gli esempi usano `outputs/new-run/`: scegliere un nome nuovo. La preparazione rifiuta record
-o split già presenti; train e generate devono ricevere gli stessi override dei percorsi.
-Gli esempi di training sono alternativi, non da eseguire tutti nella medesima directory.
+## Usage
+
+The examples use `outputs/new-run/`: choose a new name. Preparation refuses records or splits that
+already exist; train and generate must receive the same path overrides. The training examples are
+alternatives, not to be run all in the same directory.
 
 ```bash
-# Verifica che una configurazione sia ben formata, senza eseguire nulla
+# Check that a configuration is well formed, without running anything
 uv run pstparser validate-config --config configs/experiments/baseline.yaml
 ```
 
 ```bash
-# Converte il corpus annotato in record e ne congela la partizione
+# Turn the annotated corpus into records and freeze its partition
 uv run pstparser prepare-data --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits
 ```
 
 ```bash
-# Addestra gli adapter sul corpus preparato
+# Train the adapters on the prepared corpus
 uv run pstparser train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --run-dir outputs/new-run/training
 ```
 
 ```bash
-# Genera le predizioni per lo split di valutazione
+# Generate the predictions for the evaluation split
 uv run pstparser generate --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --adapter outputs/new-run/training/adapter --run-dir outputs/new-run/generation
 ```
 
 ```bash
-# Senza adapter risponde il modello base, non addestrato, sullo stesso test set
+# Without an adapter the base model answers, untrained, on the same test set
 uv run pstparser generate --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --run-dir outputs/new-run/zero_shot
 ```
 
 ```bash
-# Calcola le metriche. Non richiede GPU né modello.
+# Compute the metrics. Needs neither a GPU nor a model.
 uv run pstparser score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
 ```
 
 ```bash
-# Colloca ogni frase generata nel prompt e ne inietta la posizione. Nemmeno questo richiede GPU.
+# Place every generated phrase in the prompt and inject its position. No GPU either.
 uv run pstparser align --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
 ```
 
-Ogni comando accetta `--set chiave.annidata=valore` per sovrascrivere puntualmente la
-configurazione, ad esempio `--set training.max_steps=50`. Le sovrascritture sono registrate nella
-configurazione risolta che accompagna ogni run.
+Every command accepts `--set nested.key=value` to override one value of the configuration, for
+example `--set training.max_steps=50`. The overrides are recorded in the resolved configuration that
+goes with every run.
 
-I valori sono interpretati come YAML, dove `no`, `yes`, `on` e `off` sono booleani. Per passare una
-di quelle parole come testo va virgolettata: `--set 'training.eval_strategy="no"'`. Un tipo
-sbagliato viene comunque rifiutato dalla validazione prima che il run inizi.
+Values are read as YAML, where `no`, `yes`, `on` and `off` are booleans. To pass one of those words
+as text, quote it: `--set 'training.eval_strategy="no"'`. A wrong type is still refused by the
+validation before the run starts.
 
-Su una GPU con 8 GB di VRAM, dimezzare il batch e raddoppiare l'accumulo conserva il numero
-nominale di esempi per aggiornamento, ma **non garantisce la stessa traiettoria di ottimizzazione**:
-padding, riduzioni numeriche, ordine dei batch e implementazione possono incidere.
+On a GPU with 8 GB of VRAM, halving the batch and doubling the accumulation keeps the nominal number
+of examples per update, but **does not guarantee the same optimisation trajectory**: padding,
+numerical reductions, batch order and implementation can all matter.
 
 ```bash
 uv run pstparser train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --set training.per_device_train_batch_size=1 --set training.gradient_accumulation_steps=8 --run-dir outputs/new-run/training
 ```
 
-Per una prova rapida senza GPU, sostituendo il modello con uno giocattolo:
+For a quick test without a GPU, with a toy model in place of the real one:
 
 ```bash
 uv run pstparser train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits --set model.backend=hf --set model.name=hf-internal-testing/tiny-random-LlamaForCausalLM --set model.load_in_4bit=false --set model.max_seq_length=512 --set training.max_steps=2 --set training.warmup_steps=0 --set training.optim=adamw_torch --set inference.max_new_tokens=32 --run-dir outputs/new-run/training
 ```
 
-## Esecuzione in container
+## Running in a container
 
-Due immagini, costruite dallo stesso `Dockerfile` con target diversi.
+Two images, built from the same `Dockerfile` with different targets.
 
-| Target | Base | Contenuto |
+| Target | Base | Content |
 |---|---|---|
-| `train` | Python 3.11 slim | Stack completo di fine-tuning, richiede GPU |
-| `eval` | Python 3.11 slim | Solo ciò che serve al calcolo delle metriche |
+| `train` | Python 3.11 slim | Full fine-tuning stack, needs a GPU |
+| `eval` | Python 3.11 slim | Only what computing the metrics needs |
 
-Le dimensioni delle immagini dipendono dalla build e dalle dipendenze effettive.
+The image sizes depend on the build and on the actual dependencies.
 
 ```bash
 docker build -f docker/Dockerfile --target eval -t pstparser:eval .
@@ -182,147 +209,151 @@ docker build -f docker/Dockerfile --target eval -t pstparser:eval .
 docker compose -f docker/compose.yaml --profile eval run --rm score score --config configs/experiments/baseline.yaml --predictions results/predictions.jsonl
 ```
 
-L'immagine di valutazione **non contiene PyTorch né alcuna libreria di modelli**. Non è una
-questione di dimensioni: è ciò che rende le metriche ricalcolabili anche quando l'ambiente di
-training non è riproducibile, e permette di verificare i risultati su una macchina qualsiasi.
+The evaluation image **contains neither PyTorch nor any model library**. This is not about size: it
+keeps the metrics recomputable even when the training environment cannot be reproduced, and lets the
+results be checked on any machine.
 
-L'immagine è autosufficiente: configurazioni e system prompt sono al suo interno, e l'unica cosa
-da fornire è il file di predizioni.
+The image is self-contained: configurations and system prompt are inside it, and the only thing to
+provide is the predictions file.
 
 ```bash
 docker run --rm -v "$PWD/results:/work" pstparser:eval score --config configs/experiments/baseline.yaml --predictions /work/predictions.jsonl
 ```
 
-Il training richiede l'NVIDIA Container Toolkit:
+Training needs the NVIDIA Container Toolkit:
 
 ```bash
 docker compose -f docker/compose.yaml --profile train run --rm train train --config configs/experiments/baseline.yaml --set data.processed_dir=outputs/new-run/processed --set data.split.output_dir=outputs/new-run/splits
 ```
 
-I pesi del modello base risiedono in un volume nominato, quindi non entrano mai nell'immagine e
-sopravvivono alle ricostruzioni. `data/`, `outputs/` e `results/` sono montate dall'host.
+The base model weights live in a named volume, so they never enter the image and survive rebuilds.
+`data/`, `outputs/` and `results/` are mounted from the host.
 
+## Artefacts of a run
 
-## Artefatti di una run
+Every `train` run writes a directory under `outputs/`:
 
-Ogni esecuzione di `train` scrive una directory sotto `outputs/`:
-
-| File | Contenuto |
+| File | Content |
 |---|---|
-| `adapter/` | Pesi LoRA e tokenizer |
-| `train_manifest.json` | Manifest v2 dello stadio: configurazione, hash degli input registrati e snapshot del codice, seed, versioni e metadati disponibili del training |
-| `training_metrics.jsonl` | Metriche emesse dal trainer, una per riga |
+| `adapter/` | LoRA weights and tokenizer |
+| `train_manifest.json` | v2 manifest of the stage: configuration, hashes of the recorded inputs and of the code snapshot, seed, versions and available training metadata |
+| `training_metrics.jsonl` | Metrics emitted by the trainer, one per line |
 
-I nuovi manifest sono distinti per stadio: `prepare_manifest.json`, `train_manifest.json`,
-`generate_manifest.json`, `score_manifest.json` e `align_manifest.json`. La preparazione salva
-il proprio manifest nella directory dei dati preparati. `run_manifest.json` rimane un nome
-presente negli artefatti storici, non quello delle nuove run. Gli hash e la configurazione
-migliorano la tracciabilità, ma non garantiscono riproducibilità bit per bit né provano da soli
-che tutti gli artefatti esterni siano recuperabili. Un digest nullo indica un input non disponibile.
+New manifests are separate per stage: `prepare_manifest.json`, `train_manifest.json`,
+`generate_manifest.json`, `score_manifest.json` and `align_manifest.json`. Preparation saves its
+manifest in the directory of the prepared data. `run_manifest.json` is a name found in historical
+artefacts, not the one of new runs. Hashes and configuration improve traceability, but they do not
+guarantee bit-for-bit reproducibility, nor do they prove on their own that every external artefact
+can be recovered. A null digest marks an input that was not available.
 
-`generate`, `score` e `align` producono a loro volta `predictions.jsonl`, `results.json`,
-`eval_details.jsonl` e `alignments.jsonl`. Senza `--run-dir`, `score` e `align` creano una nuova
-sottodirectory `score-...` o `align-...` sotto `training.output_dir` (`outputs/` di default), mai
-accanto alle predizioni: così un ricalcolo non scrive dentro `results/`. Le collisioni con
-artefatti dello stesso stadio sono rifiutate: scegliere una directory nuova, non cancellare o sovrascrivere le run storiche.
+`generate`, `score` and `align` in turn write `predictions.jsonl`, `results.json`,
+`eval_details.jsonl` and `alignments.jsonl`. Without `--run-dir`, `score` and `align` create a new
+`score-...` or `align-...` subdirectory under `training.output_dir` (`outputs/` by default), never
+next to the predictions, so that a recomputation never writes into `results/`. Collisions with
+artefacts of the same stage are refused: choose a new directory instead of deleting or overwriting
+historical runs.
 
-## Valutazione
+## Evaluation of the parser
 
-La generazione è separata dal calcolo delle metriche. `generate` carica il modello e persiste
-le predizioni; `score` legge quel file senza caricare modelli. Tempo e memoria dipendono dai dati.
-Le predizioni storiche in `results/` consentono ricalcoli CPU, distinguendo la versione delle metriche.
+Generation is separate from computing the metrics. `generate` loads the model and stores the
+predictions; `score` reads that file without loading any model. Time and memory depend on the data.
+The historical predictions in `results/` allow recomputations on a CPU, keeping track of the version
+of the metrics.
 
-Le metriche di contenuto sono calcolate sulle predizioni che risultano ben formate:
+The content metrics are computed on the predictions that are well formed:
 
-| Metrica | Significato | Valore atteso |
+| Metric | Meaning | Expected value |
 |---|---|---|
-| Validità JSON | quota di predizioni che si parsificano **e** rispettano lo schema | alto |
-| F1 per campo | accordo token per token con il riferimento, per nodo foglia, con il support | alto |
-| Matrice di confusione | a quale nodo è stato assegnato ogni token del prompt, contro quello corretto | diagonale |
-| Distanza di edit fra alberi | quante modifiche separano la struttura predetta da quella attesa | basso |
-| Tasso di allucinazione | quota di token predetti assenti dal prompt | zero |
-| Copertura | quota di token del prompt collocati in un nodo | uno |
-| Ricostruzione legacy normalizzata | ricostruzione del sottoinsieme allineato con normalizzazione; non prova fedeltà completa | alto |
-| Tutte le foglie contabilizzate (v2) | quota di predizioni senza foglie estratte rimaste non collocate | uno |
-| Ricostruzione completa strict (v2) | tutte le foglie contabilizzate e ricostruzione testuale esatta | uno |
-| Frasi collocate | quota di frasi generate ritrovate nel prompt | uno |
+| JSON validity | share of predictions that parse **and** follow the schema | high |
+| Per-field F1 | token agreement with the reference, per leaf, with its support | high |
+| Confusion matrix | which node every prompt token was assigned to, against the right one | diagonal |
+| Tree edit distance | how many edits separate the predicted structure from the expected one | low |
+| Hallucination rate | share of predicted tokens absent from the prompt | zero |
+| Coverage | share of prompt tokens placed in a node | one |
+| Normalised legacy reconstruction | reconstruction of the aligned subset with normalisation; does not prove full fidelity | high |
+| All leaves accounted for (v2) | share of predictions with no extracted leaf left unplaced | one |
+| Strict full reconstruction (v2) | all leaves accounted for and exact textual reconstruction | one |
+| Placed phrases | share of generated phrases found in the prompt | one |
 
-Nessuno di questi numeri dice però quanto il fine-tuning abbia aggiunto: per quello serve un termine
-di paragone. `generate` senza `--adapter` fa rispondere il modello base allo stesso test set e con
-lo stesso system prompt, ed è il confronto più economico disponibile — non richiede training.
+None of these numbers says how much the fine-tuning added: that needs a point of comparison.
+`generate` without `--adapter` makes the base model answer on the same test set with the same system
+prompt, and it is the cheapest comparison available, since it needs no training.
 
-### Ricostruzione e posizioni
+The parser gate of the empirical study uses its own macro F1: per prediction and leaf, the distinct
+tokens assigned to the leaf; overlap, predicted and gold token counts summed over the valid
+predictions; the F1 of each leaf averaged over the leaves with gold support
+(`MACRO_F1_DEFINITION` in `src/pstparser/empirical/auto.py`).
 
-Il modello genera solo il testo delle foglie. Un secondo stadio, deterministico e senza modello,
-ricolloca ogni frase nel prompt da cui è stata estratta e ne ricava la posizione: ogni frase
-rivendica un intervallo di caratteri, due intervalli non possono sovrapporsi, e la posizione è il
-rango dell'intervallo. Da lì discende l'artefatto con foglie `{"position": ..., "phrase": ...}` e la
-verifica di ricostruzione. Il vecchio campo `exact_reconstruction_rate` conserva la semantica
-legacy: normalizza whitespace e può ignorare foglie non collocate. I nuovi report v2 aggiungono
-`aligned_subset_reconstruction_normalized_rate`, `all_leaves_accounted_for_rate` e
-`strict_full_reconstruction_rate`. Confrontare metriche con stessa versione; non rinominare
-i risultati storici come strict. Nessuna di queste misure sostituisce la validazione dello schema
-o il controllo umano delle categorie. I dettagli sono nella nota locale di implementazione R01–R02.
+### Reconstruction and positions
 
-La copertura è solo un sostituto di quella proprietà: dice quali parole sono state collocate, mai in
-che ordine. Un output che rimescolasse completamente le frasi otterrebbe comunque copertura piena.
+The model generates only the text of the leaves. A second stage, deterministic and model-free, places
+every phrase back in the prompt it was extracted from and derives its position: every phrase claims a
+character interval, two intervals cannot overlap, and the position is the rank of the interval. From
+there come the artefact with `{"position": ..., "phrase": ...}` leaves and the reconstruction check.
+The old field `exact_reconstruction_rate` keeps its legacy meaning: it normalises whitespace and can
+ignore unplaced leaves. The new v2 reports add `aligned_subset_reconstruction_normalized_rate`,
+`all_leaves_accounted_for_rate` and `strict_full_reconstruction_rate`. Compare metrics of the same
+version, and never relabel historical results as strict. None of these measures replaces the
+validation of the schema or a human check of the categories.
 
-Il comportamento di ciascuna metrica è bloccato da casi golden in `tests/metrics/cases/`, con i
-punteggi attesi versionati accanto: una variazione non spiegata è un difetto, non un cambiamento
-silenzioso di significato.
+Coverage is only a substitute for that property: it says which words were placed, never in which
+order. An output that shuffled all the phrases would still get full coverage.
 
-### Decoding vincolato
+The behaviour of each metric is locked by golden cases in `tests/metrics/cases/`, with the expected
+scores versioned next to them: an unexplained change is a defect, not a silent change of meaning.
 
-Impostando `inference.structured_output: true` (richiede l'extra `structured`) si richiede un
-decoding vincolato allo schema. Compatibilità del backend, completamento entro il budget e
-assenza di errori vanno verificati: **non è una garanzia incondizionata di JSON valido**.
-Misurare comunque validità, troncamenti e fallimenti e distinguerli dalla qualità del contenuto.
+### Constrained decoding
 
-In quella modalità la validità osservata è influenzata dal vincolo esterno e non misura da sola
-quanto il modello abbia imparato il formato. Il valore sta nel confronto fra le due
-esecuzioni — libera per misurare quanto il modello ha interiorizzato il formato, vincolata per
-valutare la qualità del contenuto a parità di formato.
+Setting `inference.structured_output: true` (needs the `structured` extra) asks for decoding
+constrained by the schema. Backend compatibility, completion within the budget and the absence of
+errors must be checked: **it is not an unconditional guarantee of valid JSON**. Measure validity,
+truncations and failures anyway, and keep them apart from the quality of the content.
 
-## Espansione del corpus
+In that mode the observed validity is driven by the external constraint and does not measure by
+itself how well the model learnt the format. The value lies in comparing the two runs: free, to
+measure how much the model has internalised the format; constrained, to assess the content at equal
+format.
 
-Il foglio consegnato proviene da conversazioni reali fra sviluppatori e assistente, dove le
-richieste dirette dominano: i rami della tassonomia che descrivono il ragionamento vi comparivano
-tre volte su 975 record, quindi tre foglie su nove non erano né imparabili né misurabili. Il comando
-`synth` genera prompt aggiuntivi per quei paradigmi, partendo da trenta seed scritti a mano in
+## Expanding the corpus
+
+The delivered spreadsheet comes from real conversations between developers and an assistant, where
+direct requests dominate: the branches of the taxonomy that describe reasoning appeared three times
+in 975 records, so three leaves out of nine could be neither learnt nor measured. The `synth` command
+generates additional prompts for those paradigms, starting from thirty hand-written seeds in
 `data/seeds/paradigms.yaml`.
 
 ```bash
 uv run pstparser synth --config configs/experiments/baseline.yaml
 ```
 
-Il provider è un qualunque servizio con endpoint di chat completions compatibile con il formato
-OpenAI; la credenziale è letta dall'ambiente, mai da un file di configurazione.
+The provider is any service with a chat-completions endpoint compatible with the OpenAI format; the
+credential is read from the environment, never from a configuration file.
 
-**Il comando produce prompt, non annotazioni.** L'output è un file con il prompt e il paradigma
-compilati e le nove foglie vuote, nello stesso formato che `prepare-data` legge: va etichettato a
-mano prima di poter rientrare. Questo passaggio resta lavoro umano.
+**The command produces prompts, not annotations.** The output is a file with the prompt and the
+paradigm filled in and the nine leaves empty, in the same format `prepare-data` reads: it must be
+labelled before it can come back in. That step stays human work.
 
-Il formato coincide di proposito. Trascrivere 150 prompt da un formato a un altro sono 150 occasioni
-di rompere l'estrazione esatta, e il controllo a valle riporterebbe un errore di trascrizione come
-se fosse un errore di annotazione.
+The format is the same on purpose. Transcribing 150 prompts from one format to another means 150
+chances of breaking the exact extraction, and the downstream check would report a transcription
+error as if it were an annotation error.
 
-Il file annotato non va fuso nel corpus di partenza: si aggiunge a `data.sources`, che li concatena
-mantenendoli file distinti. Il materiale consegnato resta separato da quello annotato dopo, e
-`prepare-data` riporta quanti record ha portato ciascuna sorgente.
+The annotated file is not merged into the starting corpus: it is added to `data.sources`, which
+concatenates the sources while keeping them as separate files. The delivered material stays apart
+from what was annotated later, and `prepare-data` reports how many records each source brought.
 
-## Audit del corpus e valutazione downstream
+## Corpus audit and downstream evaluation
 
-Due strumenti restano fuori dal comando `pstparser` e si invocano come moduli, senza entry point
-dedicati.
+Two tools stay outside the `pstparser` command and are invoked as modules, without dedicated entry
+points.
 
 ```bash
-# Diagnostica in sola lettura: testo non coperto, corrispondenze tolleranti, possibili famiglie di duplicati
+# Read-only diagnostics: uncovered text, tolerant matches, possible families of duplicates
 uv run python -m pstparser.data.audit --config configs/experiments/baseline.yaml --output outputs/new-run/corpus-audit.json
 ```
 
-L'audit non corregge annotazioni né partizioni: i candidati (similarità di Jaccard sopra
-`--similarity-threshold`, 0.9 di default) vanno rivisti a mano. Il file di output deve essere nuovo
-e la sua directory deve già esistere.
+The audit corrects neither annotations nor partitions: the candidates (Jaccard similarity above
+`--similarity-threshold`, 0.9 by default) are to be reviewed by a person. The output file must be new
+and its directory must already exist.
 
 ```bash
 uv run python -m pstparser.empirical render CANONICAL.jsonl VARIANTS.jsonl
@@ -331,110 +362,119 @@ uv run python -m pstparser.empirical check GENERATIONS.jsonl ORACLES.jsonl CHECK
 uv run python -m pstparser.empirical analyze DESIGN.json OUTCOMES.jsonl REPORT.json
 ```
 
-`render` produce le varianti appaiate T/H-gold da annotazioni canoniche revisionate. `generate`
-richiede una configurazione esplicita con revisione del modello immutabile e un record di revisione,
-verifica il budget di token di tutte le varianti prima di generare e scrive un journal riprendibile
-(`generations.jsonl`). `check` calibra gli oracoli funzionali forniti e li esegue in un container
-Docker locale senza rete, con immagine fissata per digest. `analyze` esegue l'analisi appaiata sul
-disegno dichiarato. Nessun comando sceglie da solo un benchmark: finché il protocollo non è
-congelato, i loro output sono prove tecniche, non risultati.
+`render` produces the paired T/H-gold variants from reviewed canonical annotations. `generate` needs
+an explicit configuration with an immutable model revision and a review record. It checks the token
+budget of every variant before generating, and writes a resumable journal (`generations.jsonl`).
+`check` calibrates the given functional oracles and runs them in a local Docker container without
+network, with the image pinned by digest. `analyze` runs the paired analysis on the declared design.
+No command chooses a benchmark on its own. A run with purpose `final` starts only from a verified
+freeze that lists its configuration and variants.
 
-Gli altri comandi downstream, nell'ordine in cui si usano (`--help` ne descrive gli argomenti):
+The other downstream commands, in the order they are used (`--help` describes their arguments):
 
-| Fase | Comandi |
+| Stage | Commands |
 |---|---|
-| Dati e campioni | `import-benchmark`, `calibrate-bigcodebench`, `merge-calibrations`, `sample` (permutazione e prefissi), `sample-pilot`, `sample-families`, `sample-hard`, `sample-reannotation` |
-| Annotazione gold | `propose-spans` (solo bozze `draft`), `gold-lint`, `canonicalize`, `gold-diff` (bozza contro gold), `agreement` (ri-annotazione) |
-| Generazione | `render`, `generate` (anche su Colab con `notebooks/downstream.ipynb`), `model-digests`, `merge-journals` (due journal di una sessione) |
-| H-auto | `parse-prompts` dell'interfaccia `pstparser` (su Colab con `notebooks/hauto-parser.ipynb`), `auto-annotate`, `parser-gate`, `merge-ledgers`, `hauto-ledgers` |
-| Valutazione | `check-bigcodebench` (harness ufficiale, 2+1 esecuzioni), `calibrate-security`, `check-security` (CodeQL, un database per programma), `blind-sample`, `blind-score`, `determinism-sample`, `determinism-compare` |
-| Pilot e freeze | `pilot-report` (non direzionale; `--merged` per due journal), `power`, `freeze`, `freeze-verify` |
-| Analisi | `design`, `analyze`, `check`, `covariates`, `contamination`, `near-duplicates` |
-| Tesi | `tables`, `figures`, `thesis-tables` |
+| Data and samples | `import-benchmark`, `calibrate-bigcodebench`, `merge-calibrations`, `sample` (permutation and prefixes), `sample-pilot`, `sample-families`, `sample-hard`, `sample-reannotation` |
+| Gold annotation | `propose-spans` (`draft` only), `gold-lint`, `canonicalize`, `gold-diff` (draft against gold), `agreement` (re-annotation) |
+| Generation | `render`, `generate` (also on Colab with `notebooks/downstream.ipynb`), `model-digests`, `merge-journals` (two journals of one session) |
+| H-auto | `parse-prompts` of the `pstparser` interface (on Colab with `notebooks/hauto-parser.ipynb`), `retarget-predictions` (target replaced by the frozen gold), `auto-annotate`, `parser-gate`, `merge-ledgers`, `hauto-ledgers` |
+| Evaluation | `check-bigcodebench` (official harness, 2 + 1 runs), `calibrate-security`, `check-security` (CodeQL, one database per program), `blind-sample`, `blind-score`, `determinism-sample`, `determinism-compare` |
+| Pilot and freeze | `pilot-report` (non-directional; `--merged` for two journals), `power`, `freeze`, `freeze-verify` |
+| Analysis | `design`, `analyze`, `check`, `covariates`, `contamination`, `near-duplicates` |
+| Thesis | `tables`, `figures`, `thesis-tables` |
 
-`thesis-tables` rigenera ogni tabella (CSV e LaTeX) e figura (PDF e PNG) che i file di una run
-consentono, in una directory nuova; ogni file riporta il `run_id`, lo SHA-256 di ogni input e il
-digest dei sorgenti. Le figure richiedono l'extra `analysis` (matplotlib):
+`thesis-tables` regenerates every table (CSV and LaTeX) and figure (PDF and PNG) that the files of a
+run allow, in a new directory. Every file records the `run_id`, the SHA-256 of every input and the
+digest of the sources. Figures need the `analysis` extra (matplotlib):
 
 ```bash
-make thesis-tables DS_RUN=results/downstream/<run_id> TABLES=<directory nuova>
+make thesis-tables DS_RUN=<run directory> TABLES=<new directory>
 ```
 
-## Notebook Colab
+## Colab notebooks
 
-`notebooks/colab.ipynb` clona il repository e invoca la stessa interfaccia a riga di comando usata
-in locale e in container. Non contiene logica: logica duplicata sarebbe la prima cosa a divergere
-dal resto del progetto.
+`notebooks/colab.ipynb` clones the repository and calls the same command-line interface used locally
+and in a container. It holds no logic: duplicated logic would be the first thing to drift from the
+rest of the project. `notebooks/downstream.ipynb` and `notebooks/hauto-parser.ipynb` are the
+launchers of the generations and of the parser runs of the study, from a source archive of a clean
+committed tree. The launchers of the exploratory runs are in `results/r4/notebooks/` and
+`results/s/notebooks/`.
 
-## Configurazione
+## Configuration
 
-Le configurazioni sono file YAML composti su due livelli:
+Configurations are YAML files composed on two levels:
 
-- `configs/_base/` contiene i frammenti riutilizzabili (corpus, modello, training, valutazione);
-- `configs/experiments/` contiene gli esperimenti, che dichiarano `extends` sui frammenti e
-  sovrascrivono solo ciò che cambia.
+- `configs/_base/` holds the reusable fragments (corpus, model, training, evaluation);
+- `configs/experiments/` holds the experiments, which declare `extends` on the fragments and
+  override only what changes.
 
-`configs/experiments/baseline.yaml` è l'esperimento di riferimento: ogni altra configurazione
-dovrebbe esprimersi come delta rispetto a questo, così che i confronti restino significativi.
+`configs/experiments/baseline.yaml` is the reference experiment: every other configuration should
+be expressed as a delta from it, so that comparisons stay meaningful.
+`configs/experiments/hauto-parser.yaml` pins the parser used for H-auto. The generation
+configurations of the study are in `protocol/configs/`.
 
-La configurazione risolta viene serializzata insieme agli artefatti di ogni run, per cui è sempre
-possibile risalire ai parametri esatti con cui un risultato è stato prodotto.
+The resolved configuration is serialised with the artefacts of every run, so the exact parameters a
+result was produced with can always be traced.
 
-## Struttura
+## Layout
 
 ```
-configs/         configurazioni degli esperimenti
-docker/          Dockerfile multi-target e compose
-data/raw/        corpus consegnato, immutabile
-data/annotated/  annotazioni scritte qui, come testo modificabile
-data/splits/     identificativi delle tre partizioni, congelati
-prompts/         system prompt versionato
+configs/         experiment configurations
+docker/          multi-target Dockerfile and compose file
+data/raw/        delivered corpus, immutable
+data/annotated/  annotations written here, as editable text; gold of the empirical study
+data/splits/     identifiers of the three partitions, frozen
+notebooks/       Colab launchers of the CLI
+prompts/         versioned system prompt
+protocol/        frozen protocol of the empirical study, analysis plan and deviations
+scripts/         archive verification
 src/pstparser/
-  config/        schema tipizzato e composizione YAML
-  pst/           tassonomia, serializzazione e schema derivato
-  data/          lettura, normalizzazione, integrità, partizioni, formati di scambio
-  models/        caricamento del modello base e degli adapter
-  training/      ricetta di fine-tuning
-  inference/     generazione delle predizioni
-  evaluation/    metriche e report
-  empirical/     contratti downstream, renderer, oracoli e analisi appaiata
-  repro/         seeding e manifest di run
-results/         predizioni e metriche di riferimento
-tests/           suite di test
+  config/        typed schema and YAML composition
+  pst/           taxonomy, serialisation and derived schema
+  data/          reading, normalisation, integrity, partitions, exchange formats
+  models/        loading of the base model and of the adapters
+  training/      fine-tuning recipe
+  inference/     generation of the predictions
+  evaluation/    metrics and reports
+  synth/         generation of synthetic prompts
+  empirical/     downstream contracts, renderers, oracles and paired analysis
+  repro/         seeding and run manifests
+results/         reference predictions and metrics, results of the empirical study
+results/tools/   tools written after the freeze (declared in protocol/deviations.md)
+tests/           test suite
 ```
 
-Le dipendenze fra i package sono aciclee e orientate verso il basso: `pst/` non dipende da nulla,
-`data/` dipende da `pst/`, `evaluation/` dipende da `data/`, e solo `models/`, `training/` e
-`inference/` toccano PyTorch. È questa direzione a rendere possibile un ambiente di valutazione
-privo dello stack di modelli.
+Dependencies between packages are acyclic and point downwards: `pst/` depends on nothing, `data/`
+depends on `pst/`, `evaluation/` depends on `data/`, and only `models/`, `training/` and `inference/`
+touch PyTorch. This direction is what makes an evaluation environment without the model stack
+possible.
 
-## Partizione del corpus
+## Corpus partition
 
-Tre insiemi, non due. Sorvegliare un insieme durante il training e poi riportare i risultati sullo
-stesso insieme non misura la generalizzazione: misura quanto bene si è fermato il training. Il
-**validation** è ciò che il ciclo di addestramento può guardare; il **test** è ciò da cui si citano
-i risultati, e si legge una volta sola.
+Three sets, not two. Watching a set during training and then reporting results on the same set does
+not measure generalisation: it measures how well training was stopped. The **validation** set is what
+the training loop may look at; the **test** set is what results are quoted from, and it is read once.
 
-I record che condividono un prompt finiscono dalla stessa parte. Il corpus contiene prompt ripetuti,
-e lasciarne uno in training e un altro in test permetterebbe di essere valutati su testo già visto.
-I record identici sia nel prompt sia nell'annotazione vengono ridotti a uno.
+Records that share a prompt end up on the same side. The corpus contains repeated prompts, and leaving
+one in training and another in test would allow being evaluated on text already seen. Records that
+are identical in both prompt and annotation are reduced to one.
 
-`generate` produce predizioni per il **test** in modo predefinito; `--split val` serve alle verifiche
-fatte durante lo sviluppo.
+`generate` writes predictions for the **test** split by default; `--split val` is for checks made
+during development.
 
-## Formati del corpus
+## Corpus formats
 
-Una sorgente dichiara come è scritta. Dedurlo dal suffisso farebbe dipendere il comportamento da come
-il file è stato chiamato, e direbbe la stessa cosa due volte — nell'estensione e nella presenza di un
-foglio — senza nulla che tenga d'accordo le due.
+A source declares how it is written. Inferring it from the suffix would make the behaviour depend on
+how the file was named, and would say the same thing twice (in the extension and in the presence of a
+sheet) with nothing keeping the two in agreement.
 
 | | `excel` | `yaml` |
 |---|---|---|
-| Cos'è | Il foglio di calcolo consegnato | Annotazioni scritte in questo repository |
-| `sheet` | obbligatorio | assente |
-| `fixes` | ammesse | vietate: si corregge il file |
-| Foglia indirizzata da | intestazione di colonna | percorso nella tassonomia |
-| Segmenti disgiunti | token `<sep>` nella cella | una voce di lista ciascuno |
+| What it is | The delivered spreadsheet | Annotations written in this repository |
+| `sheet` | required | absent |
+| `fixes` | allowed | forbidden: the file itself is corrected |
+| Leaf addressed by | column header | path in the taxonomy |
+| Disjoint segments | `<sep>` token in the cell | one list item each |
 
 ```yaml
 data:
@@ -446,10 +486,10 @@ data:
       format: yaml
 ```
 
-Un record annotato come testo si legge per intero in un diff, che è la ragione per cui il formato
-esiste: una revisione di cento annotazioni fatta riga per riga non è la stessa cosa di una fatta
-aprendo un binario. E nominando le foglie per percorso, un file scritto qui non eredita
-l'intestazione `CONSTRAINS` che il foglio consegnato porta per compatibilità.
+A record annotated as text can be read in full in a diff, which is why the format exists: reviewing
+a hundred annotations line by line is not the same as opening a binary. And by naming the leaves by
+path, a file written here does not inherit the `CONSTRAINS` header that the delivered spreadsheet
+carries for compatibility.
 
 ```yaml
 records:
@@ -469,51 +509,49 @@ records:
         - "class B: pass"
 ```
 
-Una foglia omessa non ha segmenti; una stringa è un segmento; una lista è un segmento per voce. Il
-prompt va scritto con uno scalare **letterale** (`|-`): quello ripiegato (`>-`) trasforma le andate a
-capo in spazi, e il testo cambierebbe senza dirlo.
+An omitted leaf has no segments; a string is one segment; a list is one segment per item. The prompt
+must be written as a **literal** scalar (`|-`): the folded one (`>-`) turns line breaks into spaces,
+and the text would change without saying so.
 
-## Correzioni all'annotazione
+## Corrections to the annotation
 
-Il foglio di calcolo in `data/raw/` è un input e resta esattamente come è stato consegnato. Le
-correzioni vivono in `data/raw/annotation_fixes.yaml`, ciascuna con la riga a cui si applica e il
-motivo per cui è stata fatta: virgolette aggiunte durante il copia-incolla, un carattere digitato per
-un altro, un passaggio riscritto in prima persona, una cella che il foglio di calcolo ha letto come
-formula e distrutto. Una correzione che non descrive più la sua cella è un errore, non un'operazione
-a vuoto, quindi il corpus e le sue correzioni non possono divergere senza che qualcuno se ne accorga.
+The spreadsheet in `data/raw/` is an input and stays exactly as it was delivered. The corrections
+live in `data/raw/annotation_fixes.yaml`, each with the row it applies to and the reason it was made:
+quotes added during copy and paste, one character typed for another, a passage rewritten in the first
+person, a cell the spreadsheet read as a formula and destroyed. A correction that no longer describes
+its cell is an error, not a no-op, so the corpus and its corrections cannot drift apart unnoticed.
 
-Il meccanismo vale per le sole sorgenti a foglio di calcolo, ed è una restrizione dichiarata dallo
-schema. Esiste perché quel file non si può modificare; un'annotazione scritta qui si corregge dove
-sta, e la storia di ciò che è cambiato è già il diff. Due posti in cui cercare la verità di un record
-sono peggio di uno.
+The mechanism applies to spreadsheet sources only, a restriction stated by the schema. It exists
+because that file cannot be edited; an annotation written here is corrected where it is, and the
+history of what changed is already the diff. Two places to look for the truth of a record are worse
+than one.
 
-## Limiti noti
+## Known limits
 
-- **Il foglio consegnato non è quello usato nel lavoro originale.** Il notebook di partenza legge un
-  file da circa 1208 righe che non è stato consegnato; questo repository ne contiene la versione da
-  975 righe. I risultati numerici non sono quindi direttamente confrontabili con quelli pubblicati.
-  Se il file originale venisse recuperato, basta aggiungerlo a `data.sources` in
-  `configs/_base/data/`.
-- **Il supporto del ramo `reasoning` è modesto e curato.** Le sue tre foglie contano 113, 86 e 33
-  record su 1123, e provengono quasi per intero dai prompt annotati qui: il foglio consegnato ne
-  attestava tre in tutto. I punteggi su quei nodi vanno letti con il loro support accanto, e i
-  prompt che li esercitano sono stati generati e scelti perché li esercitassero — non sono un
-  campione di come quei paradigmi compaiono in conversazioni reali.
+- **The delivered spreadsheet is not the one used in the original work.** The starting notebook reads
+  a file of about 1,208 rows that was not delivered; this repository holds the 975-row version. The
+  numbers are therefore not directly comparable with the published ones. If the original file were
+  recovered, it would be enough to add it to `data.sources` in `configs/_base/data/`.
+- **The support of the `reasoning` branch is modest and curated.** Its three leaves count 113, 86 and
+  33 records out of 1,123, almost all from the prompts annotated here: the delivered spreadsheet had
+  three in total. The scores on those nodes must be read with their support, and the prompts that
+  exercise them were generated and chosen to exercise them; they are not a sample of how those
+  paradigms occur in real conversations.
 
-## Note sul porting
+## Porting notes
 
-Alcuni elementi presenti nel notebook di partenza non sono stati portati:
+Some elements of the starting notebook were not ported:
 
-- un secondo ciclo di inferenza, duplicato del primo ma privo di template conversazionale e di
-  system prompt, e con un budget di generazione insufficiente a completare gli output;
-- una cella priva di sorgente;
-- un insieme di classi di validazione mai istanziate, che dichiaravano campi incoerenti con i
-  target effettivamente prodotti. Lo schema di validazione viene generato dalla tassonomia, quindi
-  è coerente per costruzione;
-- dipendenze installate e mai utilizzate;
-- comandi shell e autenticazione interattiva, sostituiti da equivalenti programmatici e da
-  variabili d'ambiente.
+- a second inference loop, a duplicate of the first but without the chat template and the system
+  prompt, and with a generation budget too small to complete the outputs;
+- a cell without source;
+- a set of validation classes never instantiated, which declared fields inconsistent with the targets
+  actually produced. The validation schema is generated from the taxonomy, so it is consistent by
+  construction;
+- dependencies installed and never used;
+- shell commands and interactive authentication, replaced by programmatic equivalents and environment
+  variables.
 
-## Licenza
+## Licence
 
-MIT. Vedi [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
