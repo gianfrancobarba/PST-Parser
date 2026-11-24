@@ -178,7 +178,8 @@ module = [
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# results/tools holds the tools written after the freeze, with their own tests.
+testpaths = ["tests", "results/tools"]
 addopts = "--strict-markers --showlocals"
 markers = [
     "slow: end-to-end recipe tests; excluded from the default run",
