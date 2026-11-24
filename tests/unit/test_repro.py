@@ -101,6 +101,10 @@ def test_digest_of_a_missing_directory_is_null(tmp_path: Path) -> None:
     assert digest_directory(tmp_path / "absent") is None
 
 
+@pytest.mark.skipif(
+    not (Path(__file__).resolve().parents[2] / ".git").exists(),
+    reason="needs a repository checkout (not an archive extraction)",
+)
 def test_git_state_is_readable_in_the_repository() -> None:
     state = git_state()
 

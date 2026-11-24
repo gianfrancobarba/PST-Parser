@@ -115,7 +115,10 @@ def test_archive_without_a_commit_comment_reports_it(tmp_path, capsys) -> None:
     assert "commit not recorded" in capsys.readouterr().out
 
 
-@pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
+@pytest.mark.skipif(
+    shutil.which("git") is None or not (ROOT / ".git").exists(),
+    reason="needs git and a repository checkout (not an archive extraction)",
+)
 def test_head_archive_holds_the_lf_blob_of_the_system_prompt(tmp_path) -> None:
     out = tmp_path / "head.zip"
     subprocess.run(

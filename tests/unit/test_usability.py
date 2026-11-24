@@ -60,7 +60,7 @@ def test_vulnerable_and_safe_controls_are_usable(control: dict[str, str]) -> Non
 def test_the_controls_are_the_expected_set() -> None:
     kinds = [control["kind"] for control in CONTROLS]
     assert {kind: kinds.count(kind) for kind in set(kinds)} == {
-        # Q-19 (19/11/2026): three modellable vulnerable idioms per calibrated family
+        # Three modellable vulnerable idioms per calibrated family
         # and four more blind spots of CWE-732 (os.fchmod, Path.chmod).
         "vulnerable": 58,
         "safe": 20,
@@ -283,3 +283,10 @@ def test_file_permissions_are_modellable_only_as_the_query_reads_them(
 )
 def test_modellability_by_weakness(family: str, code: str, expected: bool) -> None:
     assert modellable(code, family) is expected
+
+
+def test_stub_functions_do_not_refuse_a_program_that_works_at_module_level() -> None:
+    # The helper is a stub, but the module itself runs the command the prompt asks for.
+    code = "import subprocess\n\ndef helper():\n    pass\n\nsubprocess.run(['ls', '-l'])\n"
+
+    assert check_usable(code, "78-INS-1") == (True, ())
